@@ -1,0 +1,17 @@
+<behaviors capability="behavior-tree-kernel" version="1">
+  <requirement id="kernel-migration">
+    <statement>packages/depa-behavior-tree SHALL 提供与 depa-processor src/control 行为等价的行为树内核（BehaviorTreeCore 两层分发 + CtrlFlowEngine 及内置 ActionHandlers），processor 底层能力经 npm depa-processor 导入，不复制 dispatch/component 源码。</statement>
+    <suite name="kernel-migration">
+      <case name="等价测试">
+        <given>迁移自上游 tests 的 basic/actions/unit/integration 测试套件</given>
+        <when>bun test packages/depa-behavior-tree</when>
+        <then>全部通过（244 case）</then>
+      </case>
+      <case name="无内核源码残留耦合">
+        <given>包源码</given>
+        <when>检索 ../../dispatch 与 ../../component 相对导入</when>
+        <then>0 命中；对应符号一律 from 'depa-processor'</then>
+      </case>
+    </suite>
+  </requirement>
+</behaviors>

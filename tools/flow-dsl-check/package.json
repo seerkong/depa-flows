@@ -1,0 +1,11 @@
+{
+  "name": "flow-dsl-check",
+  "version": "0.1.0",
+  "private": true,
+  "description": "流定义 bundle 校验器（规范真源 docs/flow-dsl）",
+  "type": "module",
+  "dependencies": {
+    "task-manager-contract": "workspace:*",
+    "xnl-core": "^0.1.8"
+  }
+}

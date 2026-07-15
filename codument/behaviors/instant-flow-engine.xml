@@ -1,0 +1,37 @@
+<behaviors capability="instant-flow-engine" version="1">
+  <requirement id="stateless-run">
+    <statement>runInstantFlow(bundleDir, {input, runtime}) SHALL 加载 InstantFlow xnl bundle、编译为行为树并在一次调用内收敛，返回 {success, vars, logs, errors}；不保存任何跨调用状态；同一 bundle 可重复执行且互不影响（IF-1/IF-4）。</statement>
+    <suite name="stateless-run">
+      <case name="健康路径">
+        <given>instant-http-check 演示 bundle 与 stub fetch(200)</given>
+        <when>runInstantFlow</when>
+        <then>success=true，vars.ok=true，vars.attempts=1，config://#ping/url 已在编译期解析</then>
+      </case>
+      <case name="重试与断言失败">
+        <given>stub fetch(500)</given>
+        <when>runInstantFlow</when>
+        <then>Until 重试至 config.maxAttempts=3 次后 Assert 失败，success=false</then>
+      </case>
+      <case name="可重复执行">
+        <given>同一 bundle 连续两次执行</given>
+        <when>runInstantFlow ×2</when>
+        <then>两次结果一致，vars 互不泄漏</then>
+      </case>
+    </suite>
+  </requirement>
+  <requirement id="if-narrowing">
+    <statement>InstantFlow 引擎 SHALL 拒绝非 InstantFlow bundle（form-mismatch）与含可中断节点（ExternalJob/Timer/TaskStep）的树（编译期 interruptible-in-instant）。</statement>
+    <suite name="if-narrowing">
+      <case name="form 拒绝">
+        <given>WorkFlow bundle</given>
+        <when>loadInstantFlowSpec</when>
+        <then>抛 FlowLoadError(form-mismatch)</then>
+      </case>
+      <case name="节点拒绝">
+        <given>含 ExternalJob 的树</given>
+        <when>compileBundle</when>
+        <then>抛 FlowCompileError(interruptible-in-instant)</then>
+      </case>
+    </suite>
+  </requirement>
+</behaviors>

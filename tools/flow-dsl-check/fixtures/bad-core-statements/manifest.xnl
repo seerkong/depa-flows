@@ -1,0 +1,13 @@
+<InstantFlow #depa.flows.fixture.BadCoreStatements apiVersion="depa.flows/v1" version="0.0.1" [
+  <Run #missing-src>
+  <Fallback #bad-fallback [
+    <Run #not-a-strategy { src = "vfs://./flow-code.ts#run" }>
+  ]>
+  <Until #missing-when [
+    <Run #loop { src = "vfs://./flow-code.ts#run" }>
+  ]>
+  <Return #conflicting-return {
+    src = "vfs://./flow-code.ts#run"
+    value = "also-a-value"
+  }>
+]>

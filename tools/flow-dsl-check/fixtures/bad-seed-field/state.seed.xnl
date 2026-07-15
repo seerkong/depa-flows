@@ -1,0 +1,4 @@
+<StateSeed #bad-seed-field-state {
+  counter = 0
+  ghost = true
+}>

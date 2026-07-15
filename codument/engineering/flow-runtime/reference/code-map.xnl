@@ -1,0 +1,44 @@
+<reference #flow-runtime.reference.code-map.code_map {
+  kind = "reference"
+} [
+  <scope ?>记录本仓库最终交付状态对应的代码路径；路径是实现导航，不是第二份行为规范。</?>
+  <source-of-truth ?>本仓库的源码、package manifest、测试、examples 和 docs/flow-dsl；本节点只维护导航和边界。</?>
+  <paths ?>packages/*；examples/xnl-bundles；docs/flow-dsl；codument/behaviors。</?>
+  <areas [
+    <area #code_map.contracts {
+      owner = "depa-flows"
+      paths = [
+        "packages/instant-flow-contract"
+        "packages/work-flow-contract"
+        "packages/biz-process-contract"
+        "packages/eager-data-flow-contract"
+        "packages/task-manager-contract"
+        "packages/depa-behavior-tree"
+      ]
+      responsibility = "公开 XNL contract、类型、profile capability 与 rejection boundary"
+    }>
+    <area #code_map.logic {
+      owner = "depa-flows"
+      paths = [
+        "packages/instant-flow-logic"
+        "packages/work-flow-logic"
+        "packages/biz-process-logic"
+        "packages/eager-data-flow-logic"
+        "packages/task-manager-logic"
+      ]
+      responsibility = "loader、compiler、processor、scheduler 与 runtime lifecycle"
+    }>
+    <area #code_map.verification {
+      owner = "depa-flows"
+      paths = [
+        "packages/*/test"
+        "packages/*/tests"
+        "examples/xnl-bundles"
+        "docs/flow-dsl"
+      ]
+      responsibility = "contract、DSL、runtime、fixture 与本仓库 conformance"
+    }>
+  ]>
+  <update-procedure ?>代码 owner 发生变化时，先更新对应 area 的路径与职责，再更新 modeling/engineering registry；不要把历史 track 重新作为导航入口。</?>
+  <related ?>engineering://flow-runtime.overview.architecture、modeling://domain.flow.definition</?>
+]>

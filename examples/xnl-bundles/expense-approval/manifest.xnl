@@ -1,0 +1,95 @@
+<BizProcess #depa.flows.demo.ExpenseApproval apiVersion="depa.flows/v1" version="0.1.0" {
+  title = "费用报销审批"
+} (
+  <FlowContract #depa.flows.demo.ExpenseApproval {
+    input = "vfs://./actions/expense.actions.ts#ExpenseApprovalInput"
+    output = "vfs://./actions/expense.actions.ts#ExpenseApprovalOutput"
+  }>
+) [
+  <Run #validate {
+    src = "vfs://./actions/expense.actions.ts#validateExpense"
+  }>
+  <Retry #notify-manager { maxAttempts = 3 backoffMs = 10000 } [
+    <Run #send-manager-notification {
+      src = "vfs://./actions/notify.actions.ts#notifyTaskOwner"
+      config = { owner = "user:manager" }
+    }>
+  ]>
+  <TaskStep #manager-approval {
+    task = "task-space://#task_manager_approve"
+  }>
+  <If #route-manager-result (
+    <Branches [
+      <Branch #manager-approved {
+        when = "vfs://./actions/expense.actions.ts#isApproved"
+      } [
+        <If #route-finance-requirement (
+          <Branches [
+            <Branch #needs-finance {
+              when = "vfs://./actions/expense.actions.ts#needsFinanceApproval"
+              config = { threshold = 5000 }
+            } [
+              <Run #restore-expense-for-finance {
+                src = "vfs://./actions/expense.actions.ts#taskPayload"
+              }>
+              <Retry #notify-finance { maxAttempts = 3 backoffMs = 10000 } [
+                <Run #send-finance-notification {
+                  src = "vfs://./actions/notify.actions.ts#notifyTaskOwner"
+                  config = { owner = "user:finance" }
+                }>
+              ]>
+              <TaskStep #finance-approval {
+                task = "task-space://#grp_finance"
+              }>
+              <If #route-finance-result (
+                <Branches [
+                  <Branch #finance-approved {
+                    when = "vfs://./actions/expense.actions.ts#isApproved"
+                  } [
+                    <Run #restore-expense-for-payout {
+                      src = "vfs://./actions/expense.actions.ts#taskPayload"
+                    }>
+                    <Retry #payout-large { maxAttempts = 3 backoffMs = 30000 } [
+                      <Run #send-large-payout {
+                        src = "vfs://./actions/expense.actions.ts#payoutExpense"
+                      }>
+                    ]>
+                    <Return #large-approved-result>
+                  ]>
+                  <Otherwise [
+                    <Run #notify-finance-rejection {
+                      src = "vfs://./actions/notify.actions.ts#notifyRejection"
+                    }>
+                    <Return #finance-rejected-result>
+                  ]>
+                ]>
+              )>
+            ]>
+            <Otherwise [
+              <Run #restore-small-expense-for-payout {
+                src = "vfs://./actions/expense.actions.ts#taskPayload"
+              }>
+              <Retry #payout-small { maxAttempts = 3 backoffMs = 30000 } [
+                <Run #send-small-payout {
+                  src = "vfs://./actions/expense.actions.ts#payoutExpense"
+                }>
+              ]>
+              <Return #small-approved-result>
+            ]>
+          ]>
+        )>
+      ]>
+      <Branch #manager-forwarded {
+        when = "vfs://./actions/expense.actions.ts#isForwarded"
+      } [
+        <Return #manager-forwarded-result>
+      ]>
+      <Otherwise [
+        <Run #notify-manager-rejection {
+          src = "vfs://./actions/notify.actions.ts#notifyRejection"
+        }>
+        <Return #manager-rejected-result>
+      ]>
+    ]>
+  )>
+]>

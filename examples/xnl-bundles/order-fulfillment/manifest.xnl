@@ -1,0 +1,40 @@
+<WorkFlow #depa.flows.demo.OrderFulfillment apiVersion="depa.flows/v1" version="0.1.0" {
+  title = "订单履约工作流"
+} (
+  <FlowContract #depa.flows.demo.OrderFulfillment {
+    input = "vfs://./actions/fulfillment.actions.ts#FulfillmentInput"
+    output = "vfs://./actions/fulfillment.actions.ts#FulfillmentResult"
+  }>
+) [
+  <Retry #reserve-inventory { maxAttempts = 3 backoffMs = 5000 } [
+    <Run #reserve-primary {
+        src = "vfs://./actions/fulfillment.actions.ts#reservePrimaryInventory"
+        config = { endpoint = "https://warehouse.example.com/api" }
+    }>
+  ]>
+  <ExternalJob #pack {
+    signalKind = "job.completed"
+    signalKey = "pack"
+    timeoutMs = 86400000
+  }>
+  <Timer #cool-down { durationMs = 60000 }>
+  <Parallel #complete-fulfillment { join = "all" } (
+    <Lanes [
+      <Lane #notification [
+        <Retry #notify-customer { maxAttempts = 3 backoffMs = 10000 } [
+          <Run #notify {
+            src = "vfs://./actions/fulfillment.actions.ts#notifyCustomer"
+          }>
+        ]>
+      ]>
+      <Lane #audit [
+        <Run #prepare-audit {
+          src = "vfs://./actions/fulfillment.actions.ts#prepareFulfillmentAudit"
+        }>
+      ]>
+    ]>
+  )>
+  <Return #fulfilled {
+    src = "vfs://./actions/fulfillment.actions.ts#toFulfilledResult"
+  }>
+]>

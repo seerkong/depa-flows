@@ -1,0 +1,19 @@
+<InstantFlow #depa.flows.fixture.BadIfShape apiVersion="depa.flows/v1" version="0.0.1" [
+  <If #missing-branches>
+  <If #bad-branches (
+    <Branches [
+      <Branch #missing-when [
+        <Return #branch-result>
+      ]>
+      <Otherwise [
+        <Return #first-otherwise>
+      ]>
+      <Branch #late-branch {
+        when = "vfs://./predicates.ts#yes"
+      }>
+      <Otherwise [
+        <Return #second-otherwise>
+      ]>
+    ]>
+  )>
+]>

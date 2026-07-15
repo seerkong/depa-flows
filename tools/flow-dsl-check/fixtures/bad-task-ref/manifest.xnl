@@ -1,0 +1,5 @@
+<BizProcess #depa.flows.fixture.BadTaskRef apiVersion="depa.flows/v1" version="0.0.1" [
+  <TaskStep #ghost { task = "task-space://#task_ghost" }>
+  <TaskStep #nested { task = "task-space://#task_nested" }>
+  <TaskStep #with-assign { task = "task-space://#task_real" assignTo = "verdict" }>
+]>

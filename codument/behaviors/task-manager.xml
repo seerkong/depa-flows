@@ -1,0 +1,27 @@
+<behaviors capability="task-manager" version="1">
+  <requirement id="status-machine">
+    <statement>任务状态机 SHALL 遵守 task-manager-contract：NOT_STARTED→[ACTIVE,ABANDONED]；ACTIVE→[DONE,REFUSED,FORWARDED,DELEGATED,NOT_STARTED,ABANDONED]；DELEGATED→[ACTIVE,ABANDONED]；DONE/REFUSED/FORWARDED/ABANDONED 为终态；非法转移抛错；ACTIVE 记 startedAt、终态记 endedAt。</statement>
+    <suite name="status-machine">
+      <case name="非法转移">
+        <given>终态任务或 NOT_STARTED 任务</given>
+        <when>再操作 / 直接 complete</when>
+        <then>抛 TaskTransitionError</then>
+      </case>
+      <case name="委派链">
+        <given>ACTIVE 任务</given>
+        <when>delegate→reactivate→complete</when>
+        <then>各步合法收敛 DONE</then>
+      </case>
+    </suite>
+  </requirement>
+  <requirement id="group-aggregation">
+    <statement>TaskGroup SHALL 按 executionMode 聚合终态：SEQUENTIAL/ALL 全 done-like→DONE、任一失败终态提前→REFUSED；ANY 任一 done-like→DONE、全失败终态→REFUSED；FORWARDED 视同 DONE；未收敛返回 undefined。</statement>
+    <suite name="group-aggregation">
+      <case name="三种模式">
+        <given>各状态组合</given>
+        <when>terminalStatusOf</when>
+        <then>见 statusMachine.test.ts 组聚合 suite</then>
+      </case>
+    </suite>
+  </requirement>
+</behaviors>

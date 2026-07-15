@@ -1,0 +1,4 @@
+<Config #order-fulfillment-config [
+  <ConfigEntry #notify-retry { maxNotifyAttempts = 3 }>
+  <ConfigEntry #warehouse { endpoint = "https://warehouse.example.com/api" }>
+]>

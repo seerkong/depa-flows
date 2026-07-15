@@ -1,0 +1,7 @@
+<!-- state.def facet（M-N3）：描述外部保存状态的形状。字段类型习惯沿用 dg-cell 的 "type?" 字符串写法 -->
+<StateDef #order-fulfillment-state {
+  reservation = "object?"
+  packResult = "object?"
+  notified = "boolean"
+  notifyAttempts = "number"
+}>

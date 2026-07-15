@@ -1,0 +1,20 @@
+{
+  "name": "depa-flows",
+  "private": true,
+  "version": "0.0.0",
+  "description": "depa-flows workspace root (bun monorepo)",
+  "workspaces": [
+    "packages/*",
+    "tools/*"
+  ],
+  "scripts": {
+    "flow-dsl-check": "bun tools/flow-dsl-check/check.mjs",
+    "test": "bun test",
+    "typecheck": "bunx tsc --noEmit"
+  },
+  "devDependencies": {
+    "bun-types": "^1.3.14",
+    "typescript": "^5.5.0",
+    "xnl-core": "^0.1.8"
+  }
+}

@@ -1,0 +1,3 @@
+<Config #expense-approval-config [
+  <ConfigEntry #approval { financeThreshold = 5000 }>
+]>

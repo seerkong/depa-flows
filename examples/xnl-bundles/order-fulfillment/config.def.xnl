@@ -1,0 +1,4 @@
+<ConfigDef #order-fulfillment-config [
+  <ConfigEntryDef #notify-retry { maxNotifyAttempts = "number" }>
+  <ConfigEntryDef #warehouse { endpoint = "string" }>
+]>

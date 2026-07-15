@@ -1,0 +1,3 @@
+<DataFlow #depa.flows.fixture.LegacyDataFlow [
+  <Run #legacy { src = "vfs://./legacy.ts#run" }>
+]>

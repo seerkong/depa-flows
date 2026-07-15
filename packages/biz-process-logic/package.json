@@ -1,0 +1,23 @@
+{
+  "name": "biz-process-logic",
+  "version": "0.1.0",
+  "private": true,
+  "description": "BizProcess 引擎：TaskStep + task manager 的人机审批业务流程（构建在 WorkFlow 机制之上，BP-5）",
+  "type": "module",
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./browser": "./src/browser.ts",
+    "./filesystem": "./src/filesystem.ts"
+  },
+  "dependencies": {
+    "biz-process-contract": "workspace:*",
+    "task-manager-contract": "workspace:*",
+    "task-manager-logic": "workspace:*",
+    "work-flow-contract": "workspace:*",
+    "work-flow-logic": "workspace:*",
+    "instant-flow-contract": "workspace:*",
+    "instant-flow-logic": "workspace:*",
+    "depa-behavior-tree": "workspace:*"
+  }
+}

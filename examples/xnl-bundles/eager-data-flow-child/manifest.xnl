@@ -1,0 +1,16 @@
+<EagerDataFlow #depa.examples.CustomerClassifier apiVersion="depa.flows/v1" version="1.0.0" (
+  <FlowContract #depa.examples.CustomerClassifier {
+    inputPorts = ["customer"]
+    outputPorts = ["segment"]
+  }>
+) [
+  <EntryNode #entry>
+  <TransformNode #classify {
+    inputs = { customer = "flow-port://#entry/customer" }
+    outputs = ["segment"]
+    src = "vfs://./flow-code/classify.ts#classifyCustomer"
+  }>
+  <ReturnNode #return {
+    inputs = { segment = "flow-port://#classify/segment" }
+  }>
+]>

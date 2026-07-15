@@ -1,0 +1,24 @@
+<!-- task.space 域：任务树与状态机事实。
+     状态机：NOT_STARTED→ACTIVE→DONE/REFUSED/FORWARDED/DELEGATED/ABANDONED。
+     子节点一律放 []（() 只用于子域区段）；version 是系统级元数据 → 元数据位。
+     TaskStep 只能绑定本树的直接子节点（下例中 task_manager_approve 与 grp_finance） -->
+<TaskSpace #space_expense_approval version=1 { name = "费用审批任务空间" } [
+  <Task #task_manager_approve {
+    name = "直属主管审批"
+    ownerAccount = "user:manager"
+    status = "NotStarted"
+    order = 0
+  }>
+  <TaskGroup #grp_finance {
+    name = "财务复核"
+    executionMode = "SEQUENTIAL"
+    order = 1
+  } [
+    <Task #task_finance_approve {
+      name = "财务审批"
+      ownerAccount = "user:finance"
+      status = "NotStarted"
+      order = 0
+    }>
+  ]>
+]>

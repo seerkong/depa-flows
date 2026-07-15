@@ -1,0 +1,29 @@
+<behaviors capability="profiled-flow-bundles" version="1">
+  <requirement id="canonical-examples">
+    <statement>Canonical CtrlFlow example bundles SHALL demonstrate product-specific orchestration capabilities and SHALL execute through the declared product loader and engine.</statement>
+    <suite id="profile-representatives" name="按产品形态的代表示例">
+      <case id="instant-flow">
+        <given>the canonical InstantFlow bundle</given>
+        <when>it is loaded and executed</when>
+        <then>it SHALL demonstrate non-durable script orchestration and complete without persistent waits</then>
+      </case>
+      <case id="work-flow">
+        <given>the canonical WorkFlow bundle</given>
+        <when>it crosses a wait or composite boundary and resumes in a fresh engine instance</when>
+        <then>it SHALL reuse durable orchestration facts without replaying completed effects</then>
+      </case>
+      <case id="biz-process">
+        <given>the canonical BizProcess bundle with TaskSpace</given>
+        <when>task results and durable composites advance the process</when>
+        <then>it SHALL preserve business result data and technical orchestration facts in their owning domains</then>
+      </case>
+    </suite>
+    <suite id="conformance" name="一致性">
+      <case id="profile-rejection">
+        <given>a bundle uses a statement outside its product profile</given>
+        <when>the canonical loader validates it</when>
+        <then>the loader SHALL reject it with a stable diagnostic</then>
+      </case>
+    </suite>
+  </requirement>
+</behaviors>

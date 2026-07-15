@@ -1,0 +1,3 @@
+<StateDef #bad-seed-field-state {
+  counter = "number"
+}>

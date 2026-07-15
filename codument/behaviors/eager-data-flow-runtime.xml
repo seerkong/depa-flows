@@ -1,0 +1,42 @@
+<behaviors capability="eager-data-flow-runtime" version="1">
+  <requirement id="canonical-loading">
+    <statement>The system SHALL load and validate canonical EagerDataFlow definitions and MUST reject removed DataFlow and lazy DataGraph authoring shapes.</statement>
+    <suite id="loader" name="canonical loader">
+      <case id="edge-projection">
+        <given>valid flow-port and flow-node references</given>
+        <when>the definition is loaded</when>
+        <then>the derived plan SHALL retain distinct data and completion edges</then>
+      </case>
+      <case id="legacy-rejected">
+        <given>a DataFlow root or lazy graph node</given>
+        <when>it is loaded</when>
+        <then>loading SHALL fail without a compatibility alias</then>
+      </case>
+    </suite>
+  </requirement>
+  <requirement id="eager-scheduling">
+    <statement>The engine SHALL execute each ready node at most once, SHALL start independent ready nodes concurrently, and SHALL atomically publish validated output records.</statement>
+    <suite id="scheduler" name="ready scheduler">
+      <case id="wait-for">
+        <given>a node with data inputs and waitFor dependencies</given>
+        <when>the flow runs</when>
+        <then>it SHALL start only after both dependency classes are satisfied</then>
+      </case>
+      <case id="convergence">
+        <given>a ReturnNode captures output before another independent sink finishes</given>
+        <when>the flow runs</when>
+        <then>the invocation SHALL resolve only after all nodes converge</then>
+      </case>
+    </suite>
+  </requirement>
+  <requirement id="subflow-execution">
+    <statement>SubFlowNode SHALL invoke a registered EagerDataFlow through its FlowContract, isolate child invocation state, and reject recursive unit call graphs.</statement>
+    <suite id="subflow" name="subflow execution">
+      <case id="contract">
+        <given>a registered child flow</given>
+        <when>the parent links and invokes it</when>
+        <then>input and output ports SHALL match the child contract exactly</then>
+      </case>
+    </suite>
+  </requirement>
+</behaviors>

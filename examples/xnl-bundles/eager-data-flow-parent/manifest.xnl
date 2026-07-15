@@ -1,0 +1,28 @@
+<EagerDataFlow #depa.examples.CustomerSummary apiVersion="depa.flows/v1" version="1.0.0" (
+  <FlowContract #depa.examples.CustomerSummary {
+    inputPorts = ["customer"]
+    outputPorts = ["summary"]
+  }>
+) [
+  <EntryNode #entry>
+  <SubFlowNode #classify {
+    flow = "eager-data-flow://depa.examples.CustomerClassifier"
+    inputs = { customer = "flow-port://#entry/customer" }
+  }>
+  <SinkNode #audit {
+    inputs = { segment = "flow-port://#classify/segment" }
+    src = "vfs://./flow-code/summary.ts#auditSegment"
+  }>
+  <TransformNode #format {
+    inputs = {
+      customer = "flow-port://#entry/customer"
+      segment = "flow-port://#classify/segment"
+    }
+    outputs = ["summary"]
+    waitFor = ["flow-node://#audit"]
+    src = "vfs://./flow-code/summary.ts#formatSummary"
+  }>
+  <ReturnNode #return {
+    inputs = { summary = "flow-port://#format/summary" }
+  }>
+]>

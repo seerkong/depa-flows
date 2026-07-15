@@ -1,0 +1,5 @@
+<!-- state.seed facet（M-D4）：启动快照，只读。运行态由引擎按节点 path 外部保存，绝不回写本文件 -->
+<StateSeed #order-fulfillment-state {
+  notified = false
+  notifyAttempts = 0
+}>

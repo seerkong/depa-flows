@@ -1,0 +1,12 @@
+<behaviors capability="monorepo-scaffold" version="1">
+  <requirement id="workspace">
+    <statement>仓库 SHALL 是 bun workspaces monorepo：packages/* 下的包可互相以包名引用、可依赖 npm depa-processor@0.1.1；根级 bun test 跑全仓测试、bunx tsc --noEmit 全仓类型检查通过。</statement>
+    <suite name="workspace">
+      <case name="安装与测试">
+        <given>fresh checkout</given>
+        <when>bun install &amp;amp;&amp;amp; bun test &amp;amp;&amp;amp; bunx tsc --noEmit</when>
+        <then>全部成功退出</then>
+      </case>
+    </suite>
+  </requirement>
+</behaviors>

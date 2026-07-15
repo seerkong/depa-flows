@@ -1,0 +1,3 @@
+<CtrlFlow #depa.flows.fixture.LegacyCtrlFlow [
+  <Run #legacy { src = "vfs://./legacy.ts#run" }>
+]>

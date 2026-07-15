@@ -1,0 +1,42 @@
+<behaviors capability="flow-dsl-runtime" version="1">
+  <requirement id="canonical-bundle-loading">
+    <statement>The loader SHALL parse InstantFlow, WorkFlow and BizProcess root lists as canonical CtrlFlow statements and MUST reject Tree, action.types, standalone CtrlFlow and public behavior-tree authoring nodes.</statement>
+    <suite id="loading" name="canonical loading">
+      <case id="direct-root">
+        <given>a new product bundle</given>
+        <when>it is loaded</when>
+        <then>root statements SHALL be preserved in declaration order</then>
+      </case>
+      <case id="legacy-rejected">
+        <given>a legacy Tree/action.types bundle</given>
+        <when>it is loaded</when>
+        <then>loading SHALL fail with stable diagnostics</then>
+      </case>
+    </suite>
+  </requirement>
+  <requirement id="canonical-compile-projection">
+    <statement>The compiler SHALL lower CtrlFlow statements to a rebuildable internal plan and SHALL invoke all referenced code using output = fn(runtime, input, config).</statement>
+    <suite id="compile" name="compile projection">
+      <case id="if-lowering">
+        <given>If with ordered Branches and Otherwise</given>
+        <when>compiled</when>
+        <then>the internal plan SHALL preserve first-match and no-op semantics</then>
+      </case>
+      <case id="function-code">
+        <given>Run, Return or predicate code ref</given>
+        <when>materialized</when>
+        <then>the runtime SHALL call the exported function with runtime, input and config</then>
+      </case>
+    </suite>
+  </requirement>
+  <requirement id="migrated-demos">
+    <statement>All depa-flows control-flow demos SHALL use only the new public DSL and SHALL pass parser, validator, typecheck and applicable execution tests.</statement>
+    <suite id="demos" name="demo migration">
+      <case id="no-legacy">
+        <given>examples/xnl-bundles</given>
+        <when>searched for legacy authoring</when>
+        <then>no Tree/action.types/Sequence/Selector/Condition authoring SHALL remain</then>
+      </case>
+    </suite>
+  </requirement>
+</behaviors>

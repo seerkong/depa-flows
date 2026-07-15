@@ -1,0 +1,5 @@
+<InstantFlow #depa.flows.fixture.LegacyPublicControl apiVersion="depa.flows/v1" version="0.0.1" [
+  <Sequence #sequence>
+  <Selector #selector>
+  <Condition #condition { expr = "true" }>
+]>

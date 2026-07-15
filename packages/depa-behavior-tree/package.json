@@ -1,0 +1,17 @@
+{
+  "name": "depa-behavior-tree",
+  "version": "0.1.0",
+  "private": true,
+  "description": "行为树内核（迁移自 depa-processor src/control）：BehaviorTreeCore + CtrlFlowEngine",
+  "type": "module",
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./core": "./src/BehaviorTreeCore/index.ts",
+    "./ctrlflow": "./src/CtrlFlowEngine/index.ts"
+  },
+  "dependencies": {
+    "depa-processor": "^0.1.1"
+  }
+}

@@ -1,0 +1,19 @@
+<behaviors capability="profiled-ctrl-flow-runtime" version="1">
+  <requirement id="execute-semantic-primitives">
+    <statement>引擎 SHALL 按产品 profile 执行已批准的语义编排原语，并保持 data、fault 与 lifecycle 事实边界。</statement>
+    <suite id="instant" name="即时执行">
+      <case id="memory-primitives">
+        <given>合法 InstantFlow 使用 Require、Retry、Timeout、ForEach、Parallel、Race 或同步 CallFlow</given>
+        <when>runtime 执行 definition</when>
+        <then>引擎 SHALL 在单次 invocation 内按规范产生 output、fault 与取消结果</then>
+      </case>
+    </suite>
+    <suite id="durable" name="可恢复执行">
+      <case id="resume-facts">
+        <given>WorkFlow 或 BizProcess 在编排原语中挂起或重启</given>
+        <when>runtime 从 snapshot 恢复</when>
+        <then>引擎 SHALL 复用已持久化的 attempt、deadline、lane、winner 与取消事实，且不得重复已完成 effect</then>
+      </case>
+    </suite>
+  </requirement>
+</behaviors>

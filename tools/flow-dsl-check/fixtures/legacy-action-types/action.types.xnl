@@ -1,0 +1,3 @@
+<ActionTypes [
+  <ActionType #legacy.Action { src = "vfs://./legacy.ts#run" }>
+]>

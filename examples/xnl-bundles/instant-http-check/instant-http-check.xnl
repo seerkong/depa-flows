@@ -1,0 +1,40 @@
+<InstantFlow #depa.flows.demo.InstantHttpCheck apiVersion="depa.flows/v1" version="0.1.0" {
+  title = "站点健康即时检查"
+} (
+  <FlowContract #depa.flows.demo.InstantHttpCheck {
+    input = "vfs://./actions/health.actions.ts#HealthCheckInput"
+    output = "vfs://./actions/health.actions.ts#HealthCheckResult"
+  }>
+) [
+  <Run #initialize {
+    src = "vfs://./actions/health.actions.ts#initializeHealthCheck"
+  }>
+  <Require #http-capability {
+    when = "vfs://./actions/health.actions.ts#hasHttpCapability"
+  }>
+  <Timeout #health-deadline { timeoutMs = 2000 } [
+    <Race #first-healthy-endpoint { mode = "first-success" } (
+      <Candidates [
+        <Candidate #primary [
+          <Retry #retry-primary { maxAttempts = 3 } [
+            <Run #probe-primary {
+              src = "vfs://./actions/health.actions.ts#probeHealth"
+              config = { url = "https://primary.example.com/healthz" }
+            }>
+          ]>
+        ]>
+        <Candidate #replica [
+          <Retry #retry-replica { maxAttempts = 2 } [
+            <Run #probe-replica {
+              src = "vfs://./actions/health.actions.ts#probeHealth"
+              config = { url = "https://replica.example.com/healthz" }
+            }>
+          ]>
+        ]>
+      ]>
+    )>
+  ]>
+  <Return #health-result {
+    src = "vfs://./actions/health.actions.ts#toHealthResult"
+  }>
+]>

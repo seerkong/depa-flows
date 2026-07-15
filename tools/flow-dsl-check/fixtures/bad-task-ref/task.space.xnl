@@ -1,0 +1,6 @@
+<TaskSpace #space_bad_task_ref version=1 { name = "fixture" } [
+  <Task #task_real { name = "真实任务" ownerAccount = "user:a" status = "NotStarted" order = 0 }>
+  <TaskGroup #grp_inner { name = "组" executionMode = "SEQUENTIAL" order = 1 } [
+    <Task #task_nested { name = "嵌套任务" ownerAccount = "user:b" status = "NotStarted" order = 0 }>
+  ]>
+]>

@@ -1,0 +1,13 @@
+<InstantFlow #depa.flows.fixture.BadConfigRef apiVersion="depa.flows/v1" version="0.0.1" (
+  <Config [
+    <ConfigEntry #real { greeting = "hello" }>
+  ]>
+) [
+  <Run #bad-refs {
+    src = "vfs://./flow-code.ts#run"
+    config = {
+      endpoint = "config://#nope/url"
+      message = "config://#real/msg"
+    }
+  }>
+]>

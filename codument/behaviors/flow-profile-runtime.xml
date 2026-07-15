@@ -1,0 +1,27 @@
+<behaviors capability="flow-profile-runtime" version="1">
+  <requirement id="persisted-branch-decisions">
+    <statement>WorkFlow and BizProcess SHALL persist each selected If branch before entering its body and SHALL reuse that decision after suspension or restart without re-evaluating completed predicates.</statement>
+    <suite id="resume">
+      <case id="no-re-evaluation">
+        <given>a flow selected a branch then suspended</given>
+        <when>it resumes after restart</when>
+        <then>the selected branch SHALL be reused and predicate code SHALL not run again</then>
+      </case>
+    </suite>
+  </requirement>
+  <requirement id="task-step-result-data">
+    <statement>BizProcess TaskStep SHALL output task outcome data for approved, refused, forwarded and abandoned states; business outcomes MUST NOT be converted to technical success/failure routing.</statement>
+    <suite id="task-outcome">
+      <case id="refusal">
+        <given>a task becomes Refused</given>
+        <when>TaskStep resumes</when>
+        <then>the next If SHALL receive outcome refused and the flow SHALL remain technically healthy</then>
+      </case>
+      <case id="forward">
+        <given>a task becomes Forwarded</given>
+        <when>TaskStep resumes</when>
+        <then>the next If SHALL receive outcome forwarded as data</then>
+      </case>
+    </suite>
+  </requirement>
+</behaviors>

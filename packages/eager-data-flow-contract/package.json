@@ -1,0 +1,9 @@
+{
+  "name": "eager-data-flow-contract",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Serializable EagerDataFlow authoring and derived-plan contracts",
+  "type": "module",
+  "main": "./src/index.ts",
+  "exports": { ".": "./src/index.ts" }
+}
