@@ -1,13 +1,13 @@
 <Track id="define-eidolon-native-workflow-boundaries" version="1" xmlns:cdt="urn:codument:v1">
   <Metadata>
-    <Status>new</Status>
+    <Status>completed</Status>
     <Goal>Define Eidolon-native workflow integration boundaries for tools, effects, facts and recovery.</Goal>
     <Description>Solidify the agreed package placement, native authoring tools, internal effect adapters, workflow facts authority and actor/session recovery reuse before implementation.</Description>
     <QuestionMode>decision-tree</QuestionMode>
     <QuestionSeverity>light</QuestionSeverity>
     <CommitMode>manual</CommitMode>
     <CreatedAt>2026-08-03T05:30:45Z</CreatedAt>
-    <UpdatedAt>2026-08-03T05:30:45Z</UpdatedAt>
+    <UpdatedAt>2026-08-03T06:38:02Z</UpdatedAt>
   </Metadata>
   <Ports scope="track">
     <MaterialBundle role="input" name="behavior-deltas" domain="behavior" path="vfs://./behavior_deltas/"/>
@@ -18,27 +18,27 @@
   <TaskSpace id="space_define-eidolon-native-workflow-boundaries" name="define-eidolon-native-workflow-boundaries" version="1">
     <Description>Define the Eidolon-native boundaries for workflow tool exposure, effect handling, fact ownership and recovery reuse.</Description>
     <SubNodes>
-      <TaskGroup id="P1" name="Evidence and boundary consolidation" status="NOT_STARTED" order="0">
+      <TaskGroup id="P1" name="Evidence and boundary consolidation" status="DONE" order="0">
         <Description>Consolidate the read-only Eidolon observations and user-approved placement decisions into a single target architecture.</Description>
         <SubNodes>
-          <Task id="T1.1" name="Consolidate package placement for contracts, tools, effects and profile enablement" status="NOT_STARTED" order="0"/>
-          <Task id="T1.2" name="Consolidate workflow fact authority and Eidolon recovery reuse boundary" status="NOT_STARTED" order="1"/>
-          <Task id="T1.3" name="Consolidate native authoring workspace tool scope" status="NOT_STARTED" order="2"/>
+          <Task id="T1.1" name="Consolidate package placement for contracts, tools, effects and profile enablement" status="DONE" order="0"/>
+          <Task id="T1.2" name="Consolidate workflow fact authority and Eidolon recovery reuse boundary" status="DONE" order="1"/>
+          <Task id="T1.3" name="Consolidate native authoring workspace tool scope" status="DONE" order="2"/>
         </SubNodes>
       </TaskGroup>
-      <TaskGroup id="P2" name="Behavior and design artifacts" status="NOT_STARTED" order="1">
+      <TaskGroup id="P2" name="Behavior and design artifacts" status="DONE" order="1">
         <Description>Record requirements, durable decisions and implementation-ready design.</Description>
         <SubNodes>
-          <Task id="T2.1" name="Finalize eidolon-workflow-integration behavior delta" status="NOT_STARTED" order="0"/>
-          <Task id="T2.2" name="Finalize package/tool/effect/fact authority decisions" status="NOT_STARTED" order="1"/>
-          <Task id="T2.3" name="Finalize design for runtime tools, authoring tools, effect adapters and recovery" status="NOT_STARTED" order="2"/>
+          <Task id="T2.1" name="Finalize eidolon-workflow-integration behavior delta" status="DONE" order="0"/>
+          <Task id="T2.2" name="Finalize package/tool/effect/fact authority decisions" status="DONE" order="1"/>
+          <Task id="T2.3" name="Finalize design for runtime tools, authoring tools, effect adapters and recovery" status="DONE" order="2"/>
         </SubNodes>
       </TaskGroup>
-      <TaskGroup id="P3" name="Implementation readiness review" status="NOT_STARTED" order="2">
+      <TaskGroup id="P3" name="Implementation readiness review" status="DONE" order="2">
         <Description>Prepare this architecture track for implementation handoff without changing Eidolon source in this track.</Description>
         <SubNodes>
-          <Task id="T3.1" name="Identify follow-up implementation tracks and entrypoints" status="NOT_STARTED" order="0"/>
-          <Task id="T3.2" name="Validate Codument artifacts and path hygiene" status="NOT_STARTED" order="1"/>
+          <Task id="T3.1" name="Identify follow-up implementation tracks and entrypoints" status="DONE" order="0"/>
+          <Task id="T3.2" name="Validate Codument artifacts and path hygiene" status="DONE" order="1"/>
         </SubNodes>
         <Hooks>
           <Hook on="phase:after"><cdt:AttractorCheck use="coding"/></Hook>

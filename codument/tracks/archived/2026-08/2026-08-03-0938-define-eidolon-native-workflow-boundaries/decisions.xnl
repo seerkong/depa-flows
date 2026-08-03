@@ -81,4 +81,34 @@
     <answer ?>Use Eidolon's existing actor/fiber/delegate/detached mechanisms; do not create a workflow-specific actor/session special case.</?>
     <rationale ?>Long-running recovery and evidence are already solved in the actor runtime, so workflow should coordinate it rather than reimplement it.</?>
   )>
+
+  <decision #eidolon.workflow.data_subgraph {
+    status = "accepted"
+    priority = "P0"
+  }
+  (
+    <question ?>How should workflow-owned state be represented if it becomes native Eidolon state?</?>
+    <answer ?>Add an explicit workflow data-subgraph contract for orchestration facts and refs, while preserving existing actor, session, conversation, tool, provider, runtime-control, checkpoint, member, holon and detached-task authorities.</?>
+    <rationale ?>A new additive data-subgraph makes workflow ownership visible without stealing live truth from mature Eidolon domains.</?>
+  )>
+
+  <decision #eidolon.workflow.sidecar_injection {
+    status = "accepted"
+    priority = "P0"
+  }
+  (
+    <question ?>How should workflow persistence paths be supplied?</?>
+    <answer ?>Eidolon host/session runtime should inject workflow roots or sidecar capabilities; portable depa-flows packages must not discover `.eidolon` paths from ambient cwd or hidden directory conventions.</?>
+    <rationale ?>This preserves depa-flows portability and keeps `.eidolon` as a host-layer resource convention.</?>
+  )>
+
+  <decision #eidolon.workflow.coordinator_recovery {
+    status = "accepted"
+    priority = "P0"
+  }
+  (
+    <question ?>Who controls checkpoint and recovery cadence while workflow runs?</?>
+    <answer ?>Workflow tools should schedule actor/fiber/tool/provider work and let Eidolon's runtime coordinator handle safepoints, persistence flushes, checkpoints and recovery before workflow reconciles node refs.</?>
+    <rationale ?>Direct workflow writes to checkpoint/session files would bypass runtime-control safety checks and recreate the recovery drift this integration is meant to avoid.</?>
+  )>
 )>
