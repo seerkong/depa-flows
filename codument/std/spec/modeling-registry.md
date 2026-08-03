@@ -2,7 +2,9 @@
 
 > `codument/modeling/` 是项目的**领域建模真源**（领域本体 / attractor 载体）。与 `codument/behaviors/`（行为契约）和 `codument/engineering/`（工程知识真源）正交：behaviors 答“系统应有什么可测行为”，modeling 答“系统的结构真相是什么”（对象、类型、状态机、模块依赖、事实源、actor），engineering 答“人和 AI 应该如何实现、维护、排障”。
 >
-> 仅当 `codument/config/modeling.xml` 的 modeling profile `enabled` 时启用；默认关，存量项目无感。
+> modeling **默认启用**：缺失 `codument/config/modeling.xml` 时按 `enabled=true` 处理，fresh init 模板也生成 `enabled="true"`；已有 workspace 显式配置 `enabled="false"` 时必须保持关闭，不得被默认值或升级覆盖。
+>
+> **启用状态与 delta 义务分离**：只有对象、状态机、policy、模块边界、事实源、actor/component IO 等结构知识变化时，track 才生成或维护 `modeling_deltas/`；普通 track 若无结构变化，不强制生成 delta，也不创建空 registry。
 >
 > XNL 语法权威见 [std/spec/xnl-format.md](./xnl-format.md)。
 
@@ -40,11 +42,18 @@ codument/modeling/
 
 ## 应用 delta（归档时）
 
-见 `std/spec/modeling-delta.md`。简述：base = track create 时记录的**宿主 git commit id**；archive 取 base(从宿主 git 物化) + ours(当前工作树) + theirs(track 的 `modeling_deltas`)，用 **xnl-vfs `xnlFileHandler.merge` 临时**做节点级 3-way 合并，写回工作树并由宿主 git 提交；冲突 issues-first 报告，不静默覆盖。
+见 `std/spec/modeling-delta.md`。简述：base = track create 时记录的**宿主 git commit id**；archive 取 base（从宿主 git 物化）+ ours（当前工作树）+ theirs（track 的 `modeling_deltas`），用 **xnl-vfs `xnlFileHandler.merge` 临时**做真实节点级 3-way 合并。结果先进入与 behavior / engineering 共用的 transaction staging；全部 prepare、校验和冲突检测成功后才做 rollback-capable commit，成功后才移动 track。首次有效 delta 可在 commit 时创建 registry；无 delta 不创建空 registry。
+
+## 初始态与校验
+
+- missing / empty modeling registry 是合法初态：`codument modeling validate` 报 warning，不报 missing-domain error。
+- registry 一旦包含实际 XNL 节点，就必须存在 `domain` plane；未知 derived plane 仍只报 warning。
+- 首次有效 `modeling_deltas` 归档通过真实三方 merge 产生 `codument/modeling/`；仅仅 enabled 不会物化空目录。
 
 ## 设计取舍
 
 - modeling 是**结构真源**层，不与代码/docs 争夺实现真源（实现真源在代码 + `codument/engineering`）。
 - 复用 xnl 的**节点级 merge 算法**（优于 git 行级合并），但**不持久化平行 vcs 仓库**——历史/协作交宿主 git，xnl-vfs/vcs 只当临时合并引擎。
 - 不自建 delta 节点类型与 apply 算法。
-- 默认关：无 `config/modeling.xml` 或 profile 未 enabled → 全流程跳过，行为不变。
+- 默认开：缺失 `config/modeling.xml` 视为 enabled；只有显式 `enabled="false"` 才跳过 modeling 全流程。
+- enablement 只决定能力是否可用，不等于每个 track 都必须生成 modeling delta。

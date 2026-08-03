@@ -1,0 +1,44 @@
+<decisions #establish-ai-agent-and-ai-data-workflows-on-depa-flows {
+  version = "1"
+}
+(
+  <decision #mission.scope.foundation {
+    status = "accepted"
+    priority = "P0"
+  }
+  (
+    <question ?>两个新 AI workflow 类型应建立在哪个底座上？</?>
+    <answer ?>AI Ctrl Workflow 基于 WorkCtrlFlow；AI Data Workflow 基于 EagerDataFlow。</?>
+    <rationale ?>这是用户明确约束，也是避免引入替代 flow engine 的核心边界。</?>
+  )>
+
+  <decision #mission.scope.resource_format {
+    status = "accepted"
+    priority = "P0"
+  }
+  (
+    <question ?>应用 bundle workspace authoring 使用什么资源格式？</?>
+    <answer ?>使用本仓库 XNL bundle/resource 标准；不引入 XML authoring。</?>
+    <rationale ?>新流类型必须和现有 flow-dsl 示例与校验方向一致。</?>
+  )>
+
+  <decision #mission.scope.effect_provider {
+    status = "accepted"
+    priority = "P0"
+  }
+  (
+    <question ?>AI effect provider 如何执行？</?>
+    <answer ?>作为库内可编程嵌入能力，通过 runtime/config 注入；不依赖外部 CLI。</?>
+    <rationale ?>这符合 DEPA 的显式 effect 契约与核心逻辑分离边界。</?>
+  )>
+
+  <decision #mission.scope.path_hygiene {
+    status = "accepted"
+    priority = "P0"
+  }
+  (
+    <question ?>绝对路径和外部参考信息如何持久化？</?>
+    <answer ?>只能放入 mission/track 的 ignored analysis 或 reports 中；受版本管理文件只写逻辑角色和协议约束。</?>
+    <rationale ?>这是用户明确约束，也避免宿主环境信息污染可分发资源。</?>
+  )>
+)>

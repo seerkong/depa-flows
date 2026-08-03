@@ -1,13 +1,13 @@
 # L3 · flow-core statements
 
-> 本页定义 InstantFlow、WorkFlow、BizProcess 共享的公开 CtrlFlow authoring grammar。产品扩展 statement 见各 `spec/<profile>/nodes.md`。
+> 本页定义 InstantCtrlFlow、WorkCtrlFlow、BPCtrlFlow 共享的公开 CtrlFlow authoring grammar。产品扩展 statement 见各 `spec/<profile>/nodes.md`。
 
 ## 根与有序语句
 
 三个产品根都是可执行 definition。它们的 `[]` 直接保存 statements，按声明顺序执行；嵌套 body 的 `[]` 遵守同一规则。
 
 ```xnl
-<WorkFlow #depa.flows.demo.OrderRouting apiVersion="depa.flows/v1" version="1.0.0" [
+<WorkCtrlFlow #depa.flows.demo.OrderRouting apiVersion="depa.flows/v1" version="1.0.0" [
   <Run #load-order {
     src = "vfs://./flow-code/order.ts#loadOrder"
   }>
@@ -101,7 +101,7 @@ export function isAccepted(runtime, input, config) {
 4. 全部为 `false` 时执行可选 `Otherwise[]`；没有 `Otherwise` 时 `If` 是 no-op，继续根或外层 body 的下一条 statement。
 5. predicate 的技术失败直接使 `If` 技术失败；它不是 `false`。
 
-WorkFlow/BizProcess 在完成选择后必须记录 branch decision；恢复时复用已发生决策，不重新求值改变路径。
+WorkCtrlFlow/BPCtrlFlow 在完成选择后必须记录 branch decision；恢复时复用已发生决策，不重新求值改变路径。
 
 ## `Fallback`
 

@@ -4,7 +4,7 @@
     single_writer = "modeling://runtime/flow/scheduler"
     derived_from = "modeling://domain/flow/runtime_lifecycle"
   } [
-    <desc ?>WorkFlow/BizProcess 的 snapshot 是可恢复运行事实，不得回写 flow definition。</?>
+    <desc ?>WorkCtrlFlow/BPCtrlFlow 的 snapshot 是可恢复运行事实，不得回写 flow definition。</?>
     <types ?t>interface FlowSnapshot { treeId: string; tickNo: number; status: "Waiting" | "Completed" | "Failed"; openWaitHandles: readonly WaitHandle[] }</?t>
     <fact-source ?>Flow definition 是输入事实；snapshot store 是唯一写入口；runtime 只通过 dependency port 使用它。</?>
   ]>

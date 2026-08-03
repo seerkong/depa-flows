@@ -1,0 +1,14 @@
+<decisions #document-ai-workflows-and-xnl-bundle-examples {
+  version = "1"
+}
+(
+  <decision #track.docs.examples.checker {
+    status = "accepted"
+    priority = "P0"
+  }
+  (
+    <question ?>Should examples be merely illustrative or part of the checker surface?</?>
+    <answer ?>They should be checkable examples and therefore part of the flow-dsl-check surface.</?>
+    <rationale ?>This prevents the new docs from drifting away from accepted XNL authoring syntax.</?>
+  )>
+)>

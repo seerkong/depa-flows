@@ -6,14 +6,15 @@
 
 CtrlFlow 是一套共享的 **statements 语法、canonical AST 和编辑投影**，不形成可独立加载的 definition unit。公开控制流产品只有：
 
-- `InstantFlow`：一次即时执行，不允许持久挂起。
-- `WorkFlow`：可挂起、快照、恢复和记录已发生决策。
-- `BizProcess`：在 WorkFlow 生命周期上增加 TaskSpace 与人工任务事实。
+- `InstantCtrlFlow`：一次即时执行，不允许持久挂起。
+- `WorkCtrlFlow`：可挂起、快照、恢复和记录已发生决策。
+- `BPCtrlFlow`：在 WorkCtrlFlow 生命周期上增加 TaskSpace 与人工任务事实。
+- `AICtrlWorkflow`：在 WorkCtrlFlow 生命周期上增加 AI runtime context、messages/materials 与 embedded effects。
 
 三个产品根的 `[]` 都直接承载有序 CtrlFlow statements。列表顺序本身就是顺序语义，不需要根包装：
 
 ```xnl
-<InstantFlow #depa.flows.demo.PriceQuote apiVersion="depa.flows/v1" version="1.0.0" [
+<InstantCtrlFlow #depa.flows.demo.PriceQuote apiVersion="depa.flows/v1" version="1.0.0" [
   <Run #load-quote {
     src = "vfs://./flow-code/quote.ts#loadQuote"
   }>
@@ -36,16 +37,18 @@ CtrlFlow 是一套共享的 **statements 语法、canonical AST 和编辑投影*
 ]>
 ```
 
-`EagerDataFlow` 是另一种公开执行产品，根 `[]` 直接承载一次调用内主动求值的 DAG nodes；它不使用 CtrlFlow statements 或其内部计划，也不是长生命周期的 lazy signal DataGraph。
+`EagerDataFlow` 是另一种公开执行产品，根 `[]` 直接承载一次调用内主动求值的 DAG nodes；它不使用 CtrlFlow statements 或其内部计划，也不是长生命周期的 lazy signal DataGraph。`AIDataWorkflow` 在 EagerDataFlow authoring plan 之上增加可恢复 RunGraph、patch/generation/invalidation 与 run-local semantic reuse 状态。
 
 ## 产品与制品矩阵
 
 | 产品 | definition 根 | 目录入口 | 根 `[]` | 根 `()` | 跨 unit scheme |
 |---|---|---|---|---|---|
-| InstantFlow | `<InstantFlow>` | `manifest.xnl` | 有序 CtrlFlow statements | 必需唯一 `FlowContract`，其余可选 | `instant-flow://<FQN>` |
-| WorkFlow | `<WorkFlow>` | `manifest.xnl` | 有序 CtrlFlow statements | 必需唯一 `FlowContract`，其余可选 | `work-flow://<FQN>` |
-| BizProcess | `<BizProcess>` | `manifest.xnl` | 有序 CtrlFlow statements | 必需唯一 `FlowContract`，其余可选 | `biz-process://<FQN>` |
+| InstantCtrlFlow | `<InstantCtrlFlow>` | `manifest.xnl` | 有序 CtrlFlow statements | 必需唯一 `FlowContract`，其余可选 | `instant-ctrl-flow://<FQN>` |
+| WorkCtrlFlow | `<WorkCtrlFlow>` | `manifest.xnl` | 有序 CtrlFlow statements | 必需唯一 `FlowContract`，其余可选 | `work-ctrl-flow://<FQN>` |
+| BPCtrlFlow | `<BPCtrlFlow>` | `manifest.xnl` | 有序 CtrlFlow statements | 必需唯一 `FlowContract`，其余可选 | `bp-ctrl-flow://<FQN>` |
 | EagerDataFlow | `<EagerDataFlow>` | `manifest.xnl` | DAG nodes | `FlowContract` 与可选 `FlowAuthoring` | `eager-data-flow://<FQN>` |
+| AICtrlWorkflow | `<AICtrlWorkflow>` | `manifest.xnl` | 有序 CtrlFlow statements | `FlowContract` 与 AI workflow resource refs | `resource://<FQN>` |
+| AIDataWorkflow | `<AIDataWorkflow>` | `manifest.xnl` | DAG nodes | `FlowContract` 与 AI workflow resource refs | `resource://<FQN>` |
 
 单文件 definition 可使用任意描述性 `.xnl` 文件名；目录 bundle 的入口一律为 `manifest.xnl`。域 facet 的文件名保留点号（例如 `state.def.xnl`、`task.space.xnl`），对应 URI scheme 使用单数 kebab-case（例如 `state-def://`、`task-space://`）。所有产品都遵守 metadata、`{}`、`()`、`[]` 四段职责与 `output = fn(runtime, input, config)` 动态代码协议。
 
@@ -55,14 +58,17 @@ CtrlFlow 是一套共享的 **statements 语法、canonical AST 和编辑投影*
 L1  foundation/        XNL 分段、命名/引用、DEPA 动态代码协议
        ↑
 L2  std/behavior-tree/ 内部 BehaviorTreePlan 投影公理
-L2  std/instant-flow/  InstantFlow 生命周期 profile
-L2  std/work-flow/     WorkFlow 生命周期 profile
-L2  std/biz-process/   BizProcess 生命周期 profile
+L2  std/instant-ctrl-flow/  InstantCtrlFlow 生命周期 profile
+L2  std/work-ctrl-flow/     WorkCtrlFlow 生命周期 profile
+L2  std/bp-ctrl-flow/   BPCtrlFlow 生命周期 profile
 L2  std/eager-data-flow/ EagerDataFlow DAG 执行公理
+L2  std/ai-ctrl-workflow/ AICtrlWorkflow 生命周期 profile
+L2  std/ai-data-workflow/ AIDataWorkflow DAG + RunGraph 公理
        ↑
 L3  spec/flow-core/    公共 CtrlFlow 文件、statement、引用与代码协议
 L3  spec/<profile>/    各产品 capability 与扩展节点
 L3  spec/eager-data-flow/ EagerDataFlow contract、node、port 与 subflow
+L3  spec/ai-workflow/  AI workflow app bundle resource tree、logical refs 与 XNL-only authoring
 ```
 
 遇到未明示的写法，先按 L1 分段与引用公理推导，再由 flow-core 和对应 profile 收窄；不得从实现细节或旧 bundle 反推新语法。
@@ -75,19 +81,24 @@ L3  spec/eager-data-flow/ EagerDataFlow contract、node、port 与 subflow
 | L1 | [foundation/naming-axioms.md](foundation/naming-axioms.md) | 文件、FQN、URI 和 code ref 怎么命名。 |
 | L1 | [foundation/depa-axioms.md](foundation/depa-axioms.md) | 动态代码的四边界与函数协议。 |
 | L2 | [std/behavior-tree/axioms.md](std/behavior-tree/axioms.md) | authoring AST 如何投影为内部执行计划。 |
-| L2 | [std/instant-flow/axioms.md](std/instant-flow/axioms.md) | InstantFlow 的生命周期限制。 |
-| L2 | [std/work-flow/axioms.md](std/work-flow/axioms.md) | WorkFlow 的挂起、快照与恢复。 |
-| L2 | [std/biz-process/axioms.md](std/biz-process/axioms.md) | BizProcess 的 TaskSpace 与业务结果。 |
+| L2 | [std/instant-ctrl-flow/axioms.md](std/instant-ctrl-flow/axioms.md) | InstantCtrlFlow 的生命周期限制。 |
+| L2 | [std/work-ctrl-flow/axioms.md](std/work-ctrl-flow/axioms.md) | WorkCtrlFlow 的挂起、快照与恢复。 |
+| L2 | [std/bp-ctrl-flow/axioms.md](std/bp-ctrl-flow/axioms.md) | BPCtrlFlow 的 TaskSpace 与业务结果。 |
 | L2 | [std/eager-data-flow/axioms.md](std/eager-data-flow/axioms.md) | EagerDataFlow 的 eager DAG、并发 ready scheduling、错误与 lazy graph 边界。 |
+| L2 | [std/ai-ctrl-workflow/axioms.md](std/ai-ctrl-workflow/axioms.md) | AICtrlWorkflow 的 WorkCtrlFlow substrate、runtime context 与 effect 边界。 |
+| L2 | [std/ai-data-workflow/axioms.md](std/ai-data-workflow/axioms.md) | AIDataWorkflow 的 EagerDataFlow substrate、RunGraph 与 semantic reuse。 |
 | L3 | [spec/flow-core/nodes.md](spec/flow-core/nodes.md) | 公共 statements 的字段和完整示例。 |
 | L3 | [spec/flow-core/orchestration.md](spec/flow-core/orchestration.md) | 公共语义原语、产品 capability 与 FlowContract。 |
 | L3 | [spec/flow-core/files.md](spec/flow-core/files.md) | 单文件和目录 bundle 怎么组织。 |
 | L3 | [spec/flow-core/refs.md](spec/flow-core/refs.md) | code ref 和 bundle 内引用怎么解析。 |
 | L3 | [spec/flow-core/domains.md](spec/flow-core/domains.md) | 哪些事实是定义、派生物或运行态。 |
-| L3 | [spec/instant-flow/nodes.md](spec/instant-flow/nodes.md) · [spec/instant-flow/domains.md](spec/instant-flow/domains.md) | InstantFlow statements 与 capability。 |
-| L3 | [spec/work-flow/nodes.md](spec/work-flow/nodes.md) · [spec/work-flow/domains.md](spec/work-flow/domains.md) | WorkFlow statements、恢复与持久事实。 |
-| L3 | [spec/biz-process/nodes.md](spec/biz-process/nodes.md) · [spec/biz-process/domains.md](spec/biz-process/domains.md) | BizProcess statements、TaskSpace 与事实 owner。 |
+| L3 | [spec/instant-ctrl-flow/nodes.md](spec/instant-ctrl-flow/nodes.md) · [spec/instant-ctrl-flow/domains.md](spec/instant-ctrl-flow/domains.md) | InstantCtrlFlow statements 与 capability。 |
+| L3 | [spec/work-ctrl-flow/nodes.md](spec/work-ctrl-flow/nodes.md) · [spec/work-ctrl-flow/domains.md](spec/work-ctrl-flow/domains.md) | WorkCtrlFlow statements、恢复与持久事实。 |
+| L3 | [spec/bp-ctrl-flow/nodes.md](spec/bp-ctrl-flow/nodes.md) · [spec/bp-ctrl-flow/domains.md](spec/bp-ctrl-flow/domains.md) | BPCtrlFlow statements、TaskSpace 与事实 owner。 |
 | L3 | [spec/eager-data-flow/nodes.md](spec/eager-data-flow/nodes.md) · [spec/eager-data-flow/domains.md](spec/eager-data-flow/domains.md) · [spec/eager-data-flow/files.md](spec/eager-data-flow/files.md) · [spec/eager-data-flow/refs.md](spec/eager-data-flow/refs.md) | EagerDataFlow 根、FlowContract、五种节点、端口、waitFor 与 subflow。 |
+| L3 | [spec/ai-workflow/resources.md](spec/ai-workflow/resources.md) | AI workflow app bundle resource tree、logical refs 与 XNL-only authoring。 |
+| L3 | [spec/ai-workflow/ctrl-workflow.md](spec/ai-workflow/ctrl-workflow.md) | AICtrlWorkflow root、messages/materials、state projection 与 effects。 |
+| L3 | [spec/ai-workflow/data-workflow.md](spec/ai-workflow/data-workflow.md) | AIDataWorkflow root、RunGraph、GraphPatch、invalidation 与 reuse。 |
 
 ## 公共语义速查
 
@@ -98,6 +109,8 @@ L3  spec/eager-data-flow/ EagerDataFlow contract、node、port 与 subflow
 - `Run` 调用代码，其 output 直接成为下一条 statement 的 input；`Return` 立即终止当前 flow 并产生公开 output。
 - 所有动态代码遵守 `output = fn(runtime, input, config)`；predicate 只是 output 被约束为 boolean 的同一协议。
 - `EagerDataFlow` 的 `flow-port://` 是 data edge，`flow-node://` 是 completion edge；两者共同参与 DAG 校验，所有 ready nodes 可并发调度；`SubFlowNode.flow` 只使用 `eager-data-flow://<FQN>`。
+- `AICtrlWorkflow` 复用 WorkCtrlFlow statements，可挂起/恢复；AI runtime context、state store 和 embedded effects 由 wrapper 注入。
+- `AIDataWorkflow` 复用 EagerDataFlow nodes；definition 不保存运行结果，RunGraph 保存 patch/generation/invalidation/reuse 运行态。
 
 ## 事实源
 
@@ -110,14 +123,24 @@ XNL Flow definition
 XNL EagerDataFlow definition
   -> serializable DAG plan (dataEdges + waitForEdges + subflowEdges)
   -> eager invocation scheduler
+
+XNL AICtrlWorkflow definition
+  -> WorkCtrlFlow-backed definition binding
+  -> workflow snapshot + AI run record projection
+
+XNL AIDataWorkflow definition
+  -> EagerDataFlow-backed definition binding
+  -> AI RunGraph state (patches + generations + invalidations + reuse records)
 ```
 
 - XNL definition：唯一 authoring 真源。
 - CtrlFlow AST：解析后的规范内存投影，不形成可独立加载的 definition。
 - BehaviorTreePlan：编译器可重建的内部执行计划，不得持久化为 authoring definition。
-- WorkFlow snapshot：某个运行实例的生命周期状态，不得回写 definition。
+- WorkCtrlFlow snapshot：某个运行实例的生命周期状态，不得回写 definition。
 - TaskSpace store：人工任务事实源；业务结果作为 data 进入后续 predicate。
 - FlowAuthoring：布局与 viewport 真源，不复制 statement topology 或配置。
+- AI workflow runtime roots：运行期注入事实，不属于 bundle authoring identity。
+- AIDataWorkflow RunGraph：某个 run 的可恢复状态，不得回写 definition root。
 
 ## Removed Authoring Syntax
 

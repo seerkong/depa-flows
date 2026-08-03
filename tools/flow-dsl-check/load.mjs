@@ -2,7 +2,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { parseXnl } from 'xnl-core';
 
-export const FORMS = ['InstantFlow', 'WorkFlow', 'BizProcess'];
+export const CTRL_FLOW_FORMS = ['InstantCtrlFlow', 'WorkCtrlFlow', 'BPCtrlFlow', 'AICtrlWorkflow'];
+export const DAG_FORMS = ['EagerDataFlow', 'AIDataWorkflow'];
+export const FORMS = [...CTRL_FLOW_FORMS, ...DAG_FORMS];
 
 export const FACET_TAGS = {
   'flow.contract': 'FlowContract',
@@ -17,7 +19,7 @@ const TAG_TO_FACET = Object.fromEntries(Object.entries(FACET_TAGS).map(([name, t
 const LEGACY_ROOT_CODES = {
   Tree: ['legacy-tree-domain', 'Tree authoring is removed; put statements directly in the product root []'],
   ActionTypes: ['legacy-action-types-domain', 'action.types authoring is removed; put code refs on statements'],
-  CtrlFlow: ['legacy-ctrl-flow-root', 'standalone CtrlFlow is removed; use an InstantFlow, WorkFlow, or BizProcess root'],
+  CtrlFlow: ['legacy-ctrl-flow-root', 'standalone CtrlFlow is removed; use an InstantCtrlFlow, WorkCtrlFlow, or BPCtrlFlow root'],
   DataFlow: ['legacy-data-flow-root', 'DataFlow is removed; data DAG definitions use EagerDataFlow'],
 };
 
@@ -85,7 +87,7 @@ export function loadBundle(dir) {
 
   const form = FORMS.find((candidate) => fileRoots[candidate]);
   if (!form) {
-    if (!diagnostics.length) note('no-container', `no InstantFlow, WorkFlow, or BizProcess root found in ${dir}`);
+    if (!diagnostics.length) note('no-container', `no supported flow root found in ${dir}`);
     return { diagnostics };
   }
 

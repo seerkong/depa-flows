@@ -1,4 +1,4 @@
-import type { TaskStepResult } from 'biz-process-contract';
+import type { TaskStepResult } from 'bp-ctrl-flow-contract';
 
 interface ExpenseRuntime {
   payout(expense: Expense): Promise<{ payoutId: string }>;

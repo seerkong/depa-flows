@@ -40,7 +40,7 @@ EagerDataFlowAuthoringPlan
 | child invocation state | target EagerDataFlow runner | SubFlowNode 调用期间隔离 |
 | effect state | runtime/effect owner | 由 effect 契约决定，flow 不复制 |
 
-EagerDataFlow 没有持久 snapshot、resume message、signal store 或 seed。若进程中断，是否由调用者重新发起取决于外部幂等策略；definition 本身不承诺 WorkFlow 式恢复。
+EagerDataFlow 没有持久 snapshot、resume message、signal store 或 seed。若进程中断，是否由调用者重新发起取决于外部幂等策略；definition 本身不承诺 WorkCtrlFlow 式恢复。
 
 ## 与 lazy DataGraph 的边界
 

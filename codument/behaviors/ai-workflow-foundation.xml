@@ -1,0 +1,47 @@
+<behaviors capability="ai-workflow-foundation" version="1">
+  <requirement id="substrate-binding">
+    <statement>The system SHALL expose AI workflow profile descriptors that explicitly bind AI Ctrl Workflow to WorkCtrlFlow and AI Data Workflow to EagerDataFlow.</statement>
+    <suite id="profile-descriptors" name="Profile descriptors">
+      <case id="agent-workflow-substrate">
+        <given>An AI Ctrl Workflow descriptor is inspected</given>
+        <when>The descriptor substrate is read</when>
+        <then>The descriptor SHALL identify WorkCtrlFlow as the substrate</then>
+      </case>
+      <case id="data-workflow-substrate">
+        <given>An AI Data Workflow descriptor is inspected</given>
+        <when>The descriptor substrate is read</when>
+        <then>The descriptor SHALL identify EagerDataFlow as the substrate</then>
+      </case>
+    </suite>
+  </requirement>
+  <requirement id="runtime-injection">
+    <statement>The system SHALL model global roots, workspace roots, state stores and AI effect providers as injected runtime/config contracts.</statement>
+    <suite id="runtime-contracts" name="Runtime contracts">
+      <case id="no-hardcoded-roots">
+        <given>A foundation helper creates an AI workflow runtime context</given>
+        <when>The helper receives wrapper-provided roots</when>
+        <then>The helper SHALL preserve those roots without constructing host-specific paths</then>
+      </case>
+      <case id="embedded-effect-provider">
+        <given>An AI workflow node requires an AI effect</given>
+        <when>The node invokes the provider through runtime</when>
+        <then>The system SHALL use the injected provider interface instead of an external CLI boundary</then>
+      </case>
+    </suite>
+  </requirement>
+  <requirement id="reuse-policy-vocabulary">
+    <statement>The system SHALL define node-level reuse policy vocabulary with semantic-hash as the default machine node policy and never as the default manual node policy.</statement>
+    <suite id="reuse-policy" name="Reuse policy">
+      <case id="machine-default">
+        <given>A non-manual AI workflow node has no explicit reuse policy</given>
+        <when>The platform resolves the effective policy</when>
+        <then>The policy SHALL be semantic-hash</then>
+      </case>
+      <case id="manual-default">
+        <given>A manual AI workflow node has no explicit reuse policy</given>
+        <when>The platform resolves the effective policy</when>
+        <then>The policy SHALL be never</then>
+      </case>
+    </suite>
+  </requirement>
+</behaviors>

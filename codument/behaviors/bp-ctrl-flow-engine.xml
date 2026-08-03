@@ -1,0 +1,47 @@
+<behaviors capability="bp-ctrl-flow-engine" version="1">
+  <requirement id="task-step-bridge">
+    <statement>TaskStep SHALL 是流树引用任务树的唯一桥：绑定 TaskSpace 直接子节点（否则加载期拒绝）、无 assignTo、进入置任务 ACTIVE 并执行 before-hooks、任务/组终态映射节点结果（DONE/FORWARDED→Success，REFUSED/ABANDONED→Failure）。</statement>
+    <suite name="task-step-bridge">
+      <case name="进入激活">
+        <given>expense-approval demo</given>
+        <when>start</when>
+        <then>主管任务 ACTIVE，流程挂起于 manager-approval</then>
+      </case>
+      <case name="组绑定">
+        <given>大额路径</given>
+        <when>主管 complete</when>
+        <then>挂起于 grp_finance，组内首任务自动 ACTIVE</then>
+      </case>
+    </suite>
+  </requirement>
+  <requirement id="approval-signals">
+    <statement>人工操作 SHALL 经任务状态机校验后作为 ResumeSignal 推进流程；非法转移被拒绝且流程状态不变；审批分支由节点结果驱动（拒绝走 Selector 兜底分支，流程正常收敛）。</statement>
+    <suite name="approval-signals">
+      <case name="同意路径">
+        <given>主管+财务先后 complete</given>
+        <when>operateTask ×2</when>
+        <then>COMPLETED，日志含 expense approval finished</then>
+      </case>
+      <case name="拒绝路径">
+        <given>主管 refuse</given>
+        <when>operateTask</when>
+        <then>驳回分支收敛 COMPLETED，财务任务保持 NOT_STARTED</then>
+      </case>
+      <case name="非法转移">
+        <given>NOT_STARTED 财务任务</given>
+        <when>直接 complete</when>
+        <then>抛 TaskTransitionError，open handle 不变</then>
+      </case>
+    </suite>
+  </requirement>
+  <requirement id="restart-continuity">
+    <statement>审批等待期间进程 SHALL 可退出：任务树与流程快照均外置（File 存储），全新引擎实例可继续办理至完成。</statement>
+    <suite name="restart-continuity">
+      <case name="重启续办">
+        <given>每步之间全新实例 + 同一存储</given>
+        <when>逐步审批</when>
+        <then>COMPLETED</then>
+      </case>
+    </suite>
+  </requirement>
+</behaviors>

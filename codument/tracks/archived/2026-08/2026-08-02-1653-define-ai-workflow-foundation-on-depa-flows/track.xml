@@ -1,0 +1,56 @@
+<Track id="define-ai-workflow-foundation-on-depa-flows" version="1" xmlns:cdt="urn:codument:v1">
+  <Metadata>
+    <Status>completed</Status>
+    <Goal>Define the shared TypeScript foundation for AI Ctrl Workflow and AI Data Workflow on the existing flow substrates.</Goal>
+    <Description>Create small contract/logic package boundaries, shared runtime vocabulary, substrate descriptors and validation coverage.</Description>
+    <QuestionMode>decision-tree</QuestionMode>
+    <QuestionSeverity>light</QuestionSeverity>
+    <CommitMode>manual</CommitMode>
+    <CreatedAt>2026-08-02T13:36:20Z</CreatedAt>
+    <UpdatedAt>2026-08-02T13:53:04Z</UpdatedAt>
+  </Metadata>
+
+  <Ports scope="track">
+    <MaterialBundle role="input" name="behavior-deltas" domain="behavior" path="vfs://./behavior_deltas/"/>
+    <MaterialBundle role="output" name="packages" domain="source" path="vfs://@/packages/"/>
+    <MaterialBundle role="output" name="behavior" domain="codument" path="vfs://@/codument/behaviors/"/>
+  </Ports>
+
+  <TaskSpace id="space_define-ai-workflow-foundation-on-depa-flows" name="define-ai-workflow-foundation-on-depa-flows" version="1">
+    <Description>Foundation package and contract work for AI workflow profiles.</Description>
+    <SubNodes>
+      <TaskGroup id="P1" name="Contract vocabulary" status="DONE" order="0">
+        <Description>Define shared terms, substrate descriptors and runtime injection contracts.</Description>
+        <SubNodes>
+          <Task id="T1.1" name="Inspect existing WorkCtrlFlow and EagerDataFlow public contracts" status="DONE" order="0"/>
+          <Task id="T1.2" name="Design shared AI workflow vocabulary and substrate descriptors" status="DONE" order="1"/>
+        </SubNodes>
+      </TaskGroup>
+
+      <TaskGroup id="P2" name="Package scaffolding" status="DONE" order="1">
+        <Description>Add minimal foundation packages and public exports.</Description>
+        <SubNodes>
+          <Task id="T2.1" name="Add AI workflow contract package" status="DONE" order="0"/>
+          <Task id="T2.2" name="Add AI workflow logic package" status="DONE" order="1"/>
+        </SubNodes>
+      </TaskGroup>
+
+      <TaskGroup id="P3" name="Validation" status="DONE" order="2">
+        <Description>Verify package exports, substrate descriptors, reuse policy defaults and path hygiene.</Description>
+        <SubNodes>
+          <Task id="T3.1" name="Add focused tests for descriptors and reuse policy defaults" status="DONE" order="0"/>
+          <Task id="T3.2" name="Run typecheck, tests and path hygiene checks" status="DONE" order="1"/>
+        </SubNodes>
+        <Hooks>
+          <Hook on="phase:after"><cdt:AttractorCheck use="coding"/></Hook>
+        </Hooks>
+      </TaskGroup>
+    </SubNodes>
+  </TaskSpace>
+
+  <Schedule>
+    <Parallel max-concurrent="1" spot-check="true"/>
+  </Schedule>
+
+  <Hooks/>
+</Track>

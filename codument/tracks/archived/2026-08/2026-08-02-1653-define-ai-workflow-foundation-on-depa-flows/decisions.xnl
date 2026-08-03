@@ -1,0 +1,34 @@
+<decisions #define-ai-workflow-foundation-on-depa-flows {
+  version = "1"
+}
+(
+  <decision #track.foundation.package_shape {
+    status = "accepted"
+    priority = "P0"
+  }
+  (
+    <question ?>Where should shared AI workflow contracts live?</?>
+    <answer ?>Create a small shared foundation contract package and a matching logic package.</?>
+    <rationale ?>This avoids coupling the two profile implementations while keeping shared runtime vocabulary consistent.</?>
+  )>
+
+  <decision #track.foundation.substrate_binding {
+    status = "accepted"
+    priority = "P0"
+  }
+  (
+    <question ?>How should substrate ownership be encoded?</?>
+    <answer ?>Export descriptors that explicitly bind AI Ctrl Workflow to WorkCtrlFlow and AI Data Workflow to EagerDataFlow.</?>
+    <rationale ?>A typed descriptor makes the no-alternate-engine constraint visible to downstream code.</?>
+  )>
+
+  <decision #track.foundation.effect_boundary {
+    status = "accepted"
+    priority = "P0"
+  }
+  (
+    <question ?>How are AI effects and runtime roots supplied?</?>
+    <answer ?>They are runtime/config inputs supplied by the wrapper; foundation logic does not construct host-specific implementations.</?>
+    <rationale ?>This preserves the DEPA effect boundary and keeps core helpers testable.</?>
+  )>
+)>

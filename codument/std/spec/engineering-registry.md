@@ -10,7 +10,7 @@
 
 ```text
 codument/engineering/
-├── <plane>/                       global/backend/surface/runtime/storage/agents/operations/...
+├── <plane>/                       global/backend/surface/runtime/storage/agents/actions/...
 │   └── <category>/                overview/howto/rules/examples/reference/troubleshooting/runbooks/code-map
 │       ├── <topic>.xnl            小主题单文件
 │       └── <topic>/               变大后同名文件夹演化

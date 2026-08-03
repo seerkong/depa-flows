@@ -6,7 +6,7 @@
 
 | owner | file / projection | root | entries | entry scheme | 语义 |
 |---|---|---|---|---|---|
-| flow definition | 单文件或 `manifest.xnl` | `InstantFlow` / `WorkFlow` / `BizProcess` | 根 `[]` 中的 statements | 无 | 唯一 topology 与 node config 真源 |
+| flow definition | 单文件或 `manifest.xnl` | `InstantCtrlFlow` / `WorkCtrlFlow` / `BPCtrlFlow` | 根 `[]` 中的 statements | 无 | 唯一 topology 与 node config 真源 |
 | flow contract | 根 `()` 内联或 `flow.contract.xnl` | `FlowContract` | 无 | 产品 flow scheme | 静态 input/output 类型与可调用边界 |
 | `config` | `config.xnl` | `Config` | `ConfigEntry` | `config://` | 静态开关、枚举、常量预设 |
 | `config.def` | `config.def.xnl` | `ConfigDef` | `ConfigEntryDef` | `config-def://` | config shape facet |
@@ -20,8 +20,8 @@ CtrlFlow 只命名共享 statement grammar、canonical AST 和 editor adapter，
 |---|---|---|
 | canonical FlowSpec / CtrlFlow AST | parser/compiler | 可从 XNL definition 重建；不是第二份 authoring 文件 |
 | BehaviorTreePlan | compiler | 内部派生执行计划；不得被 loader 当作公开 definition |
-| WorkFlow snapshot | WorkFlow/BizProcess runtime | 运行实例状态；不得回写 definition |
-| TaskSpace facts | BizProcess task store | 人工任务事实源；结果以 data 进入 flow |
+| WorkCtrlFlow snapshot | WorkCtrlFlow/BPCtrlFlow runtime | 运行实例状态；不得回写 definition |
+| TaskSpace facts | BPCtrlFlow task store | 人工任务事实源；结果以 data 进入 flow |
 | runtime overlay | editor/runtime adapter | 只读投影；不得覆盖 definition 或 FlowAuthoring |
 
 ## Loader Validation

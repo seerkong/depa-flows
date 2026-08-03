@@ -1,6 +1,6 @@
 <behaviors capability="flow-instance" version="1">
   <requirement id="instance-materialization">
-    <statement>WorkFlow/BizProcess 引擎 SHALL 在 start 时把定义 bundle 物化为 instancesDir/&amp;lt;treeId&amp;gt;/ 的冻结拷贝（含脚本），实例终身只从拷贝编译执行；定义后续修改不影响在途实例。</statement>
+    <statement>WorkCtrlFlow/BPCtrlFlow 引擎 SHALL 在 start 时把定义 bundle 物化为 instancesDir/&amp;lt;treeId&amp;gt;/ 的冻结拷贝（含脚本），实例终身只从拷贝编译执行；定义后续修改不影响在途实例。</statement>
     <suite name="instance-materialization">
       <case name="定义修改隔离">
         <given>实例 A 已启动；随后修改定义 tree.xnl</given>
@@ -22,7 +22,7 @@
         <when>读实例 tree.xnl</when>
         <then>runStatus=&quot;COMPLETED&quot;；notify-retry 带 iterations=1</then>
       </case>
-      <case name="BizProcess 任务视图">
+      <case name="BPCtrlFlow 任务视图">
         <given>expense-approval 实例主管审批中</given>
         <when>读实例 task.space.xnl</when>
         <then>task_manager_approve status=&quot;ACTIVE&quot;（真源在 TaskSpaceStore）</then>

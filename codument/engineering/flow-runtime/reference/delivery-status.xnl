@@ -4,15 +4,15 @@
   <scope ?>记录已清空的 mission/track 的最终交付面、未完成边界和验证证据；这是历史删除后的审计索引，不替代代码测试或 behavior registry。</?>
   <source-of-truth ?>代码包、docs/flow-dsl、示例 bundle 和测试是实现真源；本节点只保留交付摘要。</?>
   <missions [
-    <mission #flow-runtime.reference.delivery-status.biz-flow-engine { id = "biz-flow-engine" status = "completed" outcome = "BizFlow TaskStep + task manager + approval lifecycle" }>
-    <mission #flow-runtime.reference.delivery-status.instant-flow-engine { id = "instant-flow-engine" status = "completed" outcome = "bun monorepo + behavior kernel migration + InstantFlow" }>
-    <mission #flow-runtime.reference.delivery-status.work-flow-engine { id = "work-flow-engine" status = "completed" outcome = "snapshot-based interruptible WorkFlow" }>
+    <mission #flow-runtime.reference.delivery-status.bp-ctrl-flow-engine { id = "bp-ctrl-flow-engine" status = "completed" outcome = "BPCtrlFlow TaskStep + task manager + approval lifecycle" }>
+    <mission #flow-runtime.reference.delivery-status.instant-ctrl-flow-engine { id = "instant-ctrl-flow-engine" status = "completed" outcome = "bun monorepo + behavior kernel migration + InstantCtrlFlow" }>
+    <mission #flow-runtime.reference.delivery-status.work-ctrl-flow-engine { id = "work-ctrl-flow-engine" status = "completed" outcome = "snapshot-based interruptible WorkCtrlFlow" }>
     <mission #flow-runtime.reference.delivery-status.flow-dsl-spec { id = "flow-dsl-spec" status = "completed" outcome = "three-layer XNL Flow DSL and tree-flow rules" }>
     <mission #flow-runtime.reference.delivery-status.unify-halfcode-flow-dsl { id = "unify-halfcode-flow-dsl" status = "completed" outcome = "unified four-product flow DSL and local runtime integration" }>
     <mission #flow-runtime.reference.delivery-status.extend-profiled-flow-orchestration { id = "extend-profiled-flow-orchestration" status = "incomplete" outcome = "local profile-aware primitives, runtime and bundles completed; cross-boundary integration and complete verification have no completion evidence in this repository" }>
   ]>
   <tracks [
-    <track #flow-runtime.reference.delivery-status.core { ids = ["bun-monorepo-scaffold" "migrate-processor-control" "add-instant-flow-engine" "add-work-flow-engine" "add-task-manager" "add-biz-flow-engine" "refactor-status-enums" "add-flow-instance-materialization"] status = "completed" }>
+    <track #flow-runtime.reference.delivery-status.core { ids = ["bun-monorepo-scaffold" "migrate-processor-control" "add-instant-ctrl-flow-engine" "add-work-ctrl-flow-engine" "add-task-manager" "add-bp-ctrl-flow-engine" "refactor-status-enums" "add-flow-instance-materialization"] status = "completed" }>
     <track #flow-runtime.reference.delivery-status.dsl { ids = ["add-flow-dsl-tree-spec" "redesign-unified-flow-dsl-spec" "migrate-unified-flow-dsl-bundles" "migrate-profiled-flow-bundles"] status = "completed" }>
     <track #flow-runtime.reference.delivery-status.runtime { ids = ["add-profiled-ctrl-flow-primitives" "implement-unified-ctrl-flow-engines" "implement-profiled-ctrl-flow-runtime" "implement-durable-composite-scheduler" "implement-eager-data-flow-engine"] status = "completed" }>
     <track #flow-runtime.reference.delivery-status.integration-boundary { ids = ["integrate-halfcode-unified-flows" "upgrade-unified-flow-editor" "refactor-flow-editor-capsules" "implement-flow-definition-editing" "implement-vfs-flow-workspace"] status = "not-current-repository" }>

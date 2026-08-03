@@ -1,0 +1,31 @@
+<behavior-patch capability="ai-workflow-docs-examples" version="1">
+  <upsert selector="behavior://ai-workflow-docs-examples/requirements/xnl-docs-and-examples">
+    <requirement id="xnl-docs-and-examples">
+      <statement>The system SHALL document and provide checkable XNL bundle examples for AI Ctrl Workflow and AI Data Workflow.</statement>
+      <suite id="docs" name="Documentation">
+        <case id="document-agent-profile">
+          <given>Readers open the flow-dsl documentation</given>
+          <when>They look for AI Ctrl Workflow guidance</when>
+          <then>The docs SHALL describe the WorkCtrlFlow-backed root, runtime state boundary and embedded effects contract</then>
+        </case>
+        <case id="document-data-profile">
+          <given>Readers open the flow-dsl documentation</given>
+          <when>They look for AI Data Workflow guidance</when>
+          <then>The docs SHALL describe the EagerDataFlow-backed DAG root, RunGraph state boundary and reuse semantics</then>
+        </case>
+      </suite>
+      <suite id="examples" name="Examples">
+        <case id="check-agent-example">
+          <given>An AI Ctrl Workflow example bundle exists</given>
+          <when>The flow-dsl checker runs on it</when>
+          <then>The checker SHALL accept the bundle without diagnostics</then>
+        </case>
+        <case id="check-data-example">
+          <given>An AI Data Workflow example bundle exists</given>
+          <when>The flow-dsl checker runs on it</when>
+          <then>The checker SHALL accept the bundle without diagnostics</then>
+        </case>
+      </suite>
+    </requirement>
+  </upsert>
+</behavior-patch>

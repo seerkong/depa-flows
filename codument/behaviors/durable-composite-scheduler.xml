@@ -1,6 +1,6 @@
 <behaviors capability="durable-composite-scheduler" version="1">
   <requirement id="resume-composites">
-    <statement>WorkFlow 与 BizProcess SHALL 以 snapshot orchestration facts 调度和恢复复合原语。</statement>
+    <statement>WorkCtrlFlow 与 BPCtrlFlow SHALL 以 snapshot orchestration facts 调度和恢复复合原语。</statement>
     <suite id="recovery" name="恢复">
       <case id="no-replay-completed-lane">
         <given>复合节点部分 lane 或 attempt 已完成并持久化</given>

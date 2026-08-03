@@ -1,0 +1,14 @@
+<decisions #integrate-embedded-ai-effect-provider {
+  version = "1"
+}
+(
+  <decision #track.effects.dispatch_boundary {
+    status = "accepted"
+    priority = "P0"
+  }
+  (
+    <question ?>Where should AI workflow effects execute?</?>
+    <answer ?>Effects execute through a programmable embedded provider injected into runtime context, not through an external CLI bridge.</?>
+    <rationale ?>This keeps the flow library usable as a library and preserves explicit runtime boundaries.</?>
+  )>
+)>

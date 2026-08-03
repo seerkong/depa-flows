@@ -45,7 +45,7 @@ codument/modeling/
 进行中的 track 不直接修改 registry：
 
 ```text
-tracks/<id>/modeling_deltas/<plane>/<context>.xnl
+tracks/{pending,active}/<id>/modeling_deltas/<plane>/<context>.xnl
 ```
 
 delta 表达目标态节点；archive 使用宿主 git base + 当前 registry + delta 做节点级 3-way merge，再写回 `codument/modeling/`。

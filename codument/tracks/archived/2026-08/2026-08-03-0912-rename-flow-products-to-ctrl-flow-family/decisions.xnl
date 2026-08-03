@@ -1,0 +1,54 @@
+<decisions #rename-flow-products-to-ctrl-flow-family {
+  version = "1"
+}
+(
+  <decision #naming.ctrl_family {
+    status = "accepted"
+    priority = "P0"
+  }
+  (
+    <question ?>What should the control-flow product family be called?</?>
+    <answer ?>Use `ctrl-flow` as the shared concept and rename public control-flow products to `instant-ctrl-flow`, `work-ctrl-flow` and `bp-ctrl-flow`.</?>
+    <rationale ?>This makes the control-flow lineage explicit and separates lifecycle variants without implying that CtrlFlow is itself a loadable product root.</?>
+  )>
+
+  <decision #naming.ai_ctrl_workflow {
+    status = "accepted"
+    priority = "P0"
+  }
+  (
+    <question ?>What replaces `AI Agent Workflow`?</?>
+    <answer ?>Use `AI Ctrl Workflow` with code/root/package names `AICtrlWorkflow` and `ai-ctrl-workflow`.</?>
+    <rationale ?>The product is AI control-plane orchestration, not merely an agent runner; the name pairs clearly with `AIDataWorkflow`.</?>
+  )>
+
+  <decision #naming.bp_ctrl_flow {
+    status = "accepted"
+    priority = "P0"
+  }
+  (
+    <question ?>Should business process remain outside the ctrl-flow family?</?>
+    <answer ?>No. Rename `BizProcess` / `biz-process` to `BPCtrlFlow` / `bp-ctrl-flow`.</?>
+    <rationale ?>Business process uses the same control-flow substrate plus TaskSpace/manual task facts, so leaving it outside the family would preserve the old conceptual split.</?>
+  )>
+
+  <decision #naming.ai_workflow_umbrella {
+    status = "accepted"
+    priority = "P0"
+  }
+  (
+    <question ?>When should `ai-workflow` remain in names?</?>
+    <answer ?>Keep `AIWorkflow` / `ai-workflow` only for shared umbrella surfaces that apply to both `AICtrlWorkflow` and `AIDataWorkflow`.</?>
+    <rationale ?>This keeps common contracts and tools generic without leaking the old agent-centric product name.</?>
+  )>
+
+  <decision #naming.no_public_legacy_aliases {
+    status = "accepted"
+    priority = "P0"
+  }
+  (
+    <question ?>Should old public names remain supported as aliases?</?>
+    <answer ?>No. This rename is a clean canonical break; temporary internal shims are allowed only during implementation and must be removed before completion.</?>
+    <rationale ?>The product surface is still being formed, so a clean rename avoids long-term ambiguity and compatibility debt.</?>
+  )>
+)>

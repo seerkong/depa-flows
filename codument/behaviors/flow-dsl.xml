@@ -1,6 +1,6 @@
 <behaviors capability="flow-dsl" version="1">
   <requirement id="unified-ctrl-flow-authoring">
-    <statement>系统 SHALL 为 InstantFlow、WorkFlow、BizProcess 提供同一套 CtrlFlow authoring grammar；产品根的列表段 SHALL 直接保存有序 statements，不得要求 Tree、根 Sequence 或嵌套 CtrlFlow 包装。</statement>
+    <statement>系统 SHALL 为 InstantCtrlFlow、WorkCtrlFlow、BPCtrlFlow 提供同一套 CtrlFlow authoring grammar；产品根的列表段 SHALL 直接保存有序 statements，不得要求 Tree、根 Sequence 或嵌套 CtrlFlow 包装。</statement>
     <suite id="root-grammar" name="统一根语法">
       <case id="direct-statements">
         <given>任一三种控制流产品定义</given>
@@ -18,17 +18,17 @@
         <then>系统 SHALL 选择第一个 predicate 为 true 的 Branch，否则选择 Otherwise</then>
       </case>
       <case id="business-result-is-data">
-        <given>BizProcess TaskStep 产生 refused 业务结果</given>
+        <given>BPCtrlFlow TaskStep 产生 refused 业务结果</given>
         <when>流程决定后续路径</when>
         <then>系统 SHALL 把 refused 作为 predicate 可读取的数据而不是技术 Failure</then>
       </case>
     </suite>
   </requirement>
   <requirement id="profile-lifecycle">
-    <statement>规范 SHALL 在共享 CtrlFlow grammar 上分别定义 InstantFlow、WorkFlow、BizProcess 的 capability 和生命周期约束，并区分业务结果、技术失败与挂起。</statement>
+    <statement>规范 SHALL 在共享 CtrlFlow grammar 上分别定义 InstantCtrlFlow、WorkCtrlFlow、BPCtrlFlow 的 capability 和生命周期约束，并区分业务结果、技术失败与挂起。</statement>
     <suite id="profile-capabilities" name="产品 profile">
-      <case id="work-flow-resume">
-        <given>WorkFlow 已执行条件并在后续节点挂起</given>
+      <case id="work-ctrl-flow-resume">
+        <given>WorkCtrlFlow 已执行条件并在后续节点挂起</given>
         <when>实例恢复</when>
         <then>系统 SHALL 复用已记录分支决策而不是重新改变已发生路径</then>
       </case>

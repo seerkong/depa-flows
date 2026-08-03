@@ -8,9 +8,9 @@
     <area #code_map.contracts {
       owner = "depa-flows"
       paths = [
-        "packages/instant-flow-contract"
-        "packages/work-flow-contract"
-        "packages/biz-process-contract"
+        "packages/instant-ctrl-flow-contract"
+        "packages/work-ctrl-flow-contract"
+        "packages/bp-ctrl-flow-contract"
         "packages/eager-data-flow-contract"
         "packages/task-manager-contract"
         "packages/depa-behavior-tree"
@@ -20,9 +20,9 @@
     <area #code_map.logic {
       owner = "depa-flows"
       paths = [
-        "packages/instant-flow-logic"
-        "packages/work-flow-logic"
-        "packages/biz-process-logic"
+        "packages/instant-ctrl-flow-logic"
+        "packages/work-ctrl-flow-logic"
+        "packages/bp-ctrl-flow-logic"
         "packages/eager-data-flow-logic"
         "packages/task-manager-logic"
       ]

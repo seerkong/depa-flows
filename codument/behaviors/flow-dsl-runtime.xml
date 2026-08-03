@@ -1,6 +1,6 @@
 <behaviors capability="flow-dsl-runtime" version="1">
   <requirement id="canonical-bundle-loading">
-    <statement>The loader SHALL parse InstantFlow, WorkFlow and BizProcess root lists as canonical CtrlFlow statements and MUST reject Tree, action.types, standalone CtrlFlow and public behavior-tree authoring nodes.</statement>
+    <statement>The loader SHALL parse InstantCtrlFlow, WorkCtrlFlow and BPCtrlFlow root lists as canonical CtrlFlow statements and MUST reject Tree, action.types, standalone CtrlFlow and public behavior-tree authoring nodes.</statement>
     <suite id="loading" name="canonical loading">
       <case id="direct-root">
         <given>a new product bundle</given>

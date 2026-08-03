@@ -1,4 +1,4 @@
-<WorkFlow #depa.flows.demo.OrderFulfillment apiVersion="depa.flows/v1" version="0.1.0" {
+<WorkCtrlFlow #depa.flows.demo.OrderFulfillment apiVersion="depa.flows/v1" version="0.1.0" {
   title = "订单履约工作流"
 } (
   <FlowContract #depa.flows.demo.OrderFulfillment {

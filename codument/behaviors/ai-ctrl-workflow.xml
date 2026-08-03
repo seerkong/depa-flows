@@ -1,0 +1,17 @@
+<behaviors capability="ai-ctrl-workflow" version="1">
+  <requirement id="work-ctrl-flow-substrate">
+    <statement>The system SHALL implement AI Ctrl Workflow as a WorkCtrlFlow-backed profile adapter.</statement>
+    <suite id="runtime" name="Runtime">
+      <case id="start-workflow-backed-run">
+        <given>An AI Ctrl Workflow definition wraps a WorkCtrlFlow definition</given>
+        <when>The adapter starts a run</when>
+        <then>The system SHALL execute through WorkCtrlFlowEngine and persist WorkCtrlFlow snapshot facts</then>
+      </case>
+      <case id="resume-through-workflow">
+        <given>An AI Ctrl Workflow run is waiting on a WorkCtrlFlow wait handle</given>
+        <when>A ResumeSignal is submitted</when>
+        <then>The system SHALL resume through WorkCtrlFlowEngine</then>
+      </case>
+    </suite>
+  </requirement>
+</behaviors>

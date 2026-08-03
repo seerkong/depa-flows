@@ -1,6 +1,6 @@
 <behaviors capability="status-enums" version="1">
   <requirement id="pascal-case-contracts">
-    <statement>协议级状态枚举 SHALL 统一为大驼峰并定义在 contract 包：TaskStatus（NotStarted/Active/Delegated/Forwarded/Done/Refused/Abandoned，task-manager-contract）、WorkFlowStatus（Waiting/Completed/Failed）、NodeViewStatus（Init/Active/Success/Failure/Waiting/Omitted/Cancelled）、WaitHandleStatus（Open/Consumed/Expired/Cancelled）、ResumeSignal.outcome（Success/Failure/Cancelled，均在 work-flow-contract）；内核枚举属实现细节经 STATUS_VIEW 投影，不外泄。</statement>
+    <statement>协议级状态枚举 SHALL 统一为大驼峰并定义在 contract 包：TaskStatus（NotStarted/Active/Delegated/Forwarded/Done/Refused/Abandoned，task-manager-contract）、WorkCtrlFlowStatus（Waiting/Completed/Failed）、NodeViewStatus（Init/Active/Success/Failure/Waiting/Omitted/Cancelled）、WaitHandleStatus（Open/Consumed/Expired/Cancelled）、ResumeSignal.outcome（Success/Failure/Cancelled，均在 work-ctrl-flow-contract）；内核枚举属实现细节经 STATUS_VIEW 投影，不外泄。</statement>
     <suite name="pascal-case-contracts">
       <case name="视图拼写">
         <given>运行中的实例</given>

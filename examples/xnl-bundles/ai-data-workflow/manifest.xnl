@@ -1,0 +1,22 @@
+<AIDataWorkflow #depa.examples.SupportEvidenceDag apiVersion="depa.flows/v1" version="1.0.0" (
+  <FlowContract #depa.examples.SupportEvidenceDag {
+    inputPorts = ["ticket"]
+    outputPorts = ["summary"]
+  }>
+) [
+  <EntryNode #entry>
+  <TransformNode #retrieve {
+    inputs = { ticket = "flow-port://#entry/ticket" }
+    outputs = ["evidence"]
+    src = "vfs://./flow-code/evidence.ts#retrieveEvidence"
+    config = { reuse_policy = "semantic-hash" }
+  }>
+  <TransformNode #summarize {
+    inputs = { evidence = "flow-port://#retrieve/evidence" }
+    outputs = ["summary"]
+    src = "vfs://./flow-code/evidence.ts#summarizeEvidence"
+  }>
+  <ReturnNode #return {
+    inputs = { summary = "flow-port://#summarize/summary" }
+  }>
+]>

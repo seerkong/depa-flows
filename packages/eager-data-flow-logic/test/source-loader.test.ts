@@ -306,7 +306,7 @@ describe('EagerDataFlow subflow linking', () => {
     const wrongRoot = loadEagerDataFlowSources(
       { 'manifest.xnl': parentSource() },
       {
-        registry: registry({ form: 'WorkFlow' }),
+        registry: registry({ form: 'WorkCtrlFlow' }),
       },
     );
 

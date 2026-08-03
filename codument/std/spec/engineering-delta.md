@@ -9,7 +9,7 @@
 track 在下面路径写改动节点的目标态：
 
 ```text
-tracks/<id>/engineering_deltas/<plane>/<category>/<topic>.xnl
+tracks/{pending,active}/<id>/engineering_deltas/<plane>/<category>/<topic>.xnl
 ```
 
 示例：

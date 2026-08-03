@@ -1,0 +1,14 @@
+<decisions #implement-ai-ctrl-workflow-on-work-ctrl-flow {
+  version = "1"
+}
+(
+  <decision #track.agent.substrate {
+    status = "accepted"
+    priority = "P0"
+  }
+  (
+    <question ?>What engine owns AI Ctrl Workflow execution?</?>
+    <answer ?>WorkCtrlFlowEngine owns execution; AI Ctrl Workflow is an adapter/profile layer.</?>
+    <rationale ?>This preserves durable WorkCtrlFlow semantics and avoids another flow engine.</?>
+  )>
+)>

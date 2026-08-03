@@ -17,7 +17,7 @@
 <enum #flow.product_profile {
     kind = "enum"
   } [
-    <types ?t>type FlowProductForm = "InstantFlow" | "WorkFlow" | "BizProcess" | "EagerDataFlow"</?t>
+    <types ?t>type FlowProductForm = "InstantCtrlFlow" | "WorkCtrlFlow" | "BPCtrlFlow" | "EagerDataFlow"</?t>
   ]>
 <component #flow.ctrl_flow_statement {
     kind = "component"
@@ -50,7 +50,7 @@
       Completed --> [*]
       Failed --> [*]
     </?m>
-    <invariants ?>InstantFlow 不进入 Waiting；WorkFlow 持久化等待、attempt、deadline、lane 和 winner；BizProcess 额外持久化 TaskSpace 任务事实。</?>
+    <invariants ?>InstantCtrlFlow 不进入 Waiting；WorkCtrlFlow 持久化等待、attempt、deadline、lane 和 winner；BPCtrlFlow 额外持久化 TaskSpace 任务事实。</?>
   ]>
 <object #flow.eager_data_graph {
     kind = "entity"
@@ -61,4 +61,4 @@
     <types ?t>interface EagerDataFlowNode { id: string; inputs?: Record<string, string>; outputs?: readonly string[]; waitFor?: readonly string[] }</?t>
     <invariants ?>flow-port:// 引用端口输出；flow-node:// 引用节点完成事实；节点输出和 completion 不得被渲染器重新解释。</?>
   ]>
-  <not-owned-here ?>WorkFlow/BizProcess 的 snapshot、WaitHandle、TaskSpace 和 scheduler 是 runtime-control fact；编辑器位置、viewport、pin layout 是 surface_view，均不在此 context 写入。</?>
+  <not-owned-here ?>WorkCtrlFlow/BPCtrlFlow 的 snapshot、WaitHandle、TaskSpace 和 scheduler 是 runtime-control fact；编辑器位置、viewport、pin layout 是 surface_view，均不在此 context 写入。</?>

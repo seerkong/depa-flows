@@ -1,0 +1,14 @@
+<decisions #implement-ai-data-workflow-on-eager-data-flow {
+  version = "1"
+}
+(
+  <decision #track.data.substrate {
+    status = "accepted"
+    priority = "P0"
+  }
+  (
+    <question ?>What engine owns AI Data Workflow DAG authoring?</?>
+    <answer ?>EagerDataFlow owns the underlying DAG plan; AI Data Workflow adds run graph, patch, invalidation and reuse state.</?>
+    <rationale ?>This preserves the required substrate boundary.</?>
+  )>
+)>

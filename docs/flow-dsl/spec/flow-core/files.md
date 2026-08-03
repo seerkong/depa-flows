@@ -6,7 +6,7 @@
 
 ```text
 flows/
-  price-quote.xnl       # <InstantFlow #depa.flows.demo.PriceQuote [...]>
+  price-quote.xnl       # <InstantCtrlFlow #depa.flows.demo.PriceQuote [...]>
   flow-code/
     quote.ts
 ```
@@ -19,7 +19,7 @@ flows/
 
 ```text
 flows/order-routing/
-  manifest.xnl          # <WorkFlow #depa.flows.demo.OrderRouting [...]>
+  manifest.xnl          # <WorkCtrlFlow #depa.flows.demo.OrderRouting [...]>
   flow.contract.xnl     # 可选外提；逻辑上仍是必需且唯一的 FlowContract
   config.xnl            # 可选静态 config 域
   config.def.xnl        # 可选 config shape facet
@@ -33,7 +33,7 @@ profile 可以增加自己的状态或任务文件，见对应 `spec/<profile>/d
 
 ## 单/多文件边界
 
-- `manifest.xnl` 是目录 bundle 的唯一入口；根 tag ∈ {`InstantFlow`, `WorkFlow`, `BizProcess`}。
+- `manifest.xnl` 是目录 bundle 的唯一入口；根 tag ∈ {`InstantCtrlFlow`, `WorkCtrlFlow`, `BPCtrlFlow`}。
 - 根 `[]` 的 statement topology 始终由入口 definition 持有。
 - 每个 definition 必须恰有一个 `FlowContract`；可内联，也可外提为 `flow.contract.xnl`，不能两处同时声明。
 - 根 `()` 中的唯一子域可以按 M-S4 外提为同型域文件；外提不改变逻辑 URI。

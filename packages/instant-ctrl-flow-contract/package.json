@@ -1,0 +1,9 @@
+{
+  "name": "instant-ctrl-flow-contract",
+  "version": "0.1.0",
+  "private": true,
+  "description": "InstantCtrlFlow 契约：纯类型，零依赖",
+  "type": "module",
+  "main": "./src/index.ts",
+  "exports": { ".": "./src/index.ts" }
+}

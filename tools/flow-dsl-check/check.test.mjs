@@ -39,11 +39,15 @@ afterEach(() => {
 });
 
 describe('canonical bundle loading', () => {
-  test('loads direct product-root statements for all three demos', () => {
+  test('loads direct product-root statements for all demos', () => {
     const expected = {
-      'instant-http-check': 'InstantFlow',
-      'order-fulfillment': 'WorkFlow',
-      'expense-approval': 'BizProcess',
+      'instant-http-check': 'InstantCtrlFlow',
+      'order-fulfillment': 'WorkCtrlFlow',
+      'expense-approval': 'BPCtrlFlow',
+      'eager-data-flow-child': 'EagerDataFlow',
+      'eager-data-flow-parent': 'EagerDataFlow',
+      'ai-ctrl-workflow': 'AICtrlWorkflow',
+      'ai-data-workflow': 'AIDataWorkflow',
     };
 
     for (const [name, form] of Object.entries(expected)) {
@@ -53,7 +57,7 @@ describe('canonical bundle loading', () => {
     }
   });
 
-  test('loads the InstantFlow contract without treating it as a statement', () => {
+  test('loads the InstantCtrlFlow contract without treating it as a statement', () => {
     const result = checkDir(demo('instant-http-check'));
 
     expect(result.statements.map((statement) => statement.tag)).toEqual(['Run', 'Require', 'Timeout', 'Return']);
@@ -117,7 +121,7 @@ describe('canonical statement rules', () => {
 });
 
 describe('profile rules', () => {
-  test.each(['InstantFlow', 'WorkFlow', 'BizProcess'])(
+  test.each(['InstantCtrlFlow', 'WorkCtrlFlow', 'BPCtrlFlow', 'AICtrlWorkflow'])(
     'accepts shared orchestration primitives in %s',
     (form) => {
       const result = checkDir(temporaryBundle(form, `
@@ -131,7 +135,7 @@ describe('profile rules', () => {
         <Race #race { mode = "first-success" } (
           <Candidates [<Candidate #candidate [<Return #candidate-result>]>]>
         )>
-        <CallFlow #call { flow = "instant-flow://depa.flows.Child" }>
+        <CallFlow #call { flow = "instant-ctrl-flow://depa.flows.Child" }>
       `));
 
       expect(result.problems).toEqual([]);
@@ -139,18 +143,19 @@ describe('profile rules', () => {
   );
 
   test.each([
-    ['InstantFlow', '<ExternalJob #unsupported { signalKind = "job.completed" signalKey = "job" }>', 'interruptible-in-instant'],
-    ['InstantFlow', '<Timer #unsupported { durationMs = 1 }>', 'interruptible-in-instant'],
-    ['InstantFlow', '<TaskStep #unsupported { task = "task-space://#task" }>', 'interruptible-in-instant'],
-    ['WorkFlow', '<TaskStep #unsupported { task = "task-space://#task" }>', 'interruptible-in-work'],
+    ['InstantCtrlFlow', '<ExternalJob #unsupported { signalKind = "job.completed" signalKey = "job" }>', 'interruptible-in-instant-ctrl-flow'],
+    ['InstantCtrlFlow', '<Timer #unsupported { durationMs = 1 }>', 'interruptible-in-instant-ctrl-flow'],
+    ['InstantCtrlFlow', '<TaskStep #unsupported { task = "task-space://#task" }>', 'interruptible-in-instant-ctrl-flow'],
+    ['WorkCtrlFlow', '<TaskStep #unsupported { task = "task-space://#task" }>', 'interruptible-in-work-ctrl-flow'],
+    ['AICtrlWorkflow', '<TaskStep #unsupported { task = "task-space://#task" }>', 'interruptible-in-ai-ctrl-workflow'],
   ])('%s rejects %s with stable code %s', (form, statement, expectedCode) => {
     const resultCodes = codes(checkDir(temporaryBundle(form, statement)));
 
     expect(resultCodes).toContain(expectedCode);
   });
 
-  test('rejects persistent statements in InstantFlow', () => {
-    expect(codes(checkDir(fixture('bad-interruptible-instant')))).toContain('interruptible-in-instant');
+  test('rejects persistent statements in InstantCtrlFlow', () => {
+    expect(codes(checkDir(fixture('bad-interruptible-instant')))).toContain('interruptible-in-instant-ctrl-flow');
   });
 
   test('validates state seed fields', () => {

@@ -10,11 +10,11 @@
 | `config://` | 当前 bundle 的 `ConfigEntry` 或其 sub-path | profile/node config binding | `"config://#pricing/currency"` |
 | `config-def://` | 当前 bundle 的 `ConfigEntryDef` | schema/tooling 引用 | `"config-def://#pricing"` |
 | `flow-authoring://` | 当前 bundle 的 layout entry | editor projection | `"flow-authoring://#route-quote"` |
-| `instant-flow://` | InstantFlow definition / contract | `CallFlow.flow` | `"instant-flow://depa.flows.CustomerLookup"` |
-| `work-flow://` | WorkFlow definition / contract | `CallFlow.flow` | `"work-flow://depa.flows.OrderFulfillment"` |
-| `biz-process://` | BizProcess definition / contract | `CallFlow.flow` | `"biz-process://depa.flows.ExpenseApproval"` |
+| `instant-ctrl-flow://` | InstantCtrlFlow definition / contract | `CallFlow.flow` | `"instant-ctrl-flow://depa.flows.CustomerLookup"` |
+| `work-ctrl-flow://` | WorkCtrlFlow definition / contract | `CallFlow.flow` | `"work-ctrl-flow://depa.flows.OrderFulfillment"` |
+| `bp-ctrl-flow://` | BPCtrlFlow definition / contract | `CallFlow.flow` | `"bp-ctrl-flow://depa.flows.ExpenseApproval"` |
 
-profile 可登记额外 scheme，例如 BizProcess 的 task entry；未在 flow-core 或 profile 表中登记的 scheme 不得凭名称推导。
+profile 可登记额外 scheme，例如 BPCtrlFlow 的 task entry；未在 flow-core 或 profile 表中登记的 scheme 不得凭名称推导。
 
 ## Code Ref
 

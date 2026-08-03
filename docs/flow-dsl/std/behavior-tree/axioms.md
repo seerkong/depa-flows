@@ -36,7 +36,7 @@ XNL product definition
 
 - **data**：`Run` output、TaskStep 的 approved/refused/forwarded 等业务结果；正常作为后续 statement/predicate 的 input。
 - **fault**：代码异常、不可恢复 effect 错误、协议错误、循环 guard 超限；驱动 Fallback 或向外传播。
-- **suspension**：WorkFlow/BizProcess 的 timer、external job、human task 等等待；由 profile runtime 快照与恢复，不等于 fault。
+- **suspension**：WorkCtrlFlow/BPCtrlFlow 的 timer、external job、human task 等等待；由 profile runtime 快照与恢复，不等于 fault。
 
 内部 plan 若使用 `Success` / `Failure` / `Running` 等 engine 状态，adapter 必须保持上述区分：业务 data 不能映射成 Failure，挂起也不能被当成 strategy 失败。
 
@@ -44,7 +44,7 @@ XNL product definition
 
 `Branch.when` 与 `Until.when` 都由动态代码按 `output = fn(runtime, input, config)` 求值。compiler 只能生成调用 predicate 的内部叶子，不得把 predicate 复制成表达式字符串或第二份条件定义。
 
-InstantFlow 可以只在本次执行内持有决策；WorkFlow/BizProcess 对已发生 branch selection 必须记录或快照。恢复时 plan 可以重建，但已发生路径不能因 predicate 重算而变化。
+InstantCtrlFlow 可以只在本次执行内持有决策；WorkCtrlFlow/BPCtrlFlow 对已发生 branch selection 必须记录或快照。恢复时 plan 可以重建，但已发生路径不能因 predicate 重算而变化。
 
 ## BT-5 · Fallback 只消费技术结果
 
@@ -61,7 +61,7 @@ Fallback 的内部 Selector 只观察 strategy 是否发生技术 fault：
 
 BehaviorTreePlan 只描述可执行结构，不拥有实例真源：
 
-- WorkFlow/BizProcess snapshot 拥有节点位置、等待句柄和已记录决策。
+- WorkCtrlFlow/BPCtrlFlow snapshot 拥有节点位置、等待句柄和已记录决策。
 - TaskSpace store 拥有人工任务状态与业务结果。
 - editor runtime overlay 只读投影 plan/snapshot 状态，不回写 definition。
 

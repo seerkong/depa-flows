@@ -3,6 +3,8 @@ import path from 'node:path';
 import { listChildren, sectionChildren, idOf } from './load.mjs';
 import { TASK_TRANSITIONS, EXECUTION_MODES as CONTRACT_EXECUTION_MODES } from 'task-manager-contract';
 
+const CTRL_FLOW_FORMS = new Set(['InstantCtrlFlow', 'WorkCtrlFlow', 'BPCtrlFlow', 'AICtrlWorkflow']);
+const DAG_FORMS = new Set(['EagerDataFlow', 'AIDataWorkflow']);
 const SHARED_STATEMENTS = new Set([
   'Run',
   'If',
@@ -29,14 +31,24 @@ const LEGACY_PUBLIC_ACTION = new Set([
   'RunScript',
 ]);
 const WAIT_BY_FORM = {
-  InstantFlow: new Set(),
-  WorkFlow: new Set(['ExternalJob', 'Timer']),
-  BizProcess: new Set(['ExternalJob', 'Timer', 'TaskStep']),
+  InstantCtrlFlow: new Set(),
+  WorkCtrlFlow: new Set(['ExternalJob', 'Timer']),
+  BPCtrlFlow: new Set(['ExternalJob', 'Timer', 'TaskStep']),
+  AICtrlWorkflow: new Set(['ExternalJob', 'Timer']),
+};
+const INTERRUPTIBLE_CODE_BY_FORM = {
+  InstantCtrlFlow: 'interruptible-in-instant-ctrl-flow',
+  WorkCtrlFlow: 'interruptible-in-work-ctrl-flow',
+  BPCtrlFlow: 'interruptible-in-bp-ctrl-flow',
+  AICtrlWorkflow: 'interruptible-in-ai-ctrl-workflow',
 };
 const FACETS_BY_FORM = {
-  InstantFlow: new Set(['flow.contract', 'config', 'config.def']),
-  WorkFlow: new Set(['flow.contract', 'config', 'config.def', 'state.def', 'state.seed']),
-  BizProcess: new Set(['flow.contract', 'config', 'config.def', 'state.def', 'state.seed', 'task.space']),
+  InstantCtrlFlow: new Set(['flow.contract', 'config', 'config.def']),
+  WorkCtrlFlow: new Set(['flow.contract', 'config', 'config.def', 'state.def', 'state.seed']),
+  BPCtrlFlow: new Set(['flow.contract', 'config', 'config.def', 'state.def', 'state.seed', 'task.space']),
+  AICtrlWorkflow: new Set(['flow.contract', 'config', 'config.def', 'state.def', 'state.seed']),
+  EagerDataFlow: new Set(['flow.contract']),
+  AIDataWorkflow: new Set(['flow.contract']),
 };
 const TASK_STATUS = new Set(Object.keys(TASK_TRANSITIONS));
 const EXECUTION_MODES = new Set(CONTRACT_EXECUTION_MODES);
@@ -182,6 +194,121 @@ export function checkBundle(bundle) {
     });
   };
 
+  const parseFlowPortRef = (value, context) => {
+    if (typeof value !== 'string') {
+      note('flow-port-ref-invalid', `${context} must be a flow-port://#node/port ref`);
+      return undefined;
+    }
+    const match = /^flow-port:\/\/#([^/]+)\/(.+)$/.exec(value);
+    if (!match) {
+      note('flow-port-ref-invalid', `${context} must be a flow-port://#node/port ref`);
+      return undefined;
+    }
+    return { nodeId: match[1], port: match[2] };
+  };
+
+  const parseFlowNodeRef = (value, context) => {
+    if (typeof value !== 'string') {
+      note('flow-node-ref-invalid', `${context} must be a flow-node://#node ref`);
+      return undefined;
+    }
+    const match = /^flow-node:\/\/#(.+)$/.exec(value);
+    if (!match) {
+      note('flow-node-ref-invalid', `${context} must be a flow-node://#node ref`);
+      return undefined;
+    }
+    return match[1];
+  };
+
+  const checkDagNodes = () => {
+    const inputPorts = flowContract?.attributes?.inputPorts;
+    const outputPorts = flowContract?.attributes?.outputPorts;
+    if (!Array.isArray(inputPorts) || !inputPorts.every((port) => typeof port === 'string')) {
+      note('flow-contract-ports-invalid', `${form} FlowContract.inputPorts must be a string array`);
+    }
+    if (!Array.isArray(outputPorts) || !outputPorts.every((port) => typeof port === 'string')) {
+      note('flow-contract-ports-invalid', `${form} FlowContract.outputPorts must be a string array`);
+    }
+
+    const nodeIds = new Set();
+    const outputPortsByNode = new Map();
+    let entryCount = 0;
+    let returnCount = 0;
+
+    for (const node of statements) {
+      const id = registerId(node, 'dag node');
+      checkRefs(node);
+      if (!id) continue;
+      nodeIds.add(id);
+      if (node.tag === 'EntryNode') {
+        entryCount += 1;
+        outputPortsByNode.set(id, new Set(Array.isArray(inputPorts) ? inputPorts : []));
+      } else if (node.tag === 'TransformNode') {
+        const outputs = node.attributes?.outputs;
+        if (!Array.isArray(outputs) || !outputs.every((port) => typeof port === 'string')) {
+          note('transform-outputs-invalid', `TransformNode #${id} outputs must be a string array`);
+        }
+        outputPortsByNode.set(id, new Set(Array.isArray(outputs) ? outputs : []));
+      } else if (node.tag === 'SubFlowNode') {
+        if (typeof node.attributes?.flow !== 'string' || !/^eager-data-flow:\/\/[\w.-]+$/.test(node.attributes.flow)) {
+          note('subflow-ref-invalid', `SubFlowNode #${id} flow must use eager-data-flow://<FQN>`);
+        }
+        outputPortsByNode.set(id, undefined);
+      } else if (node.tag === 'SinkNode') {
+        outputPortsByNode.set(id, new Set());
+      } else if (node.tag === 'ReturnNode') {
+        returnCount += 1;
+        outputPortsByNode.set(id, new Set());
+      } else {
+        note('unknown-dag-node-tag', `unknown DAG node tag <${node.tag}>`);
+      }
+    }
+
+    if (entryCount !== 1) note('entry-node-cardinality', `${form} requires exactly one EntryNode`);
+    if (returnCount !== 1) note('return-node-cardinality', `${form} requires exactly one ReturnNode`);
+
+    for (const node of statements) {
+      const id = idOf(node);
+      if (!id) continue;
+      if (node.tag === 'TransformNode' || node.tag === 'SinkNode') {
+        const src = node.attributes?.src ?? node.attributes?.impl;
+        if (!src) note('dag-node-missing-src', `${node.tag} #${id} is missing src`);
+        else checkVfs(src, `${node.tag} #${id} src`);
+      }
+      if (node.tag === 'EntryNode') continue;
+      const inputs = node.attributes?.inputs;
+      if (!inputs || typeof inputs !== 'object' || Array.isArray(inputs)) {
+        note('dag-node-inputs-invalid', `${node.tag} #${id} inputs must be an object`);
+      } else {
+        for (const [inputName, ref] of Object.entries(inputs)) {
+          const parsed = parseFlowPortRef(ref, `${node.tag} #${id} input ${inputName}`);
+          if (!parsed) continue;
+          if (!nodeIds.has(parsed.nodeId)) {
+            note('flow-port-unknown-node', `${node.tag} #${id} references unknown node ${parsed.nodeId}`);
+            continue;
+          }
+          const allowedPorts = outputPortsByNode.get(parsed.nodeId);
+          if (allowedPorts && !allowedPorts.has(parsed.port)) {
+            note('flow-port-unknown-port', `${node.tag} #${id} references unknown port ${parsed.nodeId}/${parsed.port}`);
+          }
+        }
+      }
+      for (const ref of node.attributes?.waitFor ?? []) {
+        const nodeId = parseFlowNodeRef(ref, `${node.tag} #${id} waitFor`);
+        if (nodeId && !nodeIds.has(nodeId)) {
+          note('flow-node-unknown-node', `${node.tag} #${id} waits for unknown node ${nodeId}`);
+        }
+      }
+      if (node.tag === 'ReturnNode' && Array.isArray(outputPorts) && inputs && typeof inputs === 'object' && !Array.isArray(inputs)) {
+        const actual = Object.keys(inputs).sort();
+        const expected = [...outputPorts].sort();
+        if (actual.join('\0') !== expected.join('\0')) {
+          note('return-node-output-mismatch', `ReturnNode #${id} inputs must match FlowContract.outputPorts`);
+        }
+      }
+    }
+  };
+
   const checkStatements = (items) => {
     for (const statement of items) {
       const tag = statement.tag;
@@ -301,7 +428,7 @@ export function checkBundle(bundle) {
           note('invalid-race-mode', `Race #${id} mode must be "first-success" or "first-completed"`);
         }
       } else if (tag === 'CallFlow') {
-        if (typeof statement.attributes?.flow !== 'string' || !/^(instant-flow|work-flow|biz-process):\/\/[\w.-]+$/.test(statement.attributes.flow)) {
+        if (typeof statement.attributes?.flow !== 'string' || !/^(instant-ctrl-flow|work-ctrl-flow|bp-ctrl-flow):\/\/[\w.-]+$/.test(statement.attributes.flow)) {
           note('invalid-flow-ref', `CallFlow #${id} flow must use a product flow URI`);
         }
       } else if (tag === 'Return') {
@@ -311,7 +438,7 @@ export function checkBundle(bundle) {
         if (hasSrc) checkVfs(statement.attributes.src, `Return #${id} src`);
       } else {
         if (!WAIT_BY_FORM[form].has(tag)) {
-          note(`interruptible-in-${form.toLowerCase().replace('flow', '')}`, `<${tag} #${id}> is illegal in ${form}`);
+          note(INTERRUPTIBLE_CODE_BY_FORM[form], `<${tag} #${id}> is illegal in ${form}`);
         }
         if (tag === 'ExternalJob') {
           for (const attribute of ['signalKind', 'signalKey']) {
@@ -336,7 +463,11 @@ export function checkBundle(bundle) {
     }
   };
 
-  checkStatements(statements);
+  if (DAG_FORMS.has(form)) {
+    checkDagNodes();
+  } else if (CTRL_FLOW_FORMS.has(form)) {
+    checkStatements(statements);
+  }
 
   for (const taskId of new Set(taskStepRefs)) {
     if (taskStepRefs.filter((candidate) => candidate === taskId).length > 1) {

@@ -1,7 +1,7 @@
 <howto #flow-runtime.howto.add-profile.add_profile {
   kind = "howto"
 } [
-  <when-to-use ?>新增 InstantFlow、WorkFlow、BizProcess 或 EagerDataFlow 的公开 profile、节点或 contract 能力时。</?>
+  <when-to-use ?>新增 InstantCtrlFlow、WorkCtrlFlow、BPCtrlFlow 或 EagerDataFlow 的公开 profile、节点或 contract 能力时。</?>
   <steps ?>
   1. 在 docs/flow-dsl/spec 中更新公共 grammar、profile capability matrix、FlowContract 和 rejection rules。
   2. 在对应 `*-contract` 中先定义静态类型边界，再在 `*-logic` 中实现 loader/compiler/runtime。

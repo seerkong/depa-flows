@@ -5,7 +5,7 @@
       <case name="多文件加载">
         <given>order-fulfillment bundle（manifest + 6 个域文件）</given>
         <when>运行校验器</when>
-        <then>成功加载，容器形态识别为 WorkFlow</then>
+        <then>成功加载，容器形态识别为 WorkCtrlFlow</then>
       </case>
       <case name="单文件加载">
         <given>instant-http-check 单文件 bundle</given>
@@ -40,12 +40,12 @@
     </suite>
   </requirement>
   <requirement id="form-rules">
-    <statement>校验器 SHALL 实施产品形态规则：InstantFlow 树中出现 ExternalJob/Timer/TaskStep 或声明 state/task.space 域为违规；WorkFlow 的 state.seed 字段必须在 state.def 声明（非 ? 字段必须有 seed 值）；BizFlow 的每个 TaskStep 不得带 assignTo、task 引用必须解析到 TaskSpace 直接子节点、一任务至多一个 TaskStep。</statement>
+    <statement>校验器 SHALL 实施产品形态规则：InstantCtrlFlow 树中出现 ExternalJob/Timer/TaskStep 或声明 state/task.space 域为违规；WorkCtrlFlow 的 state.seed 字段必须在 state.def 声明（非 ? 字段必须有 seed 值）；BPCtrlFlow 的每个 TaskStep 不得带 assignTo、task 引用必须解析到 TaskSpace 直接子节点、一任务至多一个 TaskStep。</statement>
     <suite name="form-rules">
-      <case name="InstantFlow 含可中断节点">
-        <given>InstantFlow 树内含 ExternalJob</given>
+      <case name="InstantCtrlFlow 含可中断节点">
+        <given>InstantCtrlFlow 树内含 ExternalJob</given>
         <when>运行校验器</when>
-        <then>报 interruptible-in-instant 违规</then>
+        <then>报 interruptible-in-instant-ctrl-flow 违规</then>
       </case>
       <case name="seed 未声明字段">
         <given>state.seed 含 state.def 未声明的字段</given>

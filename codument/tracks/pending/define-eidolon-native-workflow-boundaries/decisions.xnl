@@ -1,0 +1,84 @@
+<decisions #define-eidolon-native-workflow-boundaries {
+  version = "1"
+}
+(
+  <decision #eidolon.workflow.contract_package {
+    status = "accepted"
+    priority = "P0"
+  }
+  (
+    <question ?>Where should the Eidolon-native workflow contract live?</?>
+    <answer ?>Use a dedicated `cell/packages/ai-workflow-contract` package when workflow becomes native Eidolon state.</?>
+    <rationale ?>A dedicated package keeps workflow contracts explicit and avoids mixing orchestration facts into broader AI core contracts too early.</?>
+  )>
+
+  <decision #eidolon.workflow.tool_home {
+    status = "accepted"
+    priority = "P0"
+  }
+  (
+    <question ?>Where should workflow native tool implementations live?</?>
+    <answer ?>Put workflow native tools under `cell/packages/ai-organ-logic/src/workflow/tools`; composer-level AIAgent code only imports and registers the bundle.</?>
+    <rationale ?>This keeps workflow implementation cohesive and prevents `composer/AIAgent/tools` from becoming a catch-all domain implementation directory.</?>
+  )>
+
+  <decision #eidolon.workflow.effect_home {
+    status = "accepted"
+    priority = "P0"
+  }
+  (
+    <question ?>Where should workflow effect implementation live?</?>
+    <answer ?>Put scheduler-facing workflow effect adapters under `cell/packages/ai-organ-logic/src/workflow/effects`.</?>
+    <rationale ?>Effects are runtime adapters, not model-visible commands; they belong next to workflow runtime logic rather than in the AI tool directory.</?>
+  )>
+
+  <decision #eidolon.workflow.authoring_tools {
+    status = "accepted"
+    priority = "P0"
+  }
+  (
+    <question ?>Should MCP authoring workspace functions become native Eidolon tools?</?>
+    <answer ?>Yes. Runtime tools and authoring workspace tools should both be exposed as native workflow ToolDefs where they are first-party Eidolon capabilities.</?>
+    <rationale ?>The model needs first-class operations to create, patch, validate, inspect, and promote workflow resources and RunGraph changes; keeping these only in MCP would make native workflow incomplete.</?>
+  )>
+
+  <decision #eidolon.workflow.effects_not_tools {
+    status = "accepted"
+    priority = "P0"
+  }
+  (
+    <question ?>Should internal workflow effect handlers be exposed as AI-callable tools?</?>
+    <answer ?>No. Effect handlers are internal scheduler adapters and must not be directly callable by the model.</?>
+    <rationale ?>Direct effect calls would bypass RunGraph generation, invalidation/reuse policy, scheduler checks, and workflow audit recording.</?>
+  )>
+
+  <decision #eidolon.workflow.profile_enablement {
+    status = "accepted"
+    priority = "P0"
+  }
+  (
+    <question ?>How should workflow become available in Eidolon profiles?</?>
+    <answer ?>Enable workflow through `mod-ai-kernel`, with composer-level registration of the workflow tool bundle.</?>
+    <rationale ?>Workflow is a core AI runtime capability, not a coding-overlay-specific capability.</?>
+  )>
+
+  <decision #eidolon.workflow.fact_authority {
+    status = "accepted"
+    priority = "P0"
+  }
+  (
+    <question ?>What facts should workflow persist?</?>
+    <answer ?>Workflow persists only workflow facts: definitions, RunGraph, generations, invalidation/reuse policy, material bindings, node refs, graph patch/promote records, and workflow audit decisions.</?>
+    <rationale ?>Actor/session/conversation/tool/provider/checkpoint/member/detached state already has Eidolon authorities; duplicating it would create recovery drift.</?>
+  )>
+
+  <decision #eidolon.workflow.actor_reuse {
+    status = "accepted"
+    priority = "P0"
+  }
+  (
+    <question ?>How should AI agent task nodes execute?</?>
+    <answer ?>Use Eidolon's existing actor/fiber/delegate/detached mechanisms; do not create a workflow-specific actor/session special case.</?>
+    <rationale ?>Long-running recovery and evidence are already solved in the actor runtime, so workflow should coordinate it rather than reimplement it.</?>
+  )>
+)>

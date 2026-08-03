@@ -2,11 +2,11 @@
   kind = "overview"
 } [
   <desc ?>depa-flows 是四类 Flow 产品的 canonical DSL、contract 和执行引擎。</?>
-  <mental-model ?>一套 XNL definition → profile-aware contract/loader → 产品 runtime；InstantFlow 负责即时编排，WorkFlow 负责持久中断恢复，BizProcess 负责任务驱动业务过程，EagerDataFlow 负责 eager DAG 数据处理。</?>
+  <mental-model ?>一套 XNL definition → profile-aware contract/loader → 产品 runtime；InstantCtrlFlow 负责即时编排，WorkCtrlFlow 负责持久中断恢复，BPCtrlFlow 负责任务驱动业务过程，EagerDataFlow 负责 eager DAG 数据处理。</?>
   <main-components ?>
-  - instant-flow-contract / logic：无状态 CtrlFlow 合同与执行。
-  - work-flow-contract / logic：snapshot、WaitHandle、ResumeSignal、durable composite scheduler。
-  - biz-process-contract / logic：TaskSpace、TaskStep、人工任务推进。
+  - instant-ctrl-flow-contract / logic：无状态 CtrlFlow 合同与执行。
+  - work-ctrl-flow-contract / logic：snapshot、WaitHandle、ResumeSignal、durable composite scheduler。
+  - bp-ctrl-flow-contract / logic：TaskSpace、TaskStep、人工任务推进。
   - eager-data-flow-contract / logic：端口、waitFor、DAG 调度。
   - depa-behavior-tree：内部执行内核，不是公开 DSL authoring API。
   </?>

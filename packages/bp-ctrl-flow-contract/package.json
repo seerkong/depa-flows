@@ -1,0 +1,13 @@
+{
+  "name": "bp-ctrl-flow-contract",
+  "version": "0.1.0",
+  "private": true,
+  "description": "BPCtrlFlow 契约：任务操作请求与结果映射（BP-2/BP-3）",
+  "type": "module",
+  "main": "./src/index.ts",
+  "exports": { ".": "./src/index.ts" },
+  "dependencies": {
+    "task-manager-contract": "workspace:*",
+    "work-ctrl-flow-contract": "workspace:*"
+  }
+}

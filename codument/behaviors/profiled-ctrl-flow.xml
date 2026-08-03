@@ -15,17 +15,17 @@
     </suite>
   </requirement>
   <requirement id="profile-capabilities">
-    <statement>Each public orchestration primitive SHALL declare product capability and lifecycle semantics. InstantFlow SHALL reject durable waiting and recovery behavior; WorkFlow and BizProcess SHALL own all facts needed to resume enabled durable primitives; BizProcess human parallelism SHALL remain owned by TaskGroup executionMode.</statement>
+    <statement>Each public orchestration primitive SHALL declare product capability and lifecycle semantics. InstantCtrlFlow SHALL reject durable waiting and recovery behavior; WorkCtrlFlow and BPCtrlFlow SHALL own all facts needed to resume enabled durable primitives; BPCtrlFlow human parallelism SHALL remain owned by TaskGroup executionMode.</statement>
     <suite id="capability-validation" name="产品能力校验">
       <case id="instant-rejects-durable-target">
-        <given>an InstantFlow CallFlow targets a suspend-capable product</given>
+        <given>an InstantCtrlFlow CallFlow targets a suspend-capable product</given>
         <when>the definition is validated</when>
         <then>validation SHALL reject the synchronous invocation</then>
       </case>
     </suite>
   </requirement>
   <requirement id="callable-flow-contract">
-    <statement>InstantFlow, WorkFlow, and BizProcess SHALL each own exactly one FlowContract child domain whose id equals the root FQN and whose optional input/output code type references define the static callable boundary. CallFlow validation SHALL resolve target form, contract, and permitted invocation mode through a registry.</statement>
+    <statement>InstantCtrlFlow, WorkCtrlFlow, and BPCtrlFlow SHALL each own exactly one FlowContract child domain whose id equals the root FQN and whose optional input/output code type references define the static callable boundary. CallFlow validation SHALL resolve target form, contract, and permitted invocation mode through a registry.</statement>
     <suite id="contract-resolution" name="可调用契约">
       <case id="contract-id">
         <given>a CtrlFlow FlowContract is declared</given>

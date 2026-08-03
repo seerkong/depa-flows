@@ -1,0 +1,34 @@
+<decisions #define-xnl-ai-workflow-resource-system {
+  version = "1"
+}
+(
+  <decision #track.resource.format {
+    status = "accepted"
+    priority = "P0"
+  }
+  (
+    <question ?>What concrete resource authoring format should AI workflow app bundles use?</?>
+    <answer ?>XNL only.</?>
+    <rationale ?>This keeps app bundles aligned with the flow-dsl resource standard and avoids a second authoring surface.</?>
+  )>
+
+  <decision #track.resource.identity {
+    status = "accepted"
+    priority = "P0"
+  }
+  (
+    <question ?>Where does resource identity come from?</?>
+    <answer ?>Declared content identity, not file path or directory shape.</?>
+    <rationale ?>This keeps physical layout editable without changing logical resource identity.</?>
+  )>
+
+  <decision #track.resource.refs {
+    status = "accepted"
+    priority = "P0"
+  }
+  (
+    <question ?>Which ref schemes are allowed for AI workflow resources?</?>
+    <answer ?>`vfs://`, `resource://`, `config://`, and `secret://`.</?>
+    <rationale ?>These schemes cover file, resource, config and secret-handle boundaries without leaking host paths.</?>
+  )>
+)>

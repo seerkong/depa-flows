@@ -60,69 +60,69 @@ output = fn(runtime, input, config)
 
 ## 产品能力矩阵
 
-| 能力 | InstantFlow | WorkFlow | BizProcess |
+| 能力 | InstantCtrlFlow | WorkCtrlFlow | BPCtrlFlow |
 |---|---|---|---|
 | `Run` / `If` / `Require` / `Fallback` / `Until` / `Return` | 是 | 是 | 是 |
 | `Retry` | 当前 invocation 内的内存期 attempt | 持久 attempt/backoff | 持久 attempt/backoff |
 | `Timeout` | 当前调用内 deadline | 持久 deadline，可恢复 | 持久 deadline，可恢复 |
-| `Parallel` / `Race` / `ForEach` | 当前调用内并发与取消 | 保存 branch/lane/candidate 状态与结果 | 与 WorkFlow 相同，用于技术工作 |
-| `CallFlow` | 仅同步、不可持久挂起目标 | 可调用 InstantFlow/EagerDataFlow；持久子 WorkFlow 需独立生命周期协议 | 与 WorkFlow 相同，可再扩展子 BizProcess |
+| `Parallel` / `Race` / `ForEach` | 当前调用内并发与取消 | 保存 branch/lane/candidate 状态与结果 | 与 WorkCtrlFlow 相同，用于技术工作 |
+| `CallFlow` | 仅同步、不可持久挂起目标 | 可调用 InstantCtrlFlow/EagerDataFlow；持久子 WorkCtrlFlow 需独立生命周期协议 | 与 WorkCtrlFlow 相同，可再扩展子 BPCtrlFlow |
 | `Delay` | 可以有，仅当前调用内等待 | 不使用，持久等待使用 `Timer` | 不使用，持久等待使用 `Timer` |
 | `ExternalJob` / `Timer` | 否 | 是 | 是 |
 | `TaskStep` / `TaskSpace` | 否 | 否 | 是 |
 | 人工任务并行/汇合 | 否 | 否 | 归 `TaskGroup.executionMode`，不是 `Parallel` |
 
-关键区别是：`Parallel` 在 InstantFlow 中只是一次 invocation 内的并发调度；在 WorkFlow/BizProcess 中是持久化并发实例模型，必须保存每个 lane 的启动、完成、fault、winner、取消和 deadline 事实。因此三种产品可以共享 DSL tag，但不能共享一套忽略生命周期差异的运行时实现。
+关键区别是：`Parallel` 在 InstantCtrlFlow 中只是一次 invocation 内的并发调度；在 WorkCtrlFlow/BPCtrlFlow 中是持久化并发实例模型，必须保存每个 lane 的启动、完成、fault、winner、取消和 deadline 事实。因此三种产品可以共享 DSL tag，但不能共享一套忽略生命周期差异的运行时实现。
 
-## InstantFlow：一次调用内完成的脚本编排器
+## InstantCtrlFlow：一次调用内完成的脚本编排器
 
-InstantFlow 用于协调多个 `vfs://...#Export` 的读取、校验、转换、聚合和有限并发脚本。它可以编排：
+InstantCtrlFlow 用于协调多个 `vfs://...#Export` 的读取、校验、转换、聚合和有限并发脚本。它可以编排：
 
 - 并行查询、并行调用 effect、竞争不同数据源。
 - 有界重试、请求级超时、批量和集合处理。
-- 调用同样无持久化的子 InstantFlow，或同步调用 EagerDataFlow。
+- 调用同样无持久化的子 InstantCtrlFlow，或同步调用 EagerDataFlow。
 - 从显式 runtime 取得 effect 依赖；脚本不直接绑定 HTTP、数据库或 UI 实现。
 
-InstantFlow 不承担：
+InstantCtrlFlow 不承担：
 
 - 重启后仍需恢复的等待、重试或并发任务。
 - 人工审批、外部回调和长期计时。
 - 隐式共享状态或脚本内偷偷改变流程上下文。
 - 自动 Saga 补偿。
 
-InstantFlow 不拥有 snapshot、WaitHandle、人工任务、外部恢复消息或跨调用实例事实。它只有正常 output 或技术 fault 两种公开完成结果，业务 `refused`、`declined`、`notFound` 等仍是 data。
+InstantCtrlFlow 不拥有 snapshot、WaitHandle、人工任务、外部恢复消息或跨调用实例事实。它只有正常 output 或技术 fault 两种公开完成结果，业务 `refused`、`declined`、`notFound` 等仍是 data。
 
-## WorkFlow：可恢复的技术编排 actor
+## WorkCtrlFlow：可恢复的技术编排 actor
 
-WorkFlow 是长生命周期、可恢复的技术编排器，协调跨进程技术工作：外部消息、Timer、持久重试、deadline，以及可恢复的并发分支。
+WorkCtrlFlow 是长生命周期、可恢复的技术编排器，协调跨进程技术工作：外部消息、Timer、持久重试、deadline，以及可恢复的并发分支。
 
-WorkFlow runtime snapshot 拥有：
+WorkCtrlFlow runtime snapshot 拥有：
 
 - execution snapshot、当前 statement path 和已发生 branch decision。
 - attempt、deadline、lane/candidate outcome、取消请求。
 - 已调度唤醒、resume token、已应用恢复消息和 child-flow 生命周期事实。
 
-WorkFlow 适合订单履约、轮询/对账、文档生成、多系统交接和具备韧性的服务编排。它不建模人工工作语义；可以等待通用外部结果，但任务域属于 BizProcess。
+WorkCtrlFlow 适合订单履约、轮询/对账、文档生成、多系统交接和具备韧性的服务编排。它不建模人工工作语义；可以等待通用外部结果，但任务域属于 BPCtrlFlow。
 
-WorkFlow 必须把 snapshot、WaitHandle 和恢复消息视为 runtime control facts，绝不回填 definition 或 authoring layout。已记录的 branch decision 在恢复时直接复用，不能因时间、配置或外部数据变化而重新改道。
+WorkCtrlFlow 必须把 snapshot、WaitHandle 和恢复消息视为 runtime control facts，绝不回填 definition 或 authoring layout。已记录的 branch decision 在恢复时直接复用，不能因时间、配置或外部数据变化而重新改道。
 
-## BizProcess：带人工任务事实的业务编排 actor
+## BPCtrlFlow：带人工任务事实的业务编排 actor
 
-BizProcess 在 WorkFlow 上扩展，面向人、角色、任务组和可审计任务结果均为一等事实的长业务过程。它围绕人工工作编排技术步骤，但不把行为树 failure 滥用为业务决策。
+BPCtrlFlow 在 WorkCtrlFlow 上扩展，面向人、角色、任务组和可审计任务结果均为一等事实的长业务过程。它围绕人工工作编排技术步骤，但不把行为树 failure 滥用为业务决策。
 
 - `TaskSpace`、`TaskGroup` 和 `Task` 拥有分配、聚合、状态和人工工作生命周期。
 - `TaskStep` 只把任务域结果桥接回公共 data 链。
 - 后续 `If` 路由 `approved`、`refused`、`forwarded`、`abandoned` 等业务 data。
 - 人工并行和汇合只属于 `TaskGroup.executionMode`，不与通用 `Parallel` 竞争事实源。
 
-BizProcess 适合审批、异常处置、运营交接、case management 和需要持久业务审计的过程。非法任务状态迁移、任务存储不可用和恢复协议损坏是技术 fault；等待人工操作是 suspension；人工操作结果是 data。
+BPCtrlFlow 适合审批、异常处置、运营交接、case management 和需要持久业务审计的过程。非法任务状态迁移、任务存储不可用和恢复协议损坏是技术 fault；等待人工操作是 suspension；人工操作结果是 data。
 
 ## FlowContract 与调用
 
-每一种可调用产品都拥有唯一的 `FlowContract` 子域。InstantFlow、WorkFlow 和 BizProcess 的 CtrlFlow contract 声明静态 `input`、`output` 类型引用；WorkFlow/BizProcess 额外受 lifecycle capability 约束。FlowContract 不是 runtime validator，也不声明代码实现。
+每一种可调用产品都拥有唯一的 `FlowContract` 子域。InstantCtrlFlow、WorkCtrlFlow 和 BPCtrlFlow 的 CtrlFlow contract 声明静态 `input`、`output` 类型引用；WorkCtrlFlow/BPCtrlFlow 额外受 lifecycle capability 约束。FlowContract 不是 runtime validator，也不声明代码实现。
 
 ```xnl
-<InstantFlow #depa.demo.CustomerLookup apiVersion="depa.flows/v1" version="1.0.0" (
+<InstantCtrlFlow #depa.demo.CustomerLookup apiVersion="depa.flows/v1" version="1.0.0" (
   <FlowContract #depa.demo.CustomerLookup {
     input = "vfs://./flow-code/customer.types.ts#CustomerLookupInput"
     output = "vfs://./flow-code/customer.types.ts#CustomerLookupOutput"
@@ -135,7 +135,7 @@ BizProcess 适合审批、异常处置、运营交接、case management 和需�
 ]
 ```
 
-`FlowContract #id` 必须等于产品根 FQN。`CallFlow` 先解析 definition，再解析目标 product form、contract 和允许的 invocation mode；因此 InstantFlow 不能同步调用一个可能 suspend 的 WorkFlow。EagerDataFlow 使用端口化 FlowContract，并额外声明 input/output ports。
+`FlowContract #id` 必须等于产品根 FQN。`CallFlow` 先解析 definition，再解析目标 product form、contract 和允许的 invocation mode；因此 InstantCtrlFlow 不能同步调用一个可能 suspend 的 WorkCtrlFlow。EagerDataFlow 使用端口化 FlowContract，并额外声明 input/output ports。
 
 ## Runtime 与 DEPA 边界
 
@@ -149,8 +149,8 @@ canonical XNL definition
 
 - definition XNL 拥有静态 topology、FlowContract 和 config。
 - derived execution plan 是可重建投影，不是新的 authoring 真源。
-- InstantFlow invocation 只拥有临时调度、取消和当前调用事实。
-- WorkFlow/BizProcess runtime actor 拥有持久 snapshot、deadline、attempt、branch decision、lane/candidate state 和 resume message。
+- InstantCtrlFlow invocation 只拥有临时调度、取消和当前调用事实。
+- WorkCtrlFlow/BPCtrlFlow runtime actor 拥有持久 snapshot、deadline、attempt、branch decision、lane/candidate state 和 resume message。
 - TaskSpace 拥有人工任务事实；业务结果作为 data 进入后续 predicate。
 - 动态代码通过显式 runtime 取得依赖，不成为 topology 或持久状态的第二 owner。
 

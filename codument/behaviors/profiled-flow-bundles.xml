@@ -2,18 +2,18 @@
   <requirement id="canonical-examples">
     <statement>Canonical CtrlFlow example bundles SHALL demonstrate product-specific orchestration capabilities and SHALL execute through the declared product loader and engine.</statement>
     <suite id="profile-representatives" name="按产品形态的代表示例">
-      <case id="instant-flow">
-        <given>the canonical InstantFlow bundle</given>
+      <case id="instant-ctrl-flow">
+        <given>the canonical InstantCtrlFlow bundle</given>
         <when>it is loaded and executed</when>
         <then>it SHALL demonstrate non-durable script orchestration and complete without persistent waits</then>
       </case>
-      <case id="work-flow">
-        <given>the canonical WorkFlow bundle</given>
+      <case id="work-ctrl-flow">
+        <given>the canonical WorkCtrlFlow bundle</given>
         <when>it crosses a wait or composite boundary and resumes in a fresh engine instance</when>
         <then>it SHALL reuse durable orchestration facts without replaying completed effects</then>
       </case>
-      <case id="biz-process">
-        <given>the canonical BizProcess bundle with TaskSpace</given>
+      <case id="bp-ctrl-flow">
+        <given>the canonical BPCtrlFlow bundle with TaskSpace</given>
         <when>task results and durable composites advance the process</when>
         <then>it SHALL preserve business result data and technical orchestration facts in their owning domains</then>
       </case>
