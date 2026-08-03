@@ -1,7 +1,7 @@
 {
   "name": "ai-workflow-logic",
   "version": "0.1.0",
-  "private": true,
+  "private": false,
   "description": "Pure helpers for AI workflow profile descriptors, runtime contexts, and reuse policy resolution",
   "type": "module",
   "main": "./src/index.ts",
@@ -11,5 +11,12 @@
   },
   "dependencies": {
     "ai-workflow-contract": "workspace:*"
+  },
+  "files": [
+    "src"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.com"
   }
 }

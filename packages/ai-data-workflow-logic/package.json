@@ -1,7 +1,7 @@
 {
   "name": "ai-data-workflow-logic",
   "version": "0.1.0",
-  "private": true,
+  "private": false,
   "description": "EagerDataFlow-backed AI Data Workflow RunGraph helpers",
   "type": "module",
   "main": "./src/index.ts",
@@ -14,5 +14,12 @@
     "ai-workflow-contract": "workspace:*",
     "ai-workflow-logic": "workspace:*",
     "eager-data-flow-contract": "workspace:*"
+  },
+  "files": [
+    "src"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.com"
   }
 }

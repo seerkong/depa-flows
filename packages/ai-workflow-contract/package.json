@@ -1,13 +1,22 @@
 {
   "name": "ai-workflow-contract",
   "version": "0.1.0",
-  "private": true,
+  "private": false,
   "description": "Shared AI workflow contracts over WorkCtrlFlow and EagerDataFlow substrates",
   "type": "module",
   "main": "./src/index.ts",
-  "exports": { ".": "./src/index.ts" },
+  "exports": {
+    ".": "./src/index.ts"
+  },
   "dependencies": {
     "eager-data-flow-contract": "workspace:*",
     "work-ctrl-flow-contract": "workspace:*"
+  },
+  "files": [
+    "src"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.com"
   }
 }

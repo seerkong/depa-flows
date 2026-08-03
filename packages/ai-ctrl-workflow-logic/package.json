@@ -1,7 +1,7 @@
 {
   "name": "ai-ctrl-workflow-logic",
   "version": "0.1.0",
-  "private": true,
+  "private": false,
   "description": "WorkCtrlFlow-backed AI Ctrl Workflow adapter logic",
   "type": "module",
   "main": "./src/index.ts",
@@ -16,5 +16,12 @@
     "instant-ctrl-flow-contract": "workspace:*",
     "work-ctrl-flow-contract": "workspace:*",
     "work-ctrl-flow-logic": "workspace:*"
+  },
+  "files": [
+    "src"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.com"
   }
 }

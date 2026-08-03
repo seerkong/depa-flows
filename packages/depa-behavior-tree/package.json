@@ -1,7 +1,7 @@
 {
   "name": "depa-behavior-tree",
   "version": "0.1.0",
-  "private": true,
+  "private": false,
   "description": "行为树内核（迁移自 depa-processor src/control）：BehaviorTreeCore + CtrlFlowEngine",
   "type": "module",
   "main": "./src/index.ts",
@@ -13,5 +13,12 @@
   },
   "dependencies": {
     "depa-processor": "^0.1.1"
+  },
+  "files": [
+    "src"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.com"
   }
 }

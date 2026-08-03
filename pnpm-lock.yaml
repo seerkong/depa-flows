@@ -1,0 +1,234 @@
+lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    devDependencies:
+      bun-types:
+        specifier: ^1.3.14
+        version: 1.3.14
+      typescript:
+        specifier: ^5.5.0
+        version: 5.9.3
+      xnl-core:
+        specifier: ^0.1.8
+        version: 0.1.11
+
+  packages/ai-ctrl-workflow-contract:
+    dependencies:
+      ai-workflow-contract:
+        specifier: workspace:*
+        version: link:../ai-workflow-contract
+      work-ctrl-flow-contract:
+        specifier: workspace:*
+        version: link:../work-ctrl-flow-contract
+
+  packages/ai-ctrl-workflow-logic:
+    dependencies:
+      ai-ctrl-workflow-contract:
+        specifier: workspace:*
+        version: link:../ai-ctrl-workflow-contract
+      ai-workflow-contract:
+        specifier: workspace:*
+        version: link:../ai-workflow-contract
+      ai-workflow-logic:
+        specifier: workspace:*
+        version: link:../ai-workflow-logic
+      instant-ctrl-flow-contract:
+        specifier: workspace:*
+        version: link:../instant-ctrl-flow-contract
+      work-ctrl-flow-contract:
+        specifier: workspace:*
+        version: link:../work-ctrl-flow-contract
+      work-ctrl-flow-logic:
+        specifier: workspace:*
+        version: link:../work-ctrl-flow-logic
+
+  packages/ai-data-workflow-contract:
+    dependencies:
+      ai-workflow-contract:
+        specifier: workspace:*
+        version: link:../ai-workflow-contract
+      eager-data-flow-contract:
+        specifier: workspace:*
+        version: link:../eager-data-flow-contract
+
+  packages/ai-data-workflow-logic:
+    dependencies:
+      ai-data-workflow-contract:
+        specifier: workspace:*
+        version: link:../ai-data-workflow-contract
+      ai-workflow-contract:
+        specifier: workspace:*
+        version: link:../ai-workflow-contract
+      ai-workflow-logic:
+        specifier: workspace:*
+        version: link:../ai-workflow-logic
+      eager-data-flow-contract:
+        specifier: workspace:*
+        version: link:../eager-data-flow-contract
+
+  packages/ai-workflow-contract:
+    dependencies:
+      eager-data-flow-contract:
+        specifier: workspace:*
+        version: link:../eager-data-flow-contract
+      work-ctrl-flow-contract:
+        specifier: workspace:*
+        version: link:../work-ctrl-flow-contract
+
+  packages/ai-workflow-logic:
+    dependencies:
+      ai-workflow-contract:
+        specifier: workspace:*
+        version: link:../ai-workflow-contract
+
+  packages/bp-ctrl-flow-contract:
+    dependencies:
+      task-manager-contract:
+        specifier: workspace:*
+        version: link:../task-manager-contract
+      work-ctrl-flow-contract:
+        specifier: workspace:*
+        version: link:../work-ctrl-flow-contract
+
+  packages/bp-ctrl-flow-logic:
+    dependencies:
+      bp-ctrl-flow-contract:
+        specifier: workspace:*
+        version: link:../bp-ctrl-flow-contract
+      depa-behavior-tree:
+        specifier: workspace:*
+        version: link:../depa-behavior-tree
+      instant-ctrl-flow-contract:
+        specifier: workspace:*
+        version: link:../instant-ctrl-flow-contract
+      instant-ctrl-flow-logic:
+        specifier: workspace:*
+        version: link:../instant-ctrl-flow-logic
+      task-manager-contract:
+        specifier: workspace:*
+        version: link:../task-manager-contract
+      task-manager-logic:
+        specifier: workspace:*
+        version: link:../task-manager-logic
+      work-ctrl-flow-contract:
+        specifier: workspace:*
+        version: link:../work-ctrl-flow-contract
+      work-ctrl-flow-logic:
+        specifier: workspace:*
+        version: link:../work-ctrl-flow-logic
+
+  packages/depa-behavior-tree:
+    dependencies:
+      depa-processor:
+        specifier: ^0.1.1
+        version: 0.1.1
+
+  packages/eager-data-flow-contract: {}
+
+  packages/eager-data-flow-logic:
+    dependencies:
+      eager-data-flow-contract:
+        specifier: workspace:*
+        version: link:../eager-data-flow-contract
+      xnl-core:
+        specifier: ^0.1.8
+        version: 0.1.11
+
+  packages/instant-ctrl-flow-contract: {}
+
+  packages/instant-ctrl-flow-logic:
+    dependencies:
+      depa-behavior-tree:
+        specifier: workspace:*
+        version: link:../depa-behavior-tree
+      instant-ctrl-flow-contract:
+        specifier: workspace:*
+        version: link:../instant-ctrl-flow-contract
+      xnl-core:
+        specifier: ^0.1.8
+        version: 0.1.11
+
+  packages/task-manager-contract: {}
+
+  packages/task-manager-logic:
+    dependencies:
+      task-manager-contract:
+        specifier: workspace:*
+        version: link:../task-manager-contract
+
+  packages/work-ctrl-flow-contract:
+    dependencies:
+      instant-ctrl-flow-contract:
+        specifier: workspace:*
+        version: link:../instant-ctrl-flow-contract
+
+  packages/work-ctrl-flow-logic:
+    dependencies:
+      depa-behavior-tree:
+        specifier: workspace:*
+        version: link:../depa-behavior-tree
+      instant-ctrl-flow-contract:
+        specifier: workspace:*
+        version: link:../instant-ctrl-flow-contract
+      instant-ctrl-flow-logic:
+        specifier: workspace:*
+        version: link:../instant-ctrl-flow-logic
+      work-ctrl-flow-contract:
+        specifier: workspace:*
+        version: link:../work-ctrl-flow-contract
+
+  tools/flow-dsl-check:
+    dependencies:
+      task-manager-contract:
+        specifier: workspace:*
+        version: link:../../packages/task-manager-contract
+      xnl-core:
+        specifier: ^0.1.8
+        version: 0.1.11
+
+packages:
+
+  '@types/node@26.1.2':
+    resolution: {integrity: sha512-Vu4a5UFA9rIIFJ7rB/Vaafh9lrCQszopTCx6KjFboXTGQbPNasehVR5TEiithSDGyd1DEiUByggTZsg8jukeIg==, tarball: https://registry.npmjs.org/@types/node/-/node-26.1.2.tgz}
+
+  bun-types@1.3.14:
+    resolution: {integrity: sha512-4N0ig0fEomHt5R0KCFWjovxow98rIoRwKolrYdCcknNwMekCXRnWEUvgu5soYV8QXtVsrUD8B95MBOZGPvr6KQ==, tarball: https://registry.npmjs.org/bun-types/-/bun-types-1.3.14.tgz}
+
+  depa-processor@0.1.1:
+    resolution: {integrity: sha512-yZQuRE/9NDlV6Bld3sUYCxGDSyXz86rhNfx2WASb5Z7vlTeu3KMAPDDDSfqNF6b6FyNIahvEVA41ot9OUfhfjw==, tarball: https://registry.npmjs.org/depa-processor/-/depa-processor-0.1.1.tgz}
+    engines: {node: '>=14.0.0'}
+
+  typescript@5.9.3:
+    resolution: {integrity: sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==, tarball: https://registry.npmjs.org/typescript/-/typescript-5.9.3.tgz}
+    engines: {node: '>=14.17'}
+    hasBin: true
+
+  undici-types@8.3.0:
+    resolution: {integrity: sha512-j375ScV60dom+YkPFIfTLcOiPxkN/buHz5GobjLhixFuANaNs3C9l4GmrWqejgXWJ7BbJcFYpTEUkS1Ge8bpZQ==, tarball: https://registry.npmjs.org/undici-types/-/undici-types-8.3.0.tgz}
+
+  xnl-core@0.1.11:
+    resolution: {integrity: sha512-ktOwkvYWe0dMBICBO2aqEX+qlLtOo1uMHHXKz/MDsn5DZhAt82f4R/mkvFEPis1e6LdY7vB+RxqsII4Jz8ahDw==, tarball: https://registry.npmjs.org/xnl-core/-/xnl-core-0.1.11.tgz}
+
+snapshots:
+
+  '@types/node@26.1.2':
+    dependencies:
+      undici-types: 8.3.0
+
+  bun-types@1.3.14:
+    dependencies:
+      '@types/node': 26.1.2
+
+  depa-processor@0.1.1: {}
+
+  typescript@5.9.3: {}
+
+  undici-types@8.3.0: {}
+
+  xnl-core@0.1.11: {}

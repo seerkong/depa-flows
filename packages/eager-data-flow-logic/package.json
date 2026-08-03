@@ -1,7 +1,7 @@
 {
   "name": "eager-data-flow-logic",
   "version": "0.1.0",
-  "private": true,
+  "private": false,
   "description": "Pure EagerDataFlow XNL loading, linking, validation, and plan projection",
   "type": "module",
   "main": "./src/index.ts",
@@ -12,5 +12,12 @@
   "dependencies": {
     "eager-data-flow-contract": "workspace:*",
     "xnl-core": "^0.1.8"
+  },
+  "files": [
+    "src"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.com"
   }
 }

@@ -1,7 +1,7 @@
 {
   "name": "work-ctrl-flow-logic",
   "version": "0.1.0",
-  "private": true,
+  "private": false,
   "description": "WorkCtrlFlow 引擎：可中断可恢复的动态工作流（快照重放 + WaitHandle/ResumeSignal）",
   "type": "module",
   "main": "./src/index.ts",
@@ -11,9 +11,16 @@
     "./filesystem": "./src/filesystem.ts"
   },
   "dependencies": {
-    "work-ctrl-flow-contract": "workspace:*",
+    "depa-behavior-tree": "workspace:*",
     "instant-ctrl-flow-contract": "workspace:*",
     "instant-ctrl-flow-logic": "workspace:*",
-    "depa-behavior-tree": "workspace:*"
+    "work-ctrl-flow-contract": "workspace:*"
+  },
+  "files": [
+    "src"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.com"
   }
 }

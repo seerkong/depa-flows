@@ -1,7 +1,7 @@
 {
   "name": "instant-ctrl-flow-logic",
   "version": "0.1.0",
-  "private": true,
+  "private": false,
   "description": "InstantCtrlFlow 引擎：xnl bundle 加载 → 行为树编译 → 无状态单次执行",
   "type": "module",
   "main": "./src/index.ts",
@@ -11,8 +11,15 @@
     "./filesystem": "./src/filesystem.ts"
   },
   "dependencies": {
-    "instant-ctrl-flow-contract": "workspace:*",
     "depa-behavior-tree": "workspace:*",
+    "instant-ctrl-flow-contract": "workspace:*",
     "xnl-core": "^0.1.8"
+  },
+  "files": [
+    "src"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.com"
   }
 }

@@ -1,9 +1,18 @@
 {
   "name": "task-manager-contract",
   "version": "0.1.0",
-  "private": true,
+  "private": false,
   "description": "任务管理契约：任务树 DTO 与状态机（纯类型 + 转移表，零依赖）",
   "type": "module",
   "main": "./src/index.ts",
-  "exports": { ".": "./src/index.ts" }
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "src"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.com"
+  }
 }

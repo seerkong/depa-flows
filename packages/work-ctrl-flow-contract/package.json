@@ -1,12 +1,21 @@
 {
   "name": "work-ctrl-flow-contract",
   "version": "0.1.0",
-  "private": true,
+  "private": false,
   "description": "WorkCtrlFlow 契约：快照/等待句柄/恢复信号/存储接口（纯类型，零运行时依赖）",
   "type": "module",
   "main": "./src/index.ts",
-  "exports": { ".": "./src/index.ts" },
+  "exports": {
+    ".": "./src/index.ts"
+  },
   "dependencies": {
     "instant-ctrl-flow-contract": "workspace:*"
+  },
+  "files": [
+    "src"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.com"
   }
 }
