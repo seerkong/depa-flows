@@ -53,7 +53,18 @@ Definition edits and RunGraph patches are separate surfaces. A run patch does no
 
 ## Reuse policy
 
-Machine nodes default to `semantic-hash`; manual nodes default to `never`. A node may override the policy with config such as:
+Machine nodes default to `semantic-hash`; manual nodes default to `never`. Author a canonical manual node through AIDataWorkflow config:
+
+```xnl
+<TransformNode #human-review {
+  inputs = { evidence = "flow-port://#retrieve/evidence" }
+  outputs = ["review"]
+  src = "vfs://./flow-code/evidence.ts#reviewEvidence"
+  config = { node_type = "manual" }
+}>
+```
+
+`node_type = "manual"` is AIDataWorkflow policy metadata. EagerDataFlow's legacy `type` field remains an implementation binding. A node may override its reuse policy with config such as:
 
 ```xnl
 <TransformNode #fresh-review {

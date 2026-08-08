@@ -21,4 +21,4 @@ When a completed node changes, the changed node and its transitive downstream de
 
 ## Reuse
 
-The default machine-node reuse policy is `semantic-hash`; manual nodes default to `never`. Reuse is run-local unless a separate shared cache authority is introduced. Generation records history and does not enter the semantic fingerprint.
+The default machine-node reuse policy is `semantic-hash`; manual nodes default to `never`. A canonical manual node is authored with `config = { node_type = "manual" }`; the EagerDataFlow `type` field remains an implementation binding and is not reinterpreted. Reuse is run-local unless a separate shared cache authority is introduced. Generation records history and does not enter the semantic fingerprint.

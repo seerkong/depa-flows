@@ -80,7 +80,7 @@ codument/missions/pending/<mission-id>/
 执行显式 plan-mission:before hook
 ---- /?before
 ---- #step ?context
-确认 codument 已初始化；读取 codument/attractors、codument/missions/README.md、codument/std/spec/mission-xml-spec.md；解析 questioning severity（默认 light）。
+确认 codument 已初始化；读取 codument/attractors、codument/missions/README.md、codument/std/spec/mission-xml-spec.md；解析 questioning severity（mission 建议默认 `auto`：用户未指定且目标是长时间自主迭代时用 `auto`；用户明确要求深挖 / 大量人工介入时才降级 `normal`/`deep`）。
 ---- /?context
 ---- #step ?decision-tree
 写 analysis/decision-tree.xnl：Root Questions、Severity、Dependency Graph、Topological Ready Batch、Assumptions；auto 模式不得提问。

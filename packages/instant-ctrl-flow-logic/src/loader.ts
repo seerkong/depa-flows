@@ -107,9 +107,37 @@ export interface LoadResult {
   diagnostics: FlowDiagnostic[];
 }
 
+export interface LoadCtrlFlowProfileSourcesOptions extends LoadFlowSourcesOptions {
+  profileRoot: string;
+  substrateForm: FlowForm;
+}
+
 export function loadFlowBundleFromSources(
   sources: FlowSourceCollection,
   options: LoadFlowSourcesOptions = {},
+): LoadResult {
+  return loadCtrlFlowSources(sources, options);
+}
+
+export function loadCtrlFlowProfileFromSources(
+  sources: FlowSourceCollection,
+  options: LoadCtrlFlowProfileSourcesOptions,
+): LoadResult {
+  if (!options.profileRoot.trim()) {
+    return {
+      diagnostics: [{ code: 'invalid-profile-root', message: 'profile root must be a non-empty XNL tag' }],
+    };
+  }
+  return loadCtrlFlowSources(sources, options, {
+    rootTag: options.profileRoot,
+    substrateForm: options.substrateForm,
+  });
+}
+
+function loadCtrlFlowSources(
+  sources: FlowSourceCollection,
+  options: LoadFlowSourcesOptions,
+  profile?: { rootTag: string; substrateForm: FlowForm },
 ): LoadResult {
   const diagnostics: FlowDiagnostic[] = [];
   const note = (code: string, message: string) => diagnostics.push({ code, message });
@@ -168,14 +196,25 @@ export function loadFlowBundleFromSources(
 
   for (const tag of Object.keys(fileRoots)) noteLegacyTag(tag);
 
-  const form = FORMS.find((candidate) => fileRoots[candidate]);
+  const form = profile?.substrateForm ?? FORMS.find((candidate) => fileRoots[candidate]);
   if (!form) {
     if (noted.size) return { diagnostics };
     note('no-container', `no container root found in ${options.baseUri ?? 'named source collection'}`);
     return { diagnostics };
   }
-  const container = fileRoots[form].el;
-  const containerFile = fileRoots[form].file;
+  const rootTag = profile?.rootTag ?? form;
+  const rootEntry = fileRoots[rootTag];
+  if (!rootEntry) {
+    note(
+      profile ? 'profile-root-missing' : 'no-container',
+      profile
+        ? `expected profile root <${rootTag}> in ${options.baseUri ?? 'named source collection'}`
+        : `no container root found in ${options.baseUri ?? 'named source collection'}`,
+    );
+    return { diagnostics };
+  }
+  const container = rootEntry.el;
+  const containerFile = rootEntry.file;
 
   // Facet discovery is physical; toNodeSpec remains a pure XNL-to-contract projection.
   const facets: Partial<Record<FacetName, XnlEl>> = {};

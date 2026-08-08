@@ -1,0 +1,95 @@
+<Track id="add-ai-workflow-profile-source-loaders" version="1" xmlns:cdt="urn:codument:v1">
+  <Metadata>
+    <Status>completed</Status>
+    <Goal>为 AICtrlWorkflow 与 AIDataWorkflow 提供 canonical XNL profile source loaders。</Goal>
+    <Description>复用 ctrl/eager-data substrate parsing 与 validation，返回 typed AI workflow binding 和结构化诊断。</Description>
+    <QuestionMode>decision-tree</QuestionMode>
+    <QuestionSeverity>auto</QuestionSeverity>
+    <CommitMode>manual</CommitMode>
+    <CreatedAt>2026-08-07T15:44:00Z</CreatedAt>
+    <UpdatedAt>2026-08-07T15:49:00Z</UpdatedAt>
+  </Metadata>
+
+  <Ports scope="track">
+    <MaterialBundle role="input" name="behavior-deltas" domain="behavior" path="vfs://./behavior_deltas/"/>
+    <MaterialBundle role="state" name="analysis" domain="track" path="vfs://./analysis/"/>
+    <MaterialBundle role="output" name="packages" domain="source" path="vfs://@/packages/"/>
+    <MaterialBundle role="output" name="behavior" domain="codument" path="vfs://@/codument/behaviors/"/>
+  </Ports>
+
+  <TaskSpace id="space_add-ai-workflow-profile-source-loaders" name="add-ai-workflow-profile-source-loaders" version="1">
+    <Description>Canonical AI workflow profile source loaders over existing substrate parsers.</Description>
+    <SubNodes>
+      <TaskGroup id="P1" name="Substrate profile-root primitives" status="DONE" order="0">
+        <Description>Add explicit profile-root loading paths while preserving existing substrate loader behavior.</Description>
+        <cdt:Gate>
+          <cdt:Criterion>Existing substrate loader characterization tests pass</cdt:Criterion>
+          <cdt:Criterion>Profile roots lower through the same grammar and validation rules</cdt:Criterion>
+        </cdt:Gate>
+        <SubNodes>
+          <Task id="T1.1" name="Add ctrl profile-root source loading primitive" status="DONE" order="0" priority="P0">
+            <Description>Parameterize ctrl source loading for an explicit profile root and WorkCtrlFlow target without widening the existing loader.</Description>
+            <cdt:Acceptance>
+              <cdt:Criterion id="T1.1-AC1" checked="true">AICtrlWorkflow sources can be validated with WorkCtrlFlow grammar and lowered to a WorkCtrlFlow spec</cdt:Criterion>
+              <cdt:Criterion id="T1.1-AC2" checked="true">Existing InstantCtrlFlow/WorkCtrlFlow/BPCtrlFlow loader tests remain unchanged and pass</cdt:Criterion>
+            </cdt:Acceptance>
+          </Task>
+          <Task id="T1.2" name="Add eager-data profile-root source loading primitive" status="DONE" order="1" priority="P0">
+            <Description>Parameterize eager-data source loading for an explicit AIDataWorkflow root without widening the existing loader.</Description>
+            <cdt:Acceptance>
+              <cdt:Criterion id="T1.2-AC1" checked="true">AIDataWorkflow sources reuse EagerDataFlow node, port, contract and DAG validation</cdt:Criterion>
+              <cdt:Criterion id="T1.2-AC2" checked="true">Existing EagerDataFlow loader tests remain unchanged and pass</cdt:Criterion>
+            </cdt:Acceptance>
+          </Task>
+        </SubNodes>
+      </TaskGroup>
+
+      <TaskGroup id="P2" name="AI workflow loader facades" status="DONE" order="1">
+        <Description>Expose typed public source loaders from AI workflow logic packages.</Description>
+        <cdt:Gate>
+          <cdt:Criterion>Both AI workflow logic packages export canonical loaders</cdt:Criterion>
+          <cdt:Criterion>Invalid sources return diagnostics without executable bindings</cdt:Criterion>
+        </cdt:Gate>
+        <SubNodes>
+          <Task id="T2.1" name="Add AICtrlWorkflow loader facade" status="DONE" order="0" priority="P0">
+            <Description>Load canonical sources, lower through the ctrl primitive and wrap the result as an AICtrlWorkflow definition binding.</Description>
+            <cdt:Acceptance>
+              <cdt:Criterion id="T2.1-AC1" checked="true">Canonical ai-ctrl-workflow example loads with no diagnostics and a WorkCtrlFlow-backed binding</cdt:Criterion>
+              <cdt:Criterion id="T2.1-AC2" checked="true">Wrong roots and invalid statements produce stable diagnostics and no binding</cdt:Criterion>
+            </cdt:Acceptance>
+          </Task>
+          <Task id="T2.2" name="Add AIDataWorkflow loader facade" status="DONE" order="1" priority="P0">
+            <Description>Load canonical sources, lower through the eager-data primitive and wrap the result as an AIDataWorkflow definition binding.</Description>
+            <cdt:Acceptance>
+              <cdt:Criterion id="T2.2-AC1" checked="true">Canonical ai-data-workflow example loads with no diagnostics and an EagerDataFlow-backed binding</cdt:Criterion>
+              <cdt:Criterion id="T2.2-AC2" checked="true">Wrong roots and invalid nodes produce stable diagnostics and no binding</cdt:Criterion>
+            </cdt:Acceptance>
+          </Task>
+        </SubNodes>
+      </TaskGroup>
+
+      <TaskGroup id="P3" name="Compatibility and release readiness" status="DONE" order="2">
+        <Description>Validate exports, package tests and workspace compatibility for downstream host consumption.</Description>
+        <cdt:Gate>
+          <cdt:Criterion>Affected package tests and workspace typecheck pass</cdt:Criterion>
+          <cdt:Criterion>Public browser entrypoints expose the source loaders</cdt:Criterion>
+        </cdt:Gate>
+        <SubNodes>
+          <Task id="T3.1" name="Run compatibility and package export verification" status="DONE" order="0" priority="P0">
+            <Description>Run affected and workspace checks, verify browser exports and record evidence for downstream binding.</Description>
+            <cdt:Acceptance>
+              <cdt:Criterion id="T3.1-AC1" checked="true">Affected package tests and typecheck pass</cdt:Criterion>
+              <cdt:Criterion id="T3.1-AC2" checked="true">Package entrypoints expose both canonical loader APIs</cdt:Criterion>
+            </cdt:Acceptance>
+          </Task>
+        </SubNodes>
+      </TaskGroup>
+    </SubNodes>
+  </TaskSpace>
+
+  <Schedule>
+    <Parallel max-concurrent="1" spot-check="true"/>
+  </Schedule>
+
+  <Hooks/>
+</Track>

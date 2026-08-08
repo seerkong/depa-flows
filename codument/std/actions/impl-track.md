@@ -58,7 +58,7 @@
 @delimiter: --
 -- #sequence ?select
 ---- #step ?s1
-扫描 codument/tracks/active/ 各 track 的 track.xml <Metadata>；无有效 track 目录或 track.xml → 宣布"没有可实现的活跃 track"并停止
+扫描 codument/tracks/active/ 各 track 的 track.xml <Metadata>；若由 codument-impl-mission 调用且存在刚由 plan-track 创建的候选（mission 的 TrackLink state=candidate），先按 §1.4 激活该候选再扫描；无有效 track 目录或 track.xml → 宣布"没有可实现的活跃 track"并停止
 ---- /?s1
 ---- #if ?s2 cond="用户提供了 track 名称参数"
 ------ #sequence ?named
@@ -81,7 +81,10 @@
 -- /?select
 ```
 
-未选出任何 track 则通知用户并等待指示（`ask-single-question-free`）。
+未选出任何 track 则通知用户并等待指示（`ask-single-question-free`）；mission 语境下则向 MissionApplier 返回“无可激活 track”+ 原因，由 mission 决定重规划 / 阻塞，不默认提问。
+
+### 1.4 mission 语境候选激活
+当本 `codument-impl-track` 由 `codument-impl-mission` 调用且 mission 的 ready action 是 `cdt:TrackLink state="candidate"` 时，plan-track 刚创建的真实 track 属于 mission 执行期产物：`QuestionSeverity=auto`（或连续执行模式）下，track executor 在选择前**先把该 track 激活到 `tracks/active/<id>/`（若 plan-track 已直接落 active 则跳过），并回写 `TrackLink state="bound"` 与 bind report**，然后按 §1.3 正常选择；不等待用户批准（mission 层已代为批准）。只有显式配置了确认 gate 才停在激活点。
 
 ---
 
@@ -106,7 +109,7 @@
 
 ## 3.0 续跑检测 / 中断恢复（step 0）
 
-`track.xml` 的任务 `status` 就是恢复点真源——**不读 `state.json` 作为恢复点**。入口先读 XML 状态：若存在 `status=ACTIVE` 的任务（上次会话中断在此），用 `ask-single-question-closed` 让用户选「继续 / 重做 / 跳过」，再进入遍历；没有 `ACTIVE` 任务就从第一个未完成 phase 起。
+`track.xml` 的任务 `status` 就是恢复点真源——**不读 `state.json` 作为恢复点**。入口先读 XML 状态：若存在 `status=ACTIVE` 的任务（上次会话中断在此），`QuestionSeverity=auto` 或由 mission 连续执行调用时**默认选「A. 继续此任务」直接续跑，不提问**；其他场景用 `ask-single-question-closed` 让用户选「继续 / 重做 / 跳过」，再进入遍历；没有 `ACTIVE` 任务就从第一个未完成 phase 起。
 
 若上次会话已有 local/delegated 实现结果但尚未完成 executor verification（例如 `analysis/findings.md` 或对话记录显示"待复核"，或任务尚未从 ACTIVE 回写 DONE），**本轮第一件事就是客观复核**，通过后再回写状态；不得因实现已存在就直接继续。
 
@@ -265,7 +268,7 @@ local 与 delegated worker 都应：
 
 delegated worker 还必须遵守：
 
-- 只接收路径与引用，自行读取文件；完成即停。
+- 只接收路径与引用，自行读取文件；完成即返回产物与证据（stop 仅限子流程边界，调用方决定是否继续）。
 - **不得修改** `track.xml`、acceptance checkmarks、`analysis/findings.md`，不得创建 task/phase commit。
 - 返回改动摘要、实际命令结果、未验证项和阻塞，不把自述当完成裁决。
 
@@ -401,6 +404,8 @@ fresh-spawn 一个新 gap-loop 子代理（或等价 fresh child context），�
 ---
 
 ## 8.0 失败处理（step 7）
+
+> **mission 子 track 语境**：若本 `codument-impl-track` 由 `codument-impl-mission` 调用，任务失败 / 门控失败 / DAG 阻塞先尝试任务边界内自动修复；无法自动修复时，把失败类型、原因与建议写入 `analysis/findings.md`，向 MissionApplier 返回结构化 BLOCKED 结果，由 mission 决定重规划 / 换分支 / 真实阻塞，**不默认 ask-single-question-closed**。非 mission（用户直接对话）场景保留下方提问分支。
 
 ```text
 @delimiter: --

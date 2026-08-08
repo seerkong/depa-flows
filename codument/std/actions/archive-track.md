@@ -55,7 +55,7 @@
 读 track.xml <Metadata><Status>；status=completed 才直接归档
 ---- /?precheck
 ---- #if ?notdone cond="Status 不是 completed"
-警告用户该 track 未完成，询问是否仍要归档（Protocol: ask-single-question-closed）；用户拒绝则 #exit
+警告用户该 track 未完成，询问是否仍要归档（Protocol: ask-single-question-closed）；用户拒绝则 #exit。由 codument-impl-mission 驱动归档时，未完成 track 的裁决交还 MissionApplier（记录原因与建议，不默认提问），由 mission 决定是否阻塞 / 换序；用户直接调用时才询问。
 ---- /?notdone
 ---- #if ?before cond="action-hooks.xml 为 archive-track 配了 archive-track:before（如 <cdt:AttractorCheck use=\"docs\">）"
 ------ #step ?run-before

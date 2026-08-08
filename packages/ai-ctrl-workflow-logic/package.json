@@ -1,6 +1,6 @@
 {
   "name": "ai-ctrl-workflow-logic",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "private": false,
   "description": "WorkCtrlFlow-backed AI Ctrl Workflow adapter logic",
   "type": "module",
@@ -14,6 +14,7 @@
     "ai-workflow-contract": "workspace:*",
     "ai-workflow-logic": "workspace:*",
     "instant-ctrl-flow-contract": "workspace:*",
+    "instant-ctrl-flow-logic": "^0.1.1",
     "work-ctrl-flow-contract": "workspace:*",
     "work-ctrl-flow-logic": "workspace:*"
   },

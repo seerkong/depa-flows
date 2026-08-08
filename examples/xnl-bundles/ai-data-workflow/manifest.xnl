@@ -15,6 +15,7 @@
     inputs = { evidence = "flow-port://#retrieve/evidence" }
     outputs = ["summary"]
     src = "vfs://./flow-code/evidence.ts#summarizeEvidence"
+    config = { node_type = "manual" }
   }>
   <ReturnNode #return {
     inputs = { summary = "flow-port://#summarize/summary" }

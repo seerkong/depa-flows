@@ -3,7 +3,7 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { loadFlowBundle } from '../src/filesystem.js';
-import { loadFlowBundleFromSources } from '../src/loader.js';
+import { loadCtrlFlowProfileFromSources, loadFlowBundleFromSources } from '../src/loader.js';
 
 const created: string[] = [];
 
@@ -28,6 +28,44 @@ afterEach(() => {
 });
 
 describe('canonical flow bundle loading', () => {
+  it('loads an explicit profile root through WorkCtrlFlow grammar without widening the canonical loader', () => {
+    const sources = {
+      'manifest.xnl': `<AICtrlWorkflow #depa.flows.test.AgentProfile apiVersion="depa.flows/v1" version="1.0.0" (
+        <FlowContract #depa.flows.test.AgentProfile>
+      ) [
+        <ExternalJob #agent-review { signalKind = "agent.done" signalKey = "review" }>
+        <Return #done>
+      ]>`,
+    };
+
+    const profile = loadCtrlFlowProfileFromSources(sources, {
+      profileRoot: 'AICtrlWorkflow',
+      substrateForm: 'WorkCtrlFlow',
+    });
+    const canonical = loadFlowBundleFromSources(sources);
+
+    expect(profile.diagnostics).toEqual([]);
+    expect(profile.spec).toMatchObject({
+      form: 'WorkCtrlFlow',
+      fqn: 'depa.flows.test.AgentProfile',
+    });
+    expect(profile.spec?.statements.map(({ tag }) => tag)).toEqual(['ExternalJob', 'Return']);
+    expect(canonical.spec).toBeUndefined();
+    expect(canonical.diagnostics.map(({ code }) => code)).toEqual(['no-container']);
+  });
+
+  it('rejects a wrong explicit profile root without falling back to a substrate root', () => {
+    const result = loadCtrlFlowProfileFromSources({
+      'manifest.xnl': manifest('WorkCtrlFlow', '<Return #done>'),
+    }, {
+      profileRoot: 'AICtrlWorkflow',
+      substrateForm: 'WorkCtrlFlow',
+    });
+
+    expect(result.spec).toBeUndefined();
+    expect(result.diagnostics.map(({ code }) => code)).toEqual(['profile-root-missing']);
+  });
+
   it.each(['InstantCtrlFlow', 'WorkCtrlFlow', 'BPCtrlFlow'] as const)(
     'loads %s from named sources without a filesystem base',
     (form) => {

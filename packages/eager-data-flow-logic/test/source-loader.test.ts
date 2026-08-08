@@ -5,6 +5,7 @@ import path from 'node:path';
 import type { EagerDataFlowRegistry } from 'eager-data-flow-contract';
 import {
   loadEagerDataFlowDirectory,
+  loadEagerDataFlowProfileSources,
   loadEagerDataFlowSources,
 } from 'eager-data-flow-logic';
 
@@ -50,6 +51,35 @@ const validSource = (body?: string) => `
 `;
 
 describe('EagerDataFlow source loader', () => {
+  test('loads an explicit AI profile root through EagerDataFlow grammar without widening the canonical loader', () => {
+    const source = validSource().replace('<EagerDataFlow ', '<AIDataWorkflow ');
+    const profile = loadEagerDataFlowProfileSources({ 'manifest.xnl': source }, {
+      profileRoot: 'AIDataWorkflow',
+    });
+    const canonical = loadEagerDataFlowSources({ 'manifest.xnl': source });
+
+    expect(profile.diagnostics).toEqual([]);
+    expect(profile.plan).toMatchObject({
+      form: 'EagerDataFlow',
+      fqn: 'depa.test.Export',
+      declarationOrder: ['entry', 'normalize', 'audit', 'finish', 'return'],
+    });
+    expect(canonical.plan).toBeUndefined();
+    expect(codes(canonical)).toEqual(expect.arrayContaining([
+      'unsupported-eager-source-root',
+      'eager-data-flow-root-count',
+    ]));
+  });
+
+  test('rejects a wrong explicit profile root without falling back to EagerDataFlow', () => {
+    const result = loadEagerDataFlowProfileSources({ 'manifest.xnl': validSource() }, {
+      profileRoot: 'AIDataWorkflow',
+    });
+
+    expect(result.plan).toBeUndefined();
+    expect(codes(result)).toContain('profile-root-count');
+  });
+
   test('loads named XNL sources and preserves distinct edge categories', () => {
     const result = loadEagerDataFlowSources([
       { name: 'flows/export/manifest.xnl', content: validSource() },

@@ -385,9 +385,34 @@ function validateTopology(
   }
 }
 
+export interface LoadEagerDataFlowProfileSourcesOptions extends LoadEagerDataFlowOptions {
+  profileRoot: string;
+}
+
 export function loadEagerDataFlowSources(
   sources: EagerDataFlowSourceCollection,
   options: LoadEagerDataFlowOptions = {},
+): EagerDataFlowLoadResult {
+  return loadEagerDataSources(sources, options, 'EagerDataFlow');
+}
+
+export function loadEagerDataFlowProfileSources(
+  sources: EagerDataFlowSourceCollection,
+  options: LoadEagerDataFlowProfileSourcesOptions,
+): EagerDataFlowLoadResult {
+  if (!options.profileRoot.trim()) {
+    return {
+      diagnostics: [{ code: 'invalid-profile-root', message: 'profile root must be a non-empty XNL tag' }],
+    };
+  }
+  return loadEagerDataSources(sources, options, options.profileRoot, true);
+}
+
+function loadEagerDataSources(
+  sources: EagerDataFlowSourceCollection,
+  options: LoadEagerDataFlowOptions,
+  rootTag: string,
+  profile = false,
 ): EagerDataFlowLoadResult {
   const diagnostics: EagerDataFlowDiagnostic[] = [];
   const sink: DiagnosticSink = {
@@ -433,7 +458,7 @@ export function loadEagerDataFlowSources(
         source: root.source,
       });
     } else if (
-      root.element.tag !== 'EagerDataFlow' &&
+      root.element.tag !== rootTag &&
       root.element.tag !== 'DataFlow' &&
       !AUXILIARY_ROOT_TAGS.has(root.element.tag)
     ) {
@@ -443,10 +468,13 @@ export function loadEagerDataFlowSources(
     }
   }
 
-  const flowRoots = roots.filter(({ element }) => element.tag === 'EagerDataFlow');
+  const flowRoots = roots.filter(({ element }) => element.tag === rootTag);
   if (flowRoots.length !== 1) {
     if (flowRoots.length > 0 || legacyRoots.length === 0) {
-      sink.note('eager-data-flow-root-count', `expected exactly one EagerDataFlow root, found ${flowRoots.length}`);
+      sink.note(
+        profile ? 'profile-root-count' : 'eager-data-flow-root-count',
+        `expected exactly one ${rootTag} root, found ${flowRoots.length}`,
+      );
     }
     return { diagnostics };
   }
@@ -464,14 +492,14 @@ export function loadEagerDataFlowSources(
 
   const rootId = idOf(root);
   if (!FQN.test(rootId)) {
-    sink.note('invalid-flow-id', `EagerDataFlow #id must be a dotted FQN, got "${rootId}"`, {
+    sink.note('invalid-flow-id', `${rootTag} #id must be a dotted FQN, got "${rootId}"`, {
       source: rootSource,
     });
   }
   const apiVersion = typeof root.metadata.apiVersion === 'string' ? root.metadata.apiVersion : '';
   const version = typeof root.metadata.version === 'string' ? root.metadata.version : '';
   if (!apiVersion || !version) {
-    sink.note('missing-flow-metadata', 'EagerDataFlow requires apiVersion and version metadata', {
+    sink.note('missing-flow-metadata', `${rootTag} requires apiVersion and version metadata`, {
       source: rootSource,
     });
   }
@@ -479,7 +507,7 @@ export function loadEagerDataFlowSources(
   const sections = sectionChildren(root);
   for (const section of sections) {
     if (section.tag !== 'FlowContract' && section.tag !== 'FlowAuthoring') {
-      sink.note('unsupported-root-section', `<${section.tag}> is not an EagerDataFlow root section`);
+      sink.note('unsupported-root-section', `<${section.tag}> is not a ${rootTag} root section`);
     }
   }
   const contractElements = [

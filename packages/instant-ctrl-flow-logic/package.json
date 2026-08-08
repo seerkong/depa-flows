@@ -1,6 +1,6 @@
 {
   "name": "instant-ctrl-flow-logic",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": false,
   "description": "InstantCtrlFlow 引擎：xnl bundle 加载 → 行为树编译 → 无状态单次执行",
   "type": "module",

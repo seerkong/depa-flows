@@ -1,6 +1,6 @@
 # skill: codument-plan-track（创建变更追踪）
 
-为一个新功能 / Bug 修复 / 变更创建一条 **Track**：引导用户收集信息，生成行为增量（`behavior_deltas/<capability>/delta.xml`）、提案（`proposal.md`）、设计（`design.md`）和状态真源 `track.xml`，并把它们组织在专用的 `tracks/pending/<id>/` 目录中等待批准。
+为一个新功能 / Bug 修复 / 变更创建一条 **Track**：引导用户收集信息，生成行为增量（`behavior_deltas/<capability>/delta.xml`）、提案（`proposal.md`）、设计（`design.md`）和状态真源 `track.xml`，并把它们组织在专用的 `tracks/pending/<id>/` 目录中等待批准。由 `codument-impl-mission` 以 `QuestionSeverity=auto` 调用时，创建直接落在 `tracks/active/<id>/`（mission 层视为已批准），不进入 pending 等待（见 §3.2 调用方上下文）。
 
 > 本文以 **Markdown 为主**：何时建 track、每步问什么、产物长什么样、各种规则与示例都用 prose / 列表 / 表格 / good-bad 示例完整给出。只有**程序化的控制流**（新建 track 的固定顺序、同轮确认的写入分支）用流程标记块（` ```text ` + `@delimiter: --`，构造词汇见 `_action-spec.md`）表达；XML 片段用 ` ```xml ` 围栏内嵌（免转义）。
 >
@@ -10,7 +10,7 @@
 
 ## 0. 意图、触发与产物
 
-**意图。** 为一个新功能 / 变更建 track：收集信息 → 起草行为增量与 `track.xml` → 同轮收集提交模式 / 校验模式 / 方向审查 → 等待批准。**提案获批前不开始实现。**
+**意图。** 为一个新功能 / 变更建 track：收集信息 → 起草行为增量与 `track.xml` → 同轮收集提交模式 / 校验模式 / 方向审查 → 等待批准。**提案获批前不开始实现**——除非由 `codument-impl-mission` 以 `QuestionSeverity=auto` 调用，此时 mission 层代为批准、创建即激活（见 §3.2 调用方上下文）。
 
 **何时建 track（trigger）。** 下列情况建 track：
 
@@ -143,7 +143,7 @@
 1. **查重**：在 `codument/tracks/{pending,active,archived}/` 查重；若提议短名与任一生命周期目录中的 track 重复，停止并建议换名。
 2. **生成 Track ID**：小写英文 + 中横线的简短描述，**动词开头**（`add-`、`update-`、`remove-`、`refactor-`），如 `add-user-auth`、`fix-login-bug`。**不含日期**（日期只在归档时加）；若已被占用，追加 `-2`、`-3`。
 3. **按 severity 处理 ID 歧义**：`auto` 模式直接采用生成的 track-id，并把命名依据写入 `analysis/decision-tree.xnl`。其他模式只有在命名确实会改变范围或与现有 id 难以区分时，才把它作为一个 ready decision 加入当前拓扑 batch；不得为单独确认 id 打断其他独立问题。
-4. **建目录**：`codument/tracks/pending/<track_id>/`。规划完成但尚未获批的 track 必须留在 `pending/`；获批后才移动到 `codument/tracks/active/<track_id>/` 并交给 `impl-track`。
+4. **建目录**：`codument/tracks/pending/<track_id>/`。规划完成但尚未获批的 track 必须留在 `pending/`；获批后才移动到 `codument/tracks/active/<track_id>/` 并交给 `impl-track`。**调用方上下文（mission 连续执行）**：由 `codument-impl-mission` 以 `QuestionSeverity=auto` 调用时，直接建在 `codument/tracks/active/<track_id>/`，不进入 pending；mission 层在 impl-mission 侧回写 `TrackLink state="bound"` 并写 bind report。
 5. **建 `analysis/`（外部记忆）**：建 `analysis/findings.md` 与 `analysis/knowledge.md`。
    - **硬规则：仅缺失时创建，绝不覆盖已有内容**——目录已存在则不删不重写；文件已存在则绝不改写（哪怕你觉得不完整），不存在才按模板创建。
    - 按 planning-with-files 把关键结论写入文件作为外部记忆，**避免长对话或多轮工具调用丢失重要信息**；内容必须与本 track 相关、避免泛化；不引用 `.` 开头隐藏目录。
@@ -577,7 +577,7 @@ proposal 获批后："现在我将根据规范创建结构化实现计划（`tra
 
 ## 4. 门控（gates）
 
-- **提案获批前不开始实现**（这是 `codument-impl-track` 的前置门控）。
+- **提案获批前不开始实现**（这是 `codument-impl-track` 的前置门控）。例外：由 `codument-impl-mission` 在 `QuestionSeverity=auto` / 连续执行模式下调用时，mission 层代为批准，track 创建即激活后即可进入 `codument-impl-track`（见 §3.2 调用方上下文）。
 - 若 `codument/config/action-hooks.xml` 为 `action name="plan-track"` 显式配置了 `plan-track:before` hook，才在规划前执行；没有 hook 时直接以项目上下文继续。命令级 hook 与 track.xml 的节点级 `<Hook>` 同语法、不同宿主。
 
 ---

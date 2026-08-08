@@ -1,0 +1,9 @@
+<decision #track.support-manual-ai-data-workflow-node-policy.authoring-field { status = "accepted" priority = "P0" }
+(
+  <question ?>How should canonical XNL distinguish manual policy from legacy implementation type?</?>
+  <answer { } (
+    <raw-answer ?>Use config.node_type for AI profile semantics.</?>
+    <decision-text ?>Preserve EagerDataFlow type compatibility and recognize config.node_type="manual" in RunGraph lowering.</?>
+    <rationale ?>This is additive and already matches patch-node config semantics.</?>
+  )>
+)>

@@ -29,9 +29,13 @@ import type {
 } from 'ai-workflow-contract';
 import type {
   EagerDataFlowAuthoringPlan,
+  EagerDataFlowDiagnostic,
   EagerDataFlowNodePlan,
+  EagerDataFlowSourceCollection,
   EagerDataFlowValue,
+  LoadEagerDataFlowOptions,
 } from 'eager-data-flow-contract';
+import { loadEagerDataFlowProfileSources } from 'eager-data-flow-logic';
 import {
   createAIWorkflowRuntimeContext,
   defineAIDataWorkflow,
@@ -67,6 +71,28 @@ export function defineEagerBackedAIDataWorkflow(
   definition: AIDataWorkflowDefinitionBinding['definition'],
 ): AIDataWorkflowDefinitionBinding {
   return defineAIDataWorkflow(definition);
+}
+
+export interface AIDataWorkflowSourceLoadResult {
+  readonly binding?: AIDataWorkflowDefinitionBinding;
+  readonly diagnostics: readonly EagerDataFlowDiagnostic[];
+}
+
+export function loadAIDataWorkflowSources(
+  sources: EagerDataFlowSourceCollection,
+  options: LoadEagerDataFlowOptions = {},
+): AIDataWorkflowSourceLoadResult {
+  const loaded = loadEagerDataFlowProfileSources(sources, {
+    ...options,
+    profileRoot: 'AIDataWorkflow',
+  });
+  if (!loaded.plan || loaded.diagnostics.length > 0) {
+    return { diagnostics: loaded.diagnostics };
+  }
+  return {
+    binding: defineEagerBackedAIDataWorkflow(loaded.plan),
+    diagnostics: loaded.diagnostics,
+  };
 }
 
 export interface CreateAIDataWorkflowRunGraphOptions {
@@ -183,6 +209,9 @@ function configReusePolicy(config: AIDataWorkflowNodeConfig): AIWorkflowReusePol
 }
 
 function nodeTypeForEagerNode(node: EagerDataFlowNodePlan): AIWorkflowNodeType {
+  if ('config' in node && (node.config.node_type === 'manual' || node.config.nodeType === 'manual')) {
+    return 'manual';
+  }
   if ('type' in node && node.type === 'manual') return 'manual';
   if (node.tag === 'SinkNode') return 'effect';
   if (node.tag === 'SubFlowNode') return 'subflow';

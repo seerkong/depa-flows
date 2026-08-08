@@ -11,7 +11,13 @@ import type {
   AIWorkflowStateStore,
 } from 'ai-workflow-contract';
 import { createAIWorkflowRuntimeContext, defineAICtrlWorkflow } from 'ai-workflow-logic';
-import type { FlowCodeResolver } from 'instant-ctrl-flow-contract';
+import type {
+  FlowCodeResolver,
+  FlowDiagnostic,
+  FlowSourceCollection,
+  LoadFlowSourcesOptions,
+} from 'instant-ctrl-flow-contract';
+import { loadCtrlFlowProfileFromSources } from 'instant-ctrl-flow-logic';
 import type {
   ResumeSignal,
   TickOutcome,
@@ -78,6 +84,29 @@ export function defineWorkCtrlFlowBackedAICtrlWorkflow(
   definition: AICtrlWorkflowDefinitionBinding['definition'],
 ): AICtrlWorkflowDefinitionBinding {
   return defineAICtrlWorkflow(definition);
+}
+
+export interface AICtrlWorkflowSourceLoadResult {
+  readonly binding?: AICtrlWorkflowDefinitionBinding;
+  readonly diagnostics: readonly FlowDiagnostic[];
+}
+
+export function loadAICtrlWorkflowSources(
+  sources: FlowSourceCollection,
+  options: LoadFlowSourcesOptions = {},
+): AICtrlWorkflowSourceLoadResult {
+  const loaded = loadCtrlFlowProfileFromSources(sources, {
+    ...options,
+    profileRoot: 'AICtrlWorkflow',
+    substrateForm: 'WorkCtrlFlow',
+  });
+  if (!loaded.spec || loaded.diagnostics.length > 0) {
+    return { diagnostics: loaded.diagnostics };
+  }
+  return {
+    binding: defineWorkCtrlFlowBackedAICtrlWorkflow(loaded.spec),
+    diagnostics: loaded.diagnostics,
+  };
 }
 
 function nodeIdFromInvocationKey(invocationKey: string): string {

@@ -42,6 +42,31 @@
         <when>The platform resolves the effective policy</when>
         <then>The policy SHALL be never</then>
       </case>
+      <case id="manual-authoring">
+        <given>An AIDataWorkflow XNL node declares config.node_type as manual</given>
+        <when>The canonical profile loader creates its RunGraph</when>
+        <then>The node SHALL have nodeType manual and SHALL resolve the never node-type default without reinterpreting the EagerDataFlow implementation type field</then>
+      </case>
+    </suite>
+  </requirement>
+  <requirement id="profile-source-loading">
+    <statement>The system SHALL provide canonical source loaders for AICtrlWorkflow and AIDataWorkflow roots that reuse substrate parsing and validation and return typed AI workflow definition bindings with structured diagnostics.</statement>
+    <suite id="canonical-profile-loading" name="Canonical profile loading">
+      <case id="load-ai-ctrl-workflow">
+        <given>Named XNL sources contain a canonical AICtrlWorkflow root</given>
+        <when>The AICtrlWorkflow source loader loads the sources</when>
+        <then>The system SHALL return a WorkCtrlFlow-backed AICtrlWorkflow definition binding without diagnostics</then>
+      </case>
+      <case id="load-ai-data-workflow">
+        <given>Named XNL sources contain a canonical AIDataWorkflow root</given>
+        <when>The AIDataWorkflow source loader loads the sources</when>
+        <then>The system SHALL return an EagerDataFlow-backed AIDataWorkflow definition binding without diagnostics</then>
+      </case>
+      <case id="reject-invalid-profile-source">
+        <given>AI workflow sources contain a wrong root or invalid substrate body</given>
+        <when>The corresponding profile loader validates the sources</when>
+        <then>The system SHALL return stable structured diagnostics and SHALL NOT fabricate an executable binding</then>
+      </case>
     </suite>
   </requirement>
 </behaviors>

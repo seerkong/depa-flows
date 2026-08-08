@@ -1,0 +1,29 @@
+<decision #track.add-ai-workflow-profile-source-loaders.authority {
+  status = "accepted"
+  priority = "P0"
+}
+(
+  <question ?>AI workflow hosts should parse profile roots themselves or consume depa-flows loaders?</?>
+  <answer { }
+  (
+    <raw-answer ?>Consume depa-flows loaders.</?>
+    <decision-text ?>Profile root parsing, substrate lowering and diagnostics are canonical depa-flows responsibilities.</?>
+    <rationale ?>This prevents parallel workflow semantics in every host integration.</?>
+    <evidence ?>Existing public XNL examples use AI profile roots while substrate loaders reject those roots.</?>
+  )>
+)>
+
+<decision #track.add-ai-workflow-profile-source-loaders.compatibility {
+  status = "accepted"
+  priority = "P0"
+}
+(
+  <question ?>Should existing substrate loaders silently accept AI profile roots?</?>
+  <answer { }
+  (
+    <raw-answer ?>No.</?>
+    <decision-text ?>Add explicit profile-root loader primitives and AI facades; keep existing substrate root acceptance unchanged.</?>
+    <rationale ?>Explicit APIs preserve product identity and avoid turning current names into ambiguous aliases.</?>
+    <evidence ?>Canonical product naming behavior and no-legacy-alias policy.</?>
+  )>
+)>
