@@ -1,0 +1,166 @@
+<BehaviorPatch #track.add-ai-agent-definition-material-and-run-freeze-resources.behavior_patch.ai-workflow-resource-system apiVersion="codument.tech/v1alpha1" version="1" { capability = "ai-workflow-resource-system" } (
+  <Mutations [
+    <Upsert { selector = "behavior://ai-workflow-resource-system/requirements/agent-material-projection" } (
+      <Requirement #agent-material-projection (
+        <Statement ?01M0NJZ4P5VXCZA07EPKN783K9>
+        The system SHALL project fixed AI Agent and Material resource relations from normalized Halfcode records without acquiring generic resource authority.
+        </?01M0NJZ4P5VXCZA07EPKN783K9>
+        <Suites [
+          <Suite #structured-agent-material-relations { name = "Structured Agent and Material relations" } (
+            <Cases [
+              <Case #preserve-authored-agent-order (
+                <Given ?01M0NJZ4P5VXCZA07EPKN783KA>
+                An AIAgentDefinition declares ordered Message and MaterialPortRef nodes with explicit typed refs
+                </?01M0NJZ4P5VXCZA07EPKN783KA>
+                <When ?01M0NJZ4P5VXCZA07EPKN783KB>
+                The effective registry is projected
+                </?01M0NJZ4P5VXCZA07EPKN783KB>
+                <Then ?01M0NJZ4P5VXCZA07EPKN783KC>
+                The system SHALL preserve authored order, exact-resolve every ref and return a deeply immutable domain projection
+                </?01M0NJZ4P5VXCZA07EPKN783KC>
+              )>
+              <Case #fail-closed-invalid-agent-material-structure (
+                <Given ?01M0NJZ4P5VXCZA07EPKN783KD>
+                A required fixed node, id, role, kind, ref, port fact or binding relation is malformed, duplicated, missing or inconsistent
+                </?01M0NJZ4P5VXCZA07EPKN783KD>
+                <When ?01M0NJZ4P5VXCZA07EPKN783KE>
+                The effective registry is projected
+                </?01M0NJZ4P5VXCZA07EPKN783KE>
+                <Then ?01M0NJZ4P5VXCZA07EPKN783KF>
+                The system SHALL return stable diagnostics and SHALL NOT return a partial projection
+                </?01M0NJZ4P5VXCZA07EPKN783KF>
+              )>
+              <Case #ignore-untyped-text (
+                <Given ?01M0NJZ4P5VXCZA07EPKN783KG>
+                Ordinary prompt or metadata text contains resource-like content or domain phrases
+                </?01M0NJZ4P5VXCZA07EPKN783KG>
+                <When ?01M0NJZ4P5VXCZA07EPKN783KH>
+                The effective registry is projected
+                </?01M0NJZ4P5VXCZA07EPKN783KH>
+                <Then ?01M0NJZ4P5VXCZA07EPKN783KJ>
+                The system MUST NOT infer a resource edge, tool, policy, task or binding from that text
+                </?01M0NJZ4P5VXCZA07EPKN783KJ>
+              )>
+            ]>
+          )>
+        ]>
+      )>
+    )>
+    <Upsert { selector = "behavior://ai-workflow-resource-system/requirements/run-resource-freeze" } (
+      <Requirement #run-resource-freeze (
+        <Statement ?01M0NJZ4P5VXCZA07EPKN783KK>
+        The system SHALL freeze one explicit workflow Agent task through Halfcode content identities and dependency snapshot authority.
+        </?01M0NJZ4P5VXCZA07EPKN783KK>
+        <Suites [
+          <Suite #freeze-proof { name = "Run freeze proof" } (
+            <Cases [
+              <Case #delegate-dependency-snapshot (
+                <Given ?01M0NJZ4P5VXCZA07EPKN783KM>
+                An authentic Halfcode effective registry, loader-owned content identities, a valid domain projection and an exact task tuple
+                </?01M0NJZ4P5VXCZA07EPKN783KM>
+                <When ?01M0NJZ4P5VXCZA07EPKN783KN>
+                Run resources are frozen
+                </?01M0NJZ4P5VXCZA07EPKN783KN>
+                <Then ?01M0NJZ4P5VXCZA07EPKN783KP>
+                The system SHALL validate selected bindings and delegate closure, provenance and revision proof to Halfcode buildResourceDependencySnapshot
+                </?01M0NJZ4P5VXCZA07EPKN783KP>
+              )>
+              <Case #reject-invalid-task-bindings (
+                <Given ?01M0NJZ4P5VXCZA07EPKN783KQ>
+                The Agent is absent, a port is foreign, required or cardinality constraints fail, or a material kind differs
+                </?01M0NJZ4P5VXCZA07EPKN783KQ>
+                <When ?01M0NJZ4P5VXCZA07EPKN783KR>
+                Run resources are frozen
+                </?01M0NJZ4P5VXCZA07EPKN783KR>
+                <Then ?01M0NJZ4P5VXCZA07EPKN783KS>
+                The system SHALL fail with stable domain diagnostics before returning a receipt
+                </?01M0NJZ4P5VXCZA07EPKN783KS>
+              )>
+              <Case #immutable-freeze-receipt (
+                <Given ?01M0NJZ4P5VXCZA07EPKN783KT>
+                A valid task and selected resource closure
+                </?01M0NJZ4P5VXCZA07EPKN783KT>
+                <When ?01M0NJZ4P5VXCZA07EPKN783KV>
+                Run resources are frozen
+                </?01M0NJZ4P5VXCZA07EPKN783KV>
+                <Then ?01M0NJZ4P5VXCZA07EPKN783KW>
+                The system SHALL return a deeply immutable receipt containing the complete Halfcode snapshot and deterministic ordered binding identities
+                </?01M0NJZ4P5VXCZA07EPKN783KW>
+              )>
+            ]>
+          )>
+        ]>
+      )>
+    )>
+    <Upsert { selector = "behavior://ai-workflow-resource-system/requirements/run-resource-semantic-fingerprint" } (
+      <Requirement #run-resource-semantic-fingerprint (
+        <Statement ?01M0NJZ4P5VXCZA07EPKN783KX>
+        The system SHALL distinguish complete Halfcode freeze proof from selected workflow resource semantic identity.
+        </?01M0NJZ4P5VXCZA07EPKN783KX>
+        <Suites [
+          <Suite #semantic-reuse-identity { name = "Semantic reuse identity" } (
+            <Cases [
+              <Case #bind-selected-domain-facts (
+                <Given ?01M0NJZ4P5VXCZA07EPKN783KY>
+                Selected task, message, tool, policy, port, binding, edge or reachable content facts change
+                </?01M0NJZ4P5VXCZA07EPKN783KY>
+                <When ?01M0NJZ4P5VXCZA07EPKN783KZ>
+                The semantic fingerprint is recomputed
+                </?01M0NJZ4P5VXCZA07EPKN783KZ>
+                <Then ?01M0NJZ4P5VXCZA07EPKN783M0>
+                The fingerprint SHALL change using canonical SHA-256 domain facts
+                </?01M0NJZ4P5VXCZA07EPKN783M0>
+              )>
+              <Case #exclude-unrelated-and-host-facts (
+                <Given ?01M0NJZ4P5VXCZA07EPKN783M1>
+                Only an unreachable resource or host run/session/generation/path fact changes
+                </?01M0NJZ4P5VXCZA07EPKN783M1>
+                <When ?01M0NJZ4P5VXCZA07EPKN783M2>
+                The semantic fingerprint is recomputed
+                </?01M0NJZ4P5VXCZA07EPKN783M2>
+                <Then ?01M0NJZ4P5VXCZA07EPKN783M3>
+                The domain fingerprint SHALL remain stable while the complete Halfcode proof MAY change for an unreachable resource
+                </?01M0NJZ4P5VXCZA07EPKN783M3>
+              )>
+            ]>
+          )>
+        ]>
+      )>
+    )>
+    <Upsert { selector = "behavior://ai-workflow-resource-system/requirements/agent-resource-package-boundary" } (
+      <Requirement #agent-resource-package-boundary (
+        <Statement ?01M0NJZ4P5VXCZA07EPKN783M4>
+        The system SHALL keep pure projection browser-safe and expose run freeze only through a Node/server subpath.
+        </?01M0NJZ4P5VXCZA07EPKN783M4>
+        <Suites [
+          <Suite #package-boundary { name = "Package boundary" } (
+            <Cases [
+              <Case #pure-root-browser (
+                <Given ?01M0NJZ4P5VXCZA07EPKN783M5>
+                A browser consumer imports the package root or browser entry
+                </?01M0NJZ4P5VXCZA07EPKN783M5>
+                <When ?01M0NJZ4P5VXCZA07EPKN783M6>
+                Agent and Material projections are used
+                </?01M0NJZ4P5VXCZA07EPKN783M6>
+                <Then ?01M0NJZ4P5VXCZA07EPKN783M7>
+                No Node filesystem, Halfcode runtime loader, layer composer or snapshot implementation SHALL enter the browser dependency graph
+                </?01M0NJZ4P5VXCZA07EPKN783M7>
+              )>
+              <Case #registry-installable-package-metadata (
+                <Given ?01M0NJZ4P5VXCZA07EPKN783M8>
+                The contract and logic packages are prepared as a public patch release
+                </?01M0NJZ4P5VXCZA07EPKN783M8>
+                <When ?01M0NJZ4P5VXCZA07EPKN783M9>
+                A fresh consumer installs the packed artifacts and imports every declared entry
+                </?01M0NJZ4P5VXCZA07EPKN783M9>
+                <Then ?01M0NJZ4P5VXCZA07EPKN783MA>
+                All dependency versions SHALL be exact registry identities with no workspace or file protocols, and the consumer SHALL resolve Halfcode 0.2.2
+                </?01M0NJZ4P5VXCZA07EPKN783MA>
+              )>
+            ]>
+          )>
+        ]>
+      )>
+    )>
+  ]>
+)>

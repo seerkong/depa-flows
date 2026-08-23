@@ -1,0 +1,207 @@
+<Track #add-flow-step-space-and-state-sidecars apiVersion="codument.tech/v1alpha1" version="1" { status = "completed" goal = "Add a modular StepSpace definition domain and step-local immutable run records while preserving one canonical FlowRunCheckpoint authority." description = "Build and publish generic StepSpace contracts/logic, profile assembly and a root-last filesystem sidecar codec with bounded local writes, fresh recovery and no second authority." question_mode = "decision-tree" question_severity = "auto" commit_mode = "manual" created_at = "2026-08-23T08:26:17.365Z" updated_at = "2026-08-23T12:45:52.543Z" modeling_base_commit = "91ac3156c2635680e3a1b8e74c4da0349c034716" engineering_base_commit = "91ac3156c2635680e3a1b8e74c4da0349c034716" gap_round = 3 } (
+  <Ports { scope = "track" } (
+    <Inputs [
+      <Port #python-step-evidence { role = "input" domain = "engineering" } ?01M0PYNPC1H9WM62GB1Q8HH456>
+      Specified Python multistep Core/Extension fixture
+      </?01M0PYNPC1H9WM62GB1Q8HH456>
+      <Port #depa-task-evidence { role = "input" domain = "code" } ?01M0PYNPC1H9WM62GB1Q8HH457>
+      task-manager, BPCtrl, order-fulfillment and canonical checkpoint implementation
+      </?01M0PYNPC1H9WM62GB1Q8HH457>
+    ]>
+    <Outputs [
+      <Port #step-space-packages { role = "output" domain = "code" } ?01M0PYNPC1H9WM62GB1Q8HH458>
+      Published StepSpace contracts/logic and exact profile runtime closure
+      </?01M0PYNPC1H9WM62GB1Q8HH458>
+      <Port #flow-dsl-reference { role = "output" domain = "docs" } ?01M0PYNPC1H9WM62GB1Q8HH459>
+      Regenerated and published Flow DSL reference
+      </?01M0PYNPC1H9WM62GB1Q8HH459>
+    ]>
+  )>
+  <TaskSpace #space_add-flow-step-space-and-state-sidecars { name = "add-flow-step-space-and-state-sidecars" version = "1" child_mode = "dag" } (
+    <SubNodes [
+      <TaskGroup #P1 { name = "StepSpace contracts and invariants" status = "DONE" priority = "P0" order = 0 } (
+        <Description ?01M0PYNPC1H9WM62GB1Q8HH45A>
+        Freeze the DataTopology, public contracts and RED evidence before changing profile loaders or persistence.
+        </?01M0PYNPC1H9WM62GB1Q8HH45A>
+        <SubNodes [
+          <Task #P1-T1 { name = "Freeze StepSpace and single-head authority" status = "DONE" priority = "P0" order = 0 } (
+            <Description ?01M0PYNPC1H9WM62GB1Q8HH45B>
+            Record package×module evidence, closed Step/Group/Extension contracts, DefinitionStepForest versus RunStepStateIndex, root-head authority, transition formula and compatibility boundary.
+            </?01M0PYNPC1H9WM62GB1Q8HH45B>
+            <Acceptance [
+              <Criterion #P1-T1-AC1 { checked = true } ?01M0PYNPC1H9WM62GB1Q8HH45C>
+              The design and tests distinguish immutable definition facts, one checkpoint current authority, immutable record material and rebuildable observations.
+              </?01M0PYNPC1H9WM62GB1Q8HH45C>
+              <Criterion #P1-T1-AC2 { checked = true } ?01M0PYNPC1H9WM62GB1Q8HH45D>
+              StepSpace and TaskSpace remain separate owners with one exact BPCtrl bridge and no copied task status.
+              </?01M0PYNPC1H9WM62GB1Q8HH45D>
+              <Criterion #P1-T1-AC3 { checked = true } ?01M0PYNPC1H9WM62GB1Q8HH45E>
+              Package ownership is frozen: flow-step-space owns definition/pure Merkle contracts, while ai-workflow-logic alone owns profile partition, filesystem IO and authoritative head admission.
+              </?01M0PYNPC1H9WM62GB1Q8HH45E>
+            ]>
+          )>
+          <Task #P1-T2 { name = "Implement closed StepSpace packages" status = "DONE" priority = "P0" order = 1 } (
+            <Description ?01M0PYNPC1H9WM62GB1Q8HH45F>
+            Create flow-step-space-contract/logic with exact recursive definitions, explicit refs, extension registry, pure normalizers and runtime-first mutation processors.
+            </?01M0PYNPC1H9WM62GB1Q8HH45F>
+            <Acceptance [
+              <Criterion #P1-T2-AC1 { checked = true } ?01M0PYNPC1H9WM62GB1Q8HH45G>
+              Unknown/duplicate ids, cyclic refs, inline+StepSpace dual topology, undeclared extensions, traversal, symlink and accessor/sparse structures fail before owner mutation.
+              </?01M0PYNPC1H9WM62GB1Q8HH45G>
+              <Criterion #P1-T2-AC2 { checked = true } ?01M0PYNPC1H9WM62GB1Q8HH45H>
+              The public Processor shapes keep explicit runtime and never expose physical filesystem paths as semantic inputs.
+              </?01M0PYNPC1H9WM62GB1Q8HH45H>
+            ]>
+          )>
+        ]>
+        <Gate [
+          <Criterion #P1-G1 { checked = true } ?01M0PYNPC1H9WM62GB1Q8HH45J>
+          Focused contract tests and typecheck pass with the prior FlowRunCheckpoint API unchanged.
+          </?01M0PYNPC1H9WM62GB1Q8HH45J>
+        ]>
+      )>
+      <TaskGroup #P2 { name = "Modular definition assembly" status = "DONE" priority = "P0" order = 1 } (
+        <Description ?01M0PYNPC1H9WM62GB1Q8HH45K>
+        Assemble exact referenced StepForests into existing Ctrl/Data profile bindings and freeze the complete closure into instances.
+        </?01M0PYNPC1H9WM62GB1Q8HH45K>
+        <SubNodes [
+          <Task #P2-T1 { name = "Implement exact StepSpace filesystem assembly" status = "DONE" priority = "P0" order = 0 } (
+            <Description ?01M0PYNPC1H9WM62GB1Q8HH45M>
+            Load a profile root plus explicit StepSpace/Step/Extension refs using raw bytes, fatal decode, containment and deterministic identity/digest rules.
+            </?01M0PYNPC1H9WM62GB1Q8HH45M>
+            <Acceptance [
+              <Criterion #P2-T1-AC1 { checked = true } ?01M0PYNPC1H9WM62GB1Q8HH45N>
+              Editing one referenced step/extension changes only that file and the complete artifact digest; unrelated bytes and refs remain exact.
+              </?01M0PYNPC1H9WM62GB1Q8HH45N>
+              <Criterion #P2-T1-AC2 { checked = true } ?01M0PYNPC1H9WM62GB1Q8HH45P>
+              Instance admission copies and verifies the whole StepSpace closure; live source change/deletion cannot affect a fresh run or resume.
+              </?01M0PYNPC1H9WM62GB1Q8HH45P>
+            ]>
+          )>
+          <Task #P2-T2 { name = "Bind Ctrl and Data profiles" status = "DONE" priority = "P0" order = 1 } (
+            <Description ?01M0PYNPC1H9WM62GB1Q8HH45Q>
+            Map Ctrl hierarchy and Data port/dependency facts into the existing profile loaders without adding a scheduler or a second topology owner.
+            </?01M0PYNPC1H9WM62GB1Q8HH45Q>
+            <Acceptance [
+              <Criterion #P2-T2-AC1 { checked = true } ?01M0PYNPC24PR4RQZ2W14R6PG2>
+              StepSpace and equivalent inline fixtures produce semantically equal canonical profile bindings.
+              </?01M0PYNPC24PR4RQZ2W14R6PG2>
+              <Criterion #P2-T2-AC2 { checked = true } ?01M0PYNPC24PR4RQZ2W14R6PG3>
+              Order-fulfillment and a multi-step AIData example use modular steps/extensions and pass authored example type/DSL gates.
+              </?01M0PYNPC24PR4RQZ2W14R6PG3>
+            ]>
+          )>
+        ]>
+        <Gate [
+          <Criterion #P2-G1 { checked = true } ?01M0PYNPC24PR4RQZ2W14R6PG4>
+          Ctrl/Data loader, freeze, definition-instance isolation, examples and Flow DSL tests pass.
+          </?01M0PYNPC24PR4RQZ2W14R6PG4>
+        ]>
+      )>
+      <TaskGroup #P3 { name = "Root-last step record persistence" status = "DONE" priority = "P0" order = 2 } (
+        <Description ?01M0PYNPC24PR4RQZ2W14R6PG5>
+        Replace full-file physical rewrites with immutable step records selected by one CAS checkpoint head while preserving the complete logical checkpoint contract.
+        </?01M0PYNPC24PR4RQZ2W14R6PG5>
+        <SubNodes [
+          <Task #P3-T1 { name = "Implement Merkle step record codec" status = "DONE" priority = "P0" order = 0 } (
+            <Description ?01M0PYNPC24PR4RQZ2W14R6PG6>
+            Add storage envelope, immutable record/tree codecs, digest readback, root-last admission, interruption recovery and one-way direct-checkpoint import.
+            </?01M0PYNPC24PR4RQZ2W14R6PG6>
+            <Acceptance [
+              <Criterion #P3-T1-AC1 { checked = true } ?01M0PYNPC24PR4RQZ2W14R6PG7>
+              A one-step or one-extension transition writes changed records, a logarithmic tree path, receipt and head; unchanged records remain byte-identical.
+              </?01M0PYNPC24PR4RQZ2W14R6PG7>
+              <Criterion #P3-T1-AC2 { checked = true } ?01M0PYNPC24PR4RQZ2W14R6PG8>
+              Every controlled interruption restores one complete old/new head; unreachable candidates, malformed records, symlinks and CAS races never become current.
+              </?01M0PYNPC24PR4RQZ2W14R6PG8>
+              <Criterion #P3-T1-AC3 { checked = true } ?01M0PYNPC24PR4RQZ2W14R6PG9>
+              Load reconstructs an exactly normalized logical FlowRunCheckpoint and the old direct-file form imports once without dual write.
+              </?01M0PYNPC24PR4RQZ2W14R6PG9>
+            ]>
+          )>
+          <Task #P3-T2 { name = "Persist Ctrl Data and extension facts" status = "DONE" priority = "P0" order = 1 } (
+            <Description ?01M0PYNPC24PR4RQZ2W14R6PGA>
+            Split exact profile step facts, retain run-level AI state, and prove fresh recovery, patches, waits, results and derived observations.
+            </?01M0PYNPC24PR4RQZ2W14R6PGA>
+            <Acceptance [
+              <Criterion #P3-T2-AC1 { checked = true } ?01M0PYNPC24PR4RQZ2W14R6PGB>
+              Ctrl waits/branches/orchestration and Data nodes/results/invalidations reconstruct with all existing reciprocal and transition invariants; runtime membership derives only from frozen binding and accepted patch/orchestration facts.
+              </?01M0PYNPC24PR4RQZ2W14R6PGB>
+              <Criterion #P3-T2-AC2 { checked = true } ?01M0PYNPC24PR4RQZ2W14R6PGC>
+              Accepted effectful Data results are not replayed after fresh recovery; BPCtrl task state remains in TaskSpaceStore only.
+              </?01M0PYNPC24PR4RQZ2W14R6PGC>
+              <Criterion #P3-T2-AC3 { checked = true } ?01M0PYNPC24PR4RQZ2W14R6PGD>
+              A 256-step benchmark records bounded changed bytes/records and no O(total step payload) rewrite for a one-step update.
+              </?01M0PYNPC24PR4RQZ2W14R6PGD>
+            ]>
+          )>
+        ]>
+        <Gate [
+          <Criterion #P3-G1 { checked = true } ?01M0PYNPC24PR4RQZ2W14R6PGE>
+          Memory/filesystem equivalence, full Ctrl/Data/Agent checkpoint suites, recovery matrix and write-accounting benchmark pass.
+          </?01M0PYNPC24PR4RQZ2W14R6PGE>
+        ]>
+      )>
+      <TaskGroup #P4 { name = "Distribution and independent verification" status = "DONE" priority = "P1" order = 3 } (
+        <Description ?01M0PYNPC24PR4RQZ2W14R6PGF>
+        Regenerate canonical docs/reference, release terminal minimum package versions and independently verify the published closure.
+        </?01M0PYNPC24PR4RQZ2W14R6PGF>
+        <SubNodes [
+          <Task #P4-T1 { name = "Publish exact runtime and reference closure" status = "DONE" priority = "P1" order = 0 } (
+            <Description ?01M0PYNPC24PR4RQZ2W14R6PGG>
+            Update exact dependencies/lock, remove registry overrides from the release closure, pack, consume, publish in topology order and read back without registry options or npmrc changes.
+            </?01M0PYNPC24PR4RQZ2W14R6PGG>
+            <Acceptance [
+              <Criterion #P4-T1-AC1 { checked = true } ?01M0PYNPC24PR4RQZ2W14R6PGH>
+              Full tests, typecheck, docs/reference generation, frozen lock, package checks and fresh tar consumer pass.
+              </?01M0PYNPC24PR4RQZ2W14R6PGH>
+              <Criterion #P4-T1-AC2 { checked = true } ?01M0PYNPC24PR4RQZ2W14R6PGJ>
+              Published metadata has terminal minimum versions, exact internal dependencies and no workspace/file/range/registry override.
+              </?01M0PYNPC24PR4RQZ2W14R6PGJ>
+              <Criterion #P4-T1-AC3 { checked = true } ?01M0PYNPC24PR4RQZ2W14R6PGK>
+              Fresh registry consumer runs definition assembly, local step transition, Ctrl/Data fresh recovery and public type smoke.
+              </?01M0PYNPC24PR4RQZ2W14R6PGK>
+            ]>
+          )>
+          <Task #P4-T2 { name = "Run fresh independent verification" status = "DONE" priority = "P1" order = 1 } (
+            <Description ?01M0PYNPC24PR4RQZ2W14R6PGM>
+            Verify every Acceptance/Gate/behavior case issues-first and hand exact published identities to the Eidolon adoption track.
+            </?01M0PYNPC24PR4RQZ2W14R6PGM>
+            <Acceptance [
+              <Criterion #P4-T2-AC1 { checked = true } ?01M0PYNPC24PR4RQZ2W14R6PGN>
+              Fresh verifier reports PASS/FAIL for all criteria with actual filesystem/recovery/package evidence and does not repair implementation.
+              </?01M0PYNPC24PR4RQZ2W14R6PGN>
+              <Criterion #P4-T2-AC2 { checked = true } ?01M0PYNPC24PR4RQZ2W14R6PGP>
+              Final coding AttractorCheck finds no P0/P1 authority, Processor, actor, recovery or distribution gap.
+              </?01M0PYNPC24PR4RQZ2W14R6PGP>
+            ]>
+          )>
+        ]>
+        <Hooks [
+          <Hook { on = "phase:after" } (
+            <AttractorCheck { use = "coding" }>
+          )>
+        ]>
+        <Gate [
+          <Criterion #P4-G1 { checked = true } ?01M0PYNPC24PR4RQZ2W14R6PGQ>
+          Independent report, strict Codument, diff/static gates and registry readback are all green.
+          </?01M0PYNPC24PR4RQZ2W14R6PGQ>
+        ]>
+      )>
+    ]>
+  )>
+  <Schedule [
+    <Dag { for = "space_add-flow-step-space-and-state-sidecars" } [
+      <Node #P2 [
+        <After { ref = "P1" }>
+      ]>
+      <Node #P3 [
+        <After { ref = "P2" }>
+      ]>
+      <Node #P4 [
+        <After { ref = "P3" }>
+      ]>
+    ]>
+  ]>
+  <Hooks []>
+)>

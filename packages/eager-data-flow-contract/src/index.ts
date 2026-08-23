@@ -1,3 +1,8 @@
+import type {
+  DefinitionStepForest,
+  DefinitionStepProfileLoadOptions,
+} from 'flow-step-space-contract';
+
 /** Serializable values retained from EagerDataFlow XNL authoring. */
 export type EagerDataFlowValue =
   | string
@@ -124,6 +129,8 @@ export interface EagerDataFlowAuthoringPlan {
   title?: string;
   baseUri?: string;
   sourceNames: string[];
+  /** Frozen modular definition authority; absent for inline authoring. */
+  definitionStepForest?: DefinitionStepForest;
   contract: EagerDataFlowContract;
   nodes: EagerDataFlowNodePlan[];
   nodeById: Record<string, EagerDataFlowNodePlan>;
@@ -150,6 +157,8 @@ export type EagerDataFlowRegistry = Readonly<Record<string, EagerDataFlowRegistr
 export interface LoadEagerDataFlowOptions {
   baseUri?: string;
   registry?: EagerDataFlowRegistry;
+  /** Optional exact StepSpace composition policy; no host path is accepted here. */
+  stepSpace?: DefinitionStepProfileLoadOptions;
 }
 
 export interface EagerDataFlowLoadResult {
@@ -176,10 +185,29 @@ export type EagerDataFlowCodeResolver<Runtime = unknown> = (
   request: EagerDataFlowCodeResolutionRequest,
 ) => EagerDataFlowCode<Runtime> | Promise<EagerDataFlowCode<Runtime>>;
 
+export interface EagerDataFlowDurableNodeState {
+  readonly nodeId: string;
+  readonly output?: Readonly<EagerDataFlowRecord>;
+  readonly returned?: Readonly<EagerDataFlowRecord>;
+}
+
+export interface EagerDataFlowNodeFailure {
+  readonly nodeId: string;
+  readonly cause: unknown;
+}
+
 export interface EagerDataFlowInvocationOptions<Runtime = unknown> {
   signal?: AbortSignal;
   bindSignal?: (runtime: Runtime, signal: AbortSignal) => Runtime;
+  /** Derives the explicit Processor runtime for one ordinary node invocation. */
+  bindNode?: (runtime: Runtime, identity: { readonly nodeId: string }) => Runtime;
   onCancel?: (reason: unknown) => void;
+  /** Previously accepted node settlements used to reconstruct scheduler ports without replay. */
+  completedNodes?: Readonly<Record<string, EagerDataFlowDurableNodeState>>;
+  /** Durable boundaries are awaited before execution and before dependent nodes become ready. */
+  onNodeStart?: (nodeId: string) => void | Promise<void>;
+  onNodeSuccess?: (state: EagerDataFlowDurableNodeState) => void | Promise<void>;
+  onNodeFailure?: (failure: EagerDataFlowNodeFailure) => void | Promise<void>;
 }
 
 export interface EagerDataFlowExecutable<Runtime = unknown> {

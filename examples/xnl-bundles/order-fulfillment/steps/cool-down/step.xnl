@@ -1,0 +1,3 @@
+<Step #cool-down (
+  <Core [ <Timer #cool-down { durationMs = 60000 }> ]>
+)>

@@ -66,6 +66,40 @@ import type {
   WorkCtrlFlowOrchestrationFacts,
   DurableChildFlowResolver,
 } from 'work-ctrl-flow-contract';
+
+function isAsciiDigit(code: number): boolean {
+  return code >= 48 && code <= 57;
+}
+
+/** Locale-independent natural ordering for durable lane identities. */
+export function compareDurableLaneIds(left: string, right: string): number {
+  let leftIndex = 0;
+  let rightIndex = 0;
+  while (leftIndex < left.length && rightIndex < right.length) {
+    const leftCode = left.charCodeAt(leftIndex);
+    const rightCode = right.charCodeAt(rightIndex);
+    if (isAsciiDigit(leftCode) && isAsciiDigit(rightCode)) {
+      let leftEnd = leftIndex;
+      let rightEnd = rightIndex;
+      while (leftEnd < left.length && isAsciiDigit(left.charCodeAt(leftEnd))) leftEnd += 1;
+      while (rightEnd < right.length && isAsciiDigit(right.charCodeAt(rightEnd))) rightEnd += 1;
+      const leftRaw = left.slice(leftIndex, leftEnd);
+      const rightRaw = right.slice(rightIndex, rightEnd);
+      const leftValue = leftRaw.replace(/^0+(?=\d)/, '');
+      const rightValue = rightRaw.replace(/^0+(?=\d)/, '');
+      if (leftValue.length !== rightValue.length) return leftValue.length - rightValue.length;
+      if (leftValue !== rightValue) return leftValue < rightValue ? -1 : 1;
+      if (leftRaw.length !== rightRaw.length) return leftRaw.length - rightRaw.length;
+      leftIndex = leftEnd;
+      rightIndex = rightEnd;
+      continue;
+    }
+    if (leftCode !== rightCode) return leftCode - rightCode;
+    leftIndex += 1;
+    rightIndex += 1;
+  }
+  return (left.length - leftIndex) - (right.length - rightIndex);
+}
 import { WORKFLOW_SNAPSHOT_SCHEMA } from 'work-ctrl-flow-contract';
 
 type Ctx = ExecutionContext<CtrlFlowNodeType, INodeConfig>;
@@ -257,9 +291,9 @@ export class DurableCompositeScheduler implements ActionHandler<CtrlFlowNodeType
       return this.openSchedulerTimer(controller, invocationKey, attempt.nextAttemptAtMs);
     }
     if (config.primitive === 'Retry' && attempt.nextAttemptAtMs) {
-      flowStateOf(ctx).fault = undefined;
+      delete flowStateOf(ctx).fault;
       flowStateOf(ctx).current = fact.input;
-      attempt.nextAttemptAtMs = undefined;
+      delete attempt.nextAttemptAtMs;
     }
     const bodyId = config.primitive === 'Retry' ? `attempt:${attempt.attempt}` : fact.bodyId;
     const result = await controller.withinInvocationScope(
@@ -370,7 +404,7 @@ export class DurableCompositeScheduler implements ActionHandler<CtrlFlowNodeType
       const laneState = (lane.flowState ??= createFlowExecutionState(
         config.primitive === 'ForEach' ? lane.item : fact.input,
       )) as ReturnType<typeof createFlowExecutionState>;
-      laneState.fault = undefined;
+      delete laneState.fault;
       const laneController = new TickController(workingSnapshot, c.runtime);
       const laneRuntime = signal
         ? Object.assign(Object.create((ctx.runtime ?? {}) as object), { abortSignal: signal })
@@ -471,7 +505,7 @@ export class DurableCompositeScheduler implements ActionHandler<CtrlFlowNodeType
     }
     const lanes = Object.values(c.snapshot.orchestration.lanes)
       .filter((lane) => lane.invocationKey === invocationKey)
-      .sort((a, b) => a.laneId.localeCompare(b.laneId, undefined, { numeric: true }));
+      .sort((a, b) => compareDurableLaneIds(a.laneId, b.laneId));
     if (c.suspended.length > 0 || lanes.some((lane) => lane.status === 'Open')) {
       fact.status = 'Waiting';
       await this.persist(c.snapshot);
@@ -760,7 +794,7 @@ export class WaitNodeHandler implements ActionHandler<CtrlFlowNodeType, INodeCon
     if (done) {
       const closed = c.snapshot.closedWaitHandles.find((handle) => handle.invocationKey === key);
       if (done.result === 'Success') {
-        flow.fault = undefined;
+        delete flow.fault;
         flow.current = this.waitKind === 'timer' ? closed?.metadata?.input : done.payload;
       } else {
         flow.fault = new Error(`${this.waitKind} ${ctx.node.Key} finished with ${done.result}`);
@@ -792,8 +826,8 @@ export class WaitNodeHandler implements ActionHandler<CtrlFlowNodeType, INodeCon
             : cfg.timeoutMs !== undefined
               ? now + Number(cfg.timeoutMs)
               : 0,
-        assignTo: cfg.assignTo as string | undefined,
-        metadata: this.waitKind === 'timer' ? { input: flow.current } : undefined,
+        ...(typeof cfg.assignTo === 'string' ? { assignTo: cfg.assignTo } : {}),
+        ...(this.waitKind === 'timer' ? { metadata: { input: flow.current } } : {}),
       };
       c.snapshot.openWaitHandles.push(handle);
       if (handle.deadlineAtMs > 0) {
@@ -814,6 +848,11 @@ export interface WorkCtrlFlowEngineOptions {
   definition: WorkCtrlFlowDefinition;
   store: WorkCtrlFlowStore;
   runtime?: WorkCtrlFlowRuntime;
+  /** Derives the explicit Processor runtime for one ordinary node invocation. */
+  bindNodeRuntime?: (
+    runtime: WorkCtrlFlowRuntime,
+    identity: { readonly treeId: string; readonly nodeId: string; readonly invocationKey: string },
+  ) => WorkCtrlFlowRuntime;
   clock?: WorkCtrlFlowClock;
   view?: WorkCtrlFlowViewAdapter;
   /** 产品形态扩展（BPCtrlFlow 注入 TaskStep 编译与 handler） */
@@ -870,7 +909,9 @@ export class WorkCtrlFlowEngine {
       treeId,
       fqn: spec.fqn,
       status: 'Waiting',
-      vars: { ...(spec.stateSeed ?? {}) },
+      // state.seed is an immutable definition facet. Each new run receives one
+      // detached initialization copy; resume always reuses persisted vars.
+      vars: structuredClone(spec.stateSeed ?? {}),
       input: { ...(opts.input ?? {}) },
       branchDecisions: {},
       nodeResults: {},
@@ -883,6 +924,10 @@ export class WorkCtrlFlowEngine {
       updatedAtMs: this.now(),
     };
     snapshot.vars[FLOW_STATE_KEY] = createFlowExecutionState(opts.input ?? {});
+    // The initialization checkpoint is durable before any user node can run.
+    // lastTickNo=0 is the closed distinction between admitted-but-unexecuted
+    // and a checkpoint produced by an execution tick.
+    await this.options.store.save(snapshot);
     return this.tick(snapshot, spec);
   }
 
@@ -914,7 +959,10 @@ export class WorkCtrlFlowEngine {
 
     snapshot.appliedResumeSignals.push(`${handle.waitHandleId}:${signal.resumeToken}`);
     const result: TerminalResult = signal.outcome ?? 'Success';
-    snapshot.waitResults[handle.invocationKey] = { result, payload: signal.payload };
+    snapshot.waitResults[handle.invocationKey] = {
+      result,
+      ...(signal.payload === undefined ? {} : { payload: signal.payload }),
+    };
     handle.status = result === 'Cancelled' ? 'Cancelled' : 'Consumed';
     handle.closedAtMs = this.now();
     snapshot.openWaitHandles = snapshot.openWaitHandles.filter((h) => h !== handle);
@@ -1017,6 +1065,14 @@ export class WorkCtrlFlowEngine {
       new ReplayingHandler(h, controller, replayResults);
 
     const decisionHooks: FlowDecisionHooks = {
+      runtimeForNode: (nodeId, runtime) => {
+        const c = controller();
+        return this.options.bindNodeRuntime?.(runtime, {
+          treeId: c.snapshot.treeId,
+          nodeId,
+          invocationKey: c.invocationKeyFor(nodeId),
+        }) ?? runtime;
+      },
       begin: (ifPath) => {
         const c = controller();
         const invocationKey = c.invocationKeyFor(ifPath);

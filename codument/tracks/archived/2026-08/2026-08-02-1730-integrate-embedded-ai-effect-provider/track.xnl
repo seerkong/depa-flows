@@ -1,0 +1,27 @@
+<Track #integrate-embedded-ai-effect-provider version="1" apiVersion="codument.tech/v1alpha1" { status = "completed" goal = "Implement a programmable embedded AI workflow effect provider." description = "Add effect handler contracts, registry/provider logic and tests for in-process AI workflow effects." question_mode = "decision-tree" question_severity = "light" commit_mode = "manual" created_at = "2026-08-02T14:27:18Z" updated_at = "2026-08-02T14:30:36Z" } (
+  <Ports { scope = "track" } [
+    <MaterialBundle { role = "input" name = "behavior-deltas" domain = "behavior" path = "vfs://./behavior_deltas/" }>
+    <MaterialBundle { role = "output" name = "contracts" domain = "source" path = "vfs://@/packages/ai-workflow-contract/" }>
+    <MaterialBundle { role = "output" name = "logic" domain = "source" path = "vfs://@/packages/ai-workflow-logic/" }>
+  ]>
+  <TaskSpace #space_integrate-embedded-ai-effect-provider { name = "integrate-embedded-ai-effect-provider" } (
+    <SubNodes [
+      <TaskGroup #P1 { name = "Effect provider contracts" status = "DONE" order = 0 } (
+        <SubNodes [
+          <Task { id = "T1.1" name = "Add embedded effect contract types" status = "DONE" order = 0 }>
+          <Task { id = "T1.2" name = "Add embedded provider registry logic" status = "DONE" order = 1 }>
+        ]>
+      )>
+      <TaskGroup #P2 { name = "Tests and validation" status = "DONE" order = 1 } (
+        <SubNodes [
+          <Task { id = "T2.1" name = "Add embedded effect provider tests" status = "DONE" order = 0 }>
+          <Task { id = "T2.2" name = "Run typecheck, tests and path hygiene checks" status = "DONE" order = 1 }>
+        ]>
+      )>
+    ]>
+  )>
+  <Schedule [
+    <Parallel { max_concurrent = 1 spot_check = true }>
+  ]>
+  <Hooks>
+)>

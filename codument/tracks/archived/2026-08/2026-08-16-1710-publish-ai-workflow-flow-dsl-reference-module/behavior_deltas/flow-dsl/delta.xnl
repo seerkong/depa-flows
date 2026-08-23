@@ -1,0 +1,85 @@
+<BehaviorPatch #track.publish-ai-workflow-flow-dsl-reference-module.behavior_patch.flow-dsl apiVersion="codument.tech/v1alpha1" version="1" { capability = "flow-dsl" } (
+  <Mutations [
+    <Upsert { selector = "behavior://flow-dsl/requirements/versioned-authoring-reference-module" } (
+      <Requirement #versioned-authoring-reference-module (
+        <Statement ?01M0NJZ4PS65J5TC2G2B91VQR9>
+        The system SHALL publish canonical Flow DSL documentation as a deterministic package-contained Halfcode authoring module for downstream Skill composition.
+        </?01M0NJZ4PS65J5TC2G2B91VQR9>
+        <Suites [
+          <Suite #canonical-reference-projection { name = "Canonical reference projection" } (
+            <Cases [
+              <Case #preserve-canonical-tree (
+                <Given ?01M0NJZ4PS65J5TC2G2B91VQRA>
+                The canonical docs/flow-dsl Markdown tree and a fixed package version
+                </?01M0NJZ4PS65J5TC2G2B91VQRA>
+                <When ?01M0NJZ4PS65J5TC2G2B91VQRB>
+                The reference module is generated
+                </?01M0NJZ4PS65J5TC2G2B91VQRB>
+                <Then ?01M0NJZ4PS65J5TC2G2B91VQRC>
+                The system SHALL preserve selected relative paths and source bytes and SHALL record an ordered sha256 provenance manifest
+                </?01M0NJZ4PS65J5TC2G2B91VQRC>
+              )>
+              <Case #load-through-halfcode (
+                <Given ?01M0NJZ4PS65J5TC2G2B91VQRD>
+                The generated module is loaded from an installed package
+                </?01M0NJZ4PS65J5TC2G2B91VQRD>
+                <When ?01M0NJZ4PS65J5TC2G2B91VQRE>
+                A consumer opens its ResourcePackage
+                </?01M0NJZ4PS65J5TC2G2B91VQRE>
+                <Then ?01M0NJZ4PS65J5TC2G2B91VQRF>
+                The system SHALL delegate parsing, validation and normalized resource projection to Halfcode without a second loader
+                </?01M0NJZ4PS65J5TC2G2B91VQRF>
+              )>
+              <Case #compose-explicit-skill-references (
+                <Given ?01M0NJZ4PS65J5TC2G2B91VQRG>
+                A downstream Skill explicitly selects Flow DSL module content through ResourceMappings
+                </?01M0NJZ4PS65J5TC2G2B91VQRG>
+                <When ?01M0NJZ4PS65J5TC2G2B91VQRH>
+                The Skill distribution plan is compiled
+                </?01M0NJZ4PS65J5TC2G2B91VQRH>
+                <Then ?01M0NJZ4PS65J5TC2G2B91VQRJ>
+                The system SHALL preserve the canonical subtree under references/flow-dsl and bind the module version and provenance
+                </?01M0NJZ4PS65J5TC2G2B91VQRJ>
+              )>
+            ]>
+          )>
+        ]>
+      )>
+    )>
+    <Upsert { selector = "behavior://flow-dsl/requirements/reference-module-package-boundary" } (
+      <Requirement #reference-module-package-boundary (
+        <Statement ?01M0NJZ4PS65J5TC2G2B91VQRK>
+        The Flow DSL reference module SHALL be an isolated authoring package and MUST NOT introduce workflow runtime, host policy, a fifth installed system Skill or registry-selection policy.
+        </?01M0NJZ4PS65J5TC2G2B91VQRK>
+        <Suites [
+          <Suite #public-package-boundary { name = "Public package boundary" } (
+            <Cases [
+              <Case #preserve-runtime-packages (
+                <Given ?01M0NJZ4PS65J5TC2G2B91VQRM>
+                Existing consumers import ai-workflow-contract or ai-workflow-logic
+                </?01M0NJZ4PS65J5TC2G2B91VQRM>
+                <When ?01M0NJZ4PS65J5TC2G2B91VQRN>
+                The dedicated Flow DSL reference package is published
+                </?01M0NJZ4PS65J5TC2G2B91VQRN>
+                <Then ?01M0NJZ4PS65J5TC2G2B91VQRP>
+                The existing runtime package versions and dependency graphs MUST remain unchanged
+                </?01M0NJZ4PS65J5TC2G2B91VQRP>
+              )>
+              <Case #publish-smallest-patch (
+                <Given ?01M0NJZ4PS65J5TC2G2B91VQRQ>
+                The reference module candidate passes package and compatibility checks
+                </?01M0NJZ4PS65J5TC2G2B91VQRQ>
+                <When ?01M0NJZ4PS65J5TC2G2B91VQRR>
+                The package is published
+                </?01M0NJZ4PS65J5TC2G2B91VQRR>
+                <Then ?01M0NJZ4PS65J5TC2G2B91VQRS>
+                The new package SHALL publish at 0.1.0 with exact Halfcode 0.2.3 and no registry override
+                </?01M0NJZ4PS65J5TC2G2B91VQRS>
+              )>
+            ]>
+          )>
+        ]>
+      )>
+    )>
+  ]>
+)>

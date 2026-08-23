@@ -1,0 +1,9 @@
+<ResourcePackage #depa.flows.test.agent_unrelated_overlay apiVersion="halfcode.resources/v1" version="1.0.0" {
+  lifecycle = "Active"
+  description = "Unrelated material overlay"
+} (
+  <Catalogs [
+    <Catalog #kind_definitions { kind = "KindDefinition" shape = "directory" root = "vfs://./KindDefinitions/" entry = "manifest.xnl" }>
+    <Catalog #context_materials { kind = "ContextMaterial" shape = "single-file" root = "vfs://./ContextMaterials/" }>
+  ]>
+)>

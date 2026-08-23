@@ -1,0 +1,149 @@
+<Track #add-typed-agent-invocation-and-instance-selection apiVersion="codument.tech/v1alpha1" version="1" { status = "completed" goal = "Add runtime-first typed Agent invocation, exact instance selection and Ctrl/Data DSL bindings on the canonical Flow checkpoint authority." description = "Introduce named Processors and authored facades, closed selectors, recoverable run-local Agent indexes and profile-specific task semantics without adding a host runtime or second state owner." question_mode = "decision-tree" question_severity = "auto" commit_mode = "manual" created_at = "2026-08-23T01:45:42.053Z" updated_at = "2026-08-23T03:16:33.306Z" } (
+  <Ports { scope = "track" } [
+    <MaterialBundle #behavior-deltas { role = "input" name = "behavior-deltas" domain = "behavior" path = "vfs://./behavior_deltas/" }>
+    <MaterialBundle #analysis { role = "input" name = "analysis" domain = "memory" path = "vfs://./analysis/" }>
+    <MaterialBundle #contracts { role = "output" name = "contracts" domain = "code" path = "vfs://@/packages/" }>
+    <MaterialBundle #flow-dsl { role = "output" name = "flow-dsl" domain = "docs" path = "vfs://@/docs/flow-dsl/" }>
+    <MaterialBundle #examples { role = "output" name = "examples" domain = "artifact" path = "vfs://@/examples/xnl-bundles/" }>
+  ]>
+  <TaskSpace #space_add-typed-agent-invocation-and-instance-selection { name = "add-typed-agent-invocation-and-instance-selection" version = "1" } (
+    <Description ?01M0P5DTETJE03FCJG41B67WHJ>
+    Implement typed Agent Processor, checkpoint and profile bindings with TDD and recovery evidence.
+    </?01M0P5DTETJE03FCJG41B67WHJ>
+    <SubNodes [
+      <TaskGroup #P1 { name = "Closed contracts and checkpoint state" status = "DONE" priority = "P0" order = 0 } (
+        <Description ?01M0P5DTETJE03FCJG41B67WHK>
+        Freeze the public typed surface and canonical run-local Agent state before implementation.
+        </?01M0P5DTETJE03FCJG41B67WHK>
+        <SubNodes [
+          <Task #P1-T1 { name = "Write RED contract and state invariant tests" status = "DONE" priority = "P0" order = 0 } (
+            <Acceptance [
+              <Criterion #P1-T1-AC1 { checked = true } ?01M0P5DTETJE03FCJG41B67WHM>
+              Compile-time tests require the exact runtime-first and bound method signatures, selector union and stable result identity.
+              </?01M0P5DTETJE03FCJG41B67WHM>
+              <Criterion #P1-T1-AC2 { checked = true } ?01M0P5DTETJE03FCJG41B67WHN>
+              Runtime tests reject non-plain selectors, both/missing/empty/extra keys, copied history and inconsistent id/name indexes.
+              </?01M0P5DTETJE03FCJG41B67WHN>
+              <Criterion #P1-T1-AC3 { checked = true } ?01M0P5DTETJE03FCJG41B67WHP>
+              The pre-implementation focused suite demonstrates the missing typed surface or state invariant.
+              </?01M0P5DTETJE03FCJG41B67WHP>
+            ]>
+          )>
+          <Task #P1-T2 { name = "Implement typed contracts normalizers and legacy read projection" status = "DONE" priority = "P0" order = 1 } (
+            <Acceptance [
+              <Criterion #P1-T2-AC1 { checked = true } ?01M0P5DTETJE03FCJG41B67WHQ>
+              Contracts expose closed runtime, config, invocation, selector, instance, result, receipt and authored facade types.
+              </?01M0P5DTETJE03FCJG41B67WHQ>
+              <Criterion #P1-T2-AC2 { checked = true } ?01M0P5DTETJE03FCJG41B67WHR>
+              Canonical AI profile state enforces reciprocal id/name indexes and stable-reference-only data.
+              </?01M0P5DTETJE03FCJG41B67WHR>
+              <Criterion #P1-T2-AC3 { checked = true } ?01M0P5DTETJE03FCJG41B67WHS>
+              Any legacy external-ref input is upgraded through one explicit read path; new commits use only canonical state.
+              </?01M0P5DTETJE03FCJG41B67WHS>
+            ]>
+          )>
+        ]>
+      )>
+      <TaskGroup #P2 { name = "Processors and recoverable host dispatch" status = "DONE" priority = "P0" order = 1 } (
+        <Description ?01M0P5DTETJE03FCJG41B67WHT>
+        Implement the direct Processors, runtime-bound facade and checkpoint-backed invocation protocol.
+        </?01M0P5DTETJE03FCJG41B67WHT>
+        <SubNodes [
+          <Task #P2-T1 { name = "Write RED Processor selector and recovery tests" status = "DONE" priority = "P0" order = 0 } (
+            <Acceptance [
+              <Criterion #P2-T1-AC1 { checked = true } ?01M0P5DTETJE03FCJG41B67WHV>
+              Tests prove `runAgent` returns a stable instance and `runTargetedAgent` reuses it by id and name.
+              </?01M0P5DTETJE03FCJG41B67WHV>
+              <Criterion #P2-T1-AC2 { checked = true } ?01M0P5DTETJE03FCJG41B67WHW>
+              Invalid or conflicting selectors fail before dispatch and never create a new instance.
+              </?01M0P5DTETJE03FCJG41B67WHW>
+              <Criterion #P2-T1-AC3 { checked = true } ?01M0P5DTETJE03FCJG41B67WHX>
+              Pending and completed invocation reconstruction uses one invocation key and one host child.
+              </?01M0P5DTETJE03FCJG41B67WHX>
+            ]>
+          )>
+          <Task #P2-T2 { name = "Implement Processors facade and checkpoint CAS protocol" status = "DONE" priority = "P0" order = 1 } (
+            <Acceptance [
+              <Criterion #P2-T2-AC1 { checked = true } ?01M0P5DTETJE03FCJG41B67WHY>
+              Both Processors keep explicit `agentRuntime`; the bound facade only delegates with the captured runtime.
+              </?01M0P5DTETJE03FCJG41B67WHY>
+              <Criterion #P2-T2-AC2 { checked = true } ?01M0P5DTETJE03FCJG41B67WHZ>
+              Name reservation precedes host creation and CAS conflicts cannot produce duplicate names or instances.
+              </?01M0P5DTETJE03FCJG41B67WHZ>
+              <Criterion #P2-T2-AC3 { checked = true } ?01M0P5DTETJE03FCJG41B67WJ0>
+              Generic dispatch remains an infrastructure seam and is absent from the authored effects interface.
+              </?01M0P5DTETJE03FCJG41B67WJ0>
+            ]>
+          )>
+        ]>
+      )>
+      <TaskGroup #P3 { name = "Ctrl and Data DSL integration" status = "DONE" priority = "P0" order = 2 } (
+        <Description ?01M0P5DTETJE03FCJG41B67WJ1>
+        Bind the same typed Agent task semantics to ordinary Ctrl and Data substrate nodes.
+        </?01M0P5DTETJE03FCJG41B67WJ1>
+        <SubNodes [
+          <Task #P3-T1 { name = "Write RED Ctrl Data binding and recovery tests" status = "DONE" priority = "P0" order = 0 } (
+            <Acceptance [
+              <Criterion #P3-T1-AC1 { checked = true } ?01M0P5DTETJE03FCJG41B67WJ2>
+              Ctrl tests create a named instance and reuse it by name and returned id across wait and fresh controller recovery.
+              </?01M0P5DTETJE03FCJG41B67WJ2>
+              <Criterion #P3-T1-AC2 { checked = true } ?01M0P5DTETJE03FCJG41B67WJ3>
+              Data tests reuse a predecessor instance port and an authored name while preserving RunGraph dependencies and fresh recovery.
+              </?01M0P5DTETJE03FCJG41B67WJ3>
+              <Criterion #P3-T1-AC3 { checked = true } ?01M0P5DTETJE03FCJG41B67WJ4>
+              Loader tests reject missing/conflicting task bindings and prove no role-specific Agent substrate node exists.
+              </?01M0P5DTETJE03FCJG41B67WJ4>
+            ]>
+          )>
+          <Task #P3-T2 { name = "Implement profile bindings examples and reference docs" status = "DONE" priority = "P0" order = 1 } (
+            <Acceptance [
+              <Criterion #P3-T2-AC1 { checked = true } ?01M0P5DTETJE03FCJG41B67WJ5>
+              AICtrl ordinary Run and AIData ordinary processor nodes execute through the named facade and canonical checkpoint.
+              </?01M0P5DTETJE03FCJG41B67WJ5>
+              <Criterion #P3-T2-AC2 { checked = true } ?01M0P5DTETJE03FCJG41B67WJ6>
+              Examples demonstrate `{byInstanceName}` and `{byInstanceId}` without `.effects.invoke` or a runtime-less leaf helper.
+              </?01M0P5DTETJE03FCJG41B67WJ6>
+              <Criterion #P3-T2-AC3 { checked = true } ?01M0P5DTETJE03FCJG41B67WJ7>
+              Canonical Flow DSL docs and generated reference carry exact source/version/digest provenance.
+              </?01M0P5DTETJE03FCJG41B67WJ7>
+            ]>
+          )>
+        ]>
+      )>
+      <TaskGroup #P4 { name = "Recovery gates and independent direction review" status = "DONE" priority = "P0" order = 3 } (
+        <Description ?01M0P5DTETJE03FCJG41B67WJ8>
+        Run full behavioral, type, package, recovery and architecture gates.
+        </?01M0P5DTETJE03FCJG41B67WJ8>
+        <SubNodes [
+          <Task #P4-T1 { name = "Run focused cross-profile recovery and surface gates" status = "DONE" priority = "P0" order = 0 } (
+            <Acceptance [
+              <Criterion #P4-T1-AC1 { checked = true } ?01M0P5DTETJE03FCJG41B67WJ9>
+              Focused contract, selector, checkpoint, Ctrl and Data suites pass in fresh runtime reconstructions.
+              </?01M0P5DTETJE03FCJG41B67WJ9>
+              <Criterion #P4-T1-AC2 { checked = true } ?01M0P5DTETJE03FCJG41B67WJA>
+              Static checks find no authored generic Agent invoke, runtime-less Processor or copied external runtime state.
+              </?01M0P5DTETJE03FCJG41B67WJA>
+            ]>
+          )>
+          <Task #P4-T2 { name = "Run full tests typecheck docs package and strict validation" status = "DONE" priority = "P0" order = 1 } (
+            <Acceptance [
+              <Criterion #P4-T2-AC1 { checked = true } ?01M0P5DTETJE03FCJG41B67WJB>
+              Full workspace tests, typecheck, Flow DSL checks, reference build and package smoke pass.
+              </?01M0P5DTETJE03FCJG41B67WJB>
+              <Criterion #P4-T2-AC2 { checked = true } ?01M0P5DTETJE03FCJG41B67WJC>
+              Track and decisions strict validation pass and scoped diff contains no host root, provider implementation or registry override.
+              </?01M0P5DTETJE03FCJG41B67WJC>
+            ]>
+          )>
+        ]>
+        <Hooks [
+          <Hook { on = "phase:after" } (
+            <AttractorCheck { use = "coding" }>
+          )>
+        ]>
+      )>
+    ]>
+  )>
+  <Schedule { max_concurrent = 1 spot_check = true } []>
+  <Hooks []>
+)>

@@ -1,0 +1,99 @@
+<BehaviorPatch #track.align-ai-workflow-resource-boundary-with-halfcode.behavior_patch.ai-workflow-resource-system apiVersion="codument.tech/v1alpha1" version="1" { capability = "ai-workflow-resource-system" } (
+  <Mutations [
+    <Delete { selector = "behavior://ai-workflow-resource-system/requirements/logical-contained-refs" }>
+    <Upsert { selector = "behavior://ai-workflow-resource-system/requirements/xnl-only-resource-authoring" } (
+      <Requirement #xnl-only-resource-authoring (
+        <Statement ?01M0NJZ4PF5KVTXVN25Y3B0K6M>
+        The system SHALL receive AI workflow resources as normalized XNL ResourceRecord facts loaded and validated by Halfcode.
+        </?01M0NJZ4PF5KVTXVN25Y3B0K6M>
+        <Suites [
+          <Suite #authoring-authority { name = "Authoring authority" } (
+            <Cases [
+              <Case #delegate-xnl-loading (
+                <Given ?01M0NJZ4PF5KVTXVN25Y3B0K6N>
+                An AI workflow ResourcePackage is loaded from a filesystem root
+                </?01M0NJZ4PF5KVTXVN25Y3B0K6N>
+                <When ?01M0NJZ4PF5KVTXVN25Y3B0K6P>
+                depa-flows requests workflow app projections
+                </?01M0NJZ4PF5KVTXVN25Y3B0K6P>
+                <Then ?01M0NJZ4PF5KVTXVN25Y3B0K6Q>
+                The system SHALL delegate package loading, catalog discovery and containment validation to Halfcode
+                </?01M0NJZ4PF5KVTXVN25Y3B0K6Q>
+              )>
+              <Case #reject-parallel-loader (
+                <Given ?01M0NJZ4PF5KVTXVN25Y3B0K6R>
+                A normalized Halfcode registry is available
+                </?01M0NJZ4PF5KVTXVN25Y3B0K6R>
+                <When ?01M0NJZ4PF5KVTXVN25Y3B0K6S>
+                depa-flows projects workflow resources
+                </?01M0NJZ4PF5KVTXVN25Y3B0K6S>
+                <Then ?01M0NJZ4PF5KVTXVN25Y3B0K6T>
+                The system MUST NOT scan directories, parse a second generic catalog, or derive identities from paths
+                </?01M0NJZ4PF5KVTXVN25Y3B0K6T>
+              )>
+            ]>
+          )>
+        ]>
+      )>
+    )>
+    <Upsert { selector = "behavior://ai-workflow-resource-system/requirements/workflow-app-projection" } (
+      <Requirement #workflow-app-projection (
+        <Statement ?01M0NJZ4PF5KVTXVN25Y3B0K6V>
+        The system SHALL project AIWorkflowAppBundle as a workflow-domain view over Halfcode ResourceRecord facts.
+        </?01M0NJZ4PF5KVTXVN25Y3B0K6V>
+        <Suites [
+          <Suite #typed-workflow-bindings { name = "Typed workflow bindings" } (
+            <Cases [
+              <Case #project-valid-bindings (
+                <Given ?01M0NJZ4PF5KVTXVN25Y3B0K6W>
+                An AIWorkflowAppBundle record declares ordered WorkflowBinding nodes to existing workflow records
+                </?01M0NJZ4PF5KVTXVN25Y3B0K6W>
+                <When ?01M0NJZ4PF5KVTXVN25Y3B0K6X>
+                The registry is projected
+                </?01M0NJZ4PF5KVTXVN25Y3B0K6X>
+                <Then ?01M0NJZ4PF5KVTXVN25Y3B0K6Y>
+                The system SHALL preserve binding order, validate exact workflow kinds, and expose immutable workflow-domain projections
+                </?01M0NJZ4PF5KVTXVN25Y3B0K6Y>
+              )>
+              <Case #fail-closed-invalid-binding (
+                <Given ?01M0NJZ4PF5KVTXVN25Y3B0K6Z>
+                A binding is missing, duplicated, malformed, or refers to a record of another kind
+                </?01M0NJZ4PF5KVTXVN25Y3B0K6Z>
+                <When ?01M0NJZ4PF5KVTXVN25Y3B0K70>
+                The registry is projected
+                </?01M0NJZ4PF5KVTXVN25Y3B0K70>
+                <Then ?01M0NJZ4PF5KVTXVN25Y3B0K71>
+                The system SHALL fail with stable workflow-domain diagnostics and SHALL NOT return a partial app projection
+                </?01M0NJZ4PF5KVTXVN25Y3B0K71>
+              )>
+            ]>
+          )>
+        ]>
+      )>
+    )>
+    <Upsert { selector = "behavior://ai-workflow-resource-system/requirements/compatibility-boundary" } (
+      <Requirement #compatibility-boundary (
+        <Statement ?01M0NJZ4PF5KVTXVN25Y3B0K72>
+        The system SHALL preserve existing public AI workflow DTO/ref imports additively while retiring them from canonical resource authority.
+        </?01M0NJZ4PF5KVTXVN25Y3B0K72>
+        <Suites [
+          <Suite #public-surface { name = "Public surface" } (
+            <Cases [
+              <Case #legacy-root-and-browser-imports (
+                <Given ?01M0NJZ4PF5KVTXVN25Y3B0K73>
+                An existing consumer imports legacy DTO/ref helpers from the package root or browser entry
+                </?01M0NJZ4PF5KVTXVN25Y3B0K73>
+                <When ?01M0NJZ4PF5KVTXVN25Y3B0K74>
+                The packages are upgraded within the 0.1 line
+                </?01M0NJZ4PF5KVTXVN25Y3B0K74>
+                <Then ?01M0NJZ4PF5KVTXVN25Y3B0K75>
+                The imports SHALL remain source-compatible and the new projection path MUST NOT consume the legacy catalog or ref parser
+                </?01M0NJZ4PF5KVTXVN25Y3B0K75>
+              )>
+            ]>
+          )>
+        ]>
+      )>
+    )>
+  ]>
+)>

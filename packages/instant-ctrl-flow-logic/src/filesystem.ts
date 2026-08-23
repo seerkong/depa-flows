@@ -3,12 +3,17 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import type { FlowCodeFunction, FlowCodeResolver, LoadFlowSourcesOptions } from 'instant-ctrl-flow-contract';
 import { loadFlowBundleFromSources, type LoadResult } from './loader.js';
+import {
+  assembleDefinitionStepProfileDirectory,
+  createFilesystemDefinitionStepProfileRuntime,
+} from 'flow-step-space-logic/filesystem';
 import { FlowLoadError, runInstantCtrlFlowSpec } from './engine.js';
 import type { InstantCtrlFlowRunOptions } from 'instant-ctrl-flow-contract';
 
 /** Filesystem convenience only; parsing and validation belong to the named-source loader. */
 export function loadFlowBundle(dir: string, options: LoadFlowSourcesOptions = {}): LoadResult {
   const absoluteDir = path.resolve(dir);
+  const stepRuntime = createFilesystemDefinitionStepProfileRuntime({ rootDir: absoluteDir });
   const sources = fs.existsSync(absoluteDir)
     ? fs.readdirSync(absoluteDir, { withFileTypes: true })
         .filter((entry) => entry.isFile() && entry.name.endsWith('.xnl'))
@@ -18,6 +23,26 @@ export function loadFlowBundle(dir: string, options: LoadFlowSourcesOptions = {}
           content: fs.readFileSync(path.join(absoluteDir, entry.name), 'utf8'),
         }))
     : [];
+  for (const profileRoot of ['InstantCtrlFlow', 'WorkCtrlFlow', 'BPCtrlFlow']) {
+    const assembled = assembleDefinitionStepProfileDirectory(
+      stepRuntime,
+      {},
+      { ...(options.stepSpace ?? {}), profileRoot },
+    );
+    if (assembled.diagnostics.length > 0) {
+      return { diagnostics: assembled.diagnostics.map(({ code, message }) => ({ code, message })) };
+    }
+    if (!assembled.forest) continue;
+    const projectedSources = (assembled.sources as readonly ({ readonly ref: string; readonly content: string } | { readonly name: string; readonly content: string })[])
+      .map((source) => ({ name: 'name' in source ? source.name : source.ref, content: source.content }));
+    const loaded = loadFlowBundleFromSources(projectedSources, {
+      ...options,
+      baseUri: options.baseUri ?? absoluteDir,
+    });
+    return loaded.spec
+      ? { ...loaded, spec: { ...loaded.spec, definitionStepForest: assembled.forest } }
+      : loaded;
+  }
   return loadFlowBundleFromSources(sources, { ...options, baseUri: options.baseUri ?? absoluteDir });
 }
 

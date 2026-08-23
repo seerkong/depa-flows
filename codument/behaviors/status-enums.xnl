@@ -1,0 +1,92 @@
+<Behavior #status-enums apiVersion="codument.tech/v1alpha1" version="1" (
+  <Requirements [
+    <Requirement #pascal-case-contracts (
+      <Statement ?01M0NJZ4NBC5KZFTKTWR5BJMG7>
+      协议级状态枚举 SHALL 统一为大驼峰并定义在 contract 包：TaskStatus（NotStarted/Active/Delegated/Forwarded/Done/Refused/Abandoned，task-manager-contract）、WorkCtrlFlowStatus（Waiting/Completed/Failed）、NodeViewStatus（Init/Active/Success/Failure/Waiting/Omitted/Cancelled）、WaitHandleStatus（Open/Consumed/Expired/Cancelled）、ResumeSignal.outcome（Success/Failure/Cancelled，均在 work-ctrl-flow-contract）；内核枚举属实现细节经 STATUS_VIEW 投影，不外泄。
+      </?01M0NJZ4NBC5KZFTKTWR5BJMG7>
+      <Suites [
+        <Suite { name = "pascal-case-contracts" } (
+          <Cases [
+            <Case { name = "视图拼写" } (
+              <Given ?01M0NJZ4NBC5KZFTKTWR5BJMG8>
+              运行中的实例
+              </?01M0NJZ4NBC5KZFTKTWR5BJMG8>
+              <When ?01M0NJZ4NBC5KZFTKTWR5BJMG9>
+              读实例 tree.xnl / task.space.xnl
+              </?01M0NJZ4NBC5KZFTKTWR5BJMG9>
+              <Then ?01M0NJZ4NBC5KZFTKTWR5BJMGA>
+              status 值均为大驼峰
+              </?01M0NJZ4NBC5KZFTKTWR5BJMGA>
+            )>
+            <Case { name = "工具单一真源" } (
+              <Given ?01M0NJZ4NBC5KZFTKTWR5BJMGB>
+              flow-dsl-check
+              </?01M0NJZ4NBC5KZFTKTWR5BJMGB>
+              <When ?01M0NJZ4NBC5KZFTKTWR5BJMGC>
+              校验任务状态/执行模式
+              </?01M0NJZ4NBC5KZFTKTWR5BJMGC>
+              <Then ?01M0NJZ4NBC5KZFTKTWR5BJMGD>
+              枚举集合导入自 task-manager-contract，无手抄副本
+              </?01M0NJZ4NBC5KZFTKTWR5BJMGD>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+    <Requirement #deadline-semantics (
+      <Statement ?01M0NJZ4NBC5KZFTKTWR5BJMGE>
+      fireDueDeadlines SHALL 收敛全部到期等待：Timer→Success；非 Timer（如 ExternalJob timeoutMs）→Failure；被关闭的 WaitHandle 带终态 status（Consumed/Expired/Cancelled）移入快照 closedWaitHandles 供审计（schema v2）。
+      </?01M0NJZ4NBC5KZFTKTWR5BJMGE>
+      <Suites [
+        <Suite { name = "deadline-semantics" } (
+          <Cases [
+            <Case { name = "ExternalJob 超时" } (
+              <Given ?01M0NJZ4NBC5KZFTKTWR5BJMGF>
+              pack 节点 timeoutMs 已过
+              </?01M0NJZ4NBC5KZFTKTWR5BJMGF>
+              <When ?01M0NJZ4NBC5KZFTKTWR5BJMGG>
+              fireDueDeadlines
+              </?01M0NJZ4NBC5KZFTKTWR5BJMGG>
+              <Then ?01M0NJZ4NBC5KZFTKTWR5BJMGH>
+              流程 Failed；handle status=Expired 入 closedWaitHandles
+              </?01M0NJZ4NBC5KZFTKTWR5BJMGH>
+            )>
+            <Case { name = "消费审计" } (
+              <Given ?01M0NJZ4NBC5KZFTKTWR5BJMGJ>
+              正常 resume
+              </?01M0NJZ4NBC5KZFTKTWR5BJMGJ>
+              <When ?01M0NJZ4NBC5KZFTKTWR5BJMGK>
+              读快照
+              </?01M0NJZ4NBC5KZFTKTWR5BJMGK>
+              <Then ?01M0NJZ4NBC5KZFTKTWR5BJMGM>
+              handle status=Consumed 入 closedWaitHandles
+              </?01M0NJZ4NBC5KZFTKTWR5BJMGM>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+    <Requirement #cancelled-propagation (
+      <Statement ?01M0NJZ4NBC5KZFTKTWR5BJMGN>
+      ResumeSignal outcome=Cancelled SHALL 全链可区分：waitResults 记 Cancelled、树语义按 Failure 收敛、实例视图节点标 Cancelled、handle status=Cancelled。
+      </?01M0NJZ4NBC5KZFTKTWR5BJMGN>
+      <Suites [
+        <Suite { name = "cancelled-propagation" } (
+          <Cases [
+            <Case { name = "取消路径" } (
+              <Given ?01M0NJZ4NBC5KZFTKTWR5BJMGP>
+              挂起的 ExternalJob
+              </?01M0NJZ4NBC5KZFTKTWR5BJMGP>
+              <When ?01M0NJZ4NBC5KZFTKTWR5BJMGQ>
+              投递 outcome=Cancelled 的信号
+              </?01M0NJZ4NBC5KZFTKTWR5BJMGQ>
+              <Then ?01M0NJZ4NBC5KZFTKTWR5BJMGR>
+              流程 Failed；视图该节点 status=&quot;Cancelled&quot;
+              </?01M0NJZ4NBC5KZFTKTWR5BJMGR>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+  ]>
+)>

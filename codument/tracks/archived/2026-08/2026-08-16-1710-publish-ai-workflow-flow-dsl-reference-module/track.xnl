@@ -1,0 +1,179 @@
+<Track #publish-ai-workflow-flow-dsl-reference-module version="1" apiVersion="codument.tech/v1alpha1" { status = "completed" goal = "Publish canonical depa Flow DSL documentation as a versioned, package-contained authoring reference module for downstream Skill composition." description = "Generate one deterministic Halfcode ResourcePackage module from docs/flow-dsl, publish it as a dedicated package, and let downstream Skills embed selected references without duplicating Eidolon host policy or creating another installed system Skill." question_mode = "decision-tree" question_severity = "auto" commit_mode = "manual" created_at = "2026-08-16T13:24:41Z" updated_at = "2026-08-16T14:10:00Z" } (
+  <Ports { scope = "track" } [
+    <MaterialBundle { role = "input" name = "behavior-deltas" domain = "behavior" path = "vfs://./behavior_deltas/" }>
+    <MaterialBundle { role = "input" name = "modeling-deltas" domain = "modeling" path = "vfs://./modeling_deltas/" }>
+    <MaterialBundle { role = "input" name = "analysis" domain = "engineering" path = "vfs://./analysis/" }>
+    <MaterialBundle { role = "output" name = "packages" domain = "code" path = "vfs://@/packages/ai-workflow-flow-dsl-reference/" }>
+    <MaterialBundle { role = "output" name = "flow-dsl" domain = "docs" path = "vfs://@/docs/flow-dsl/" }>
+    <MaterialBundle { role = "output" name = "behavior" domain = "behavior" path = "vfs://@/codument/behaviors/" }>
+    <MaterialBundle { role = "output" name = "modeling" domain = "modeling" path = "vfs://@/codument/modeling/" }>
+  ]>
+  <TaskSpace #space_publish-ai-workflow-flow-dsl-reference-module { name = "publish-ai-workflow-flow-dsl-reference-module" } (
+    <Description ?01M0NJZ4Q1KR0CKT8GYT8QVF83>
+    Freeze the package and reference-module contracts, generate the module, prove downstream composition, then publish and verify the immutable patch.
+    </?01M0NJZ4Q1KR0CKT8GYT8QVF83>
+    <SubNodes [
+      <TaskGroup #P1 { name = "Freeze release and module contracts" status = "DONE" order = 0 } (
+        <Description ?01M0NJZ4Q1KR0CKT8GYT8QVF84>
+        Capture boundary baseline evidence and bind the smallest public package seam.
+        </?01M0NJZ4Q1KR0CKT8GYT8QVF84>
+        <SubNodes [
+          <Task { id = "T1.1" name = "Add boundary baseline tests for the missing reference module" status = "DONE" order = 0 priority = "P0" } (
+            <Acceptance [
+              <Criterion { id = "T1.1-AC1" checked = true } ?01M0NJZ4Q1KR0CKT8GYT8QVF85>
+              Focused tests initially demonstrate that the dedicated package, public loader and generated package root are absent
+              </?01M0NJZ4Q1KR0CKT8GYT8QVF85>
+              <Criterion { id = "T1.1-AC2" checked = true } ?01M0NJZ4Q1KR0CKT8GYT8QVF86>
+              Boundary cases cover package containment, canonical file identity, provenance, deterministic ordering and browser separation
+              </?01M0NJZ4Q1KR0CKT8GYT8QVF86>
+              <Criterion { id = "T1.1-AC3" checked = true } ?01M0NJZ4Q1KR0CKT8GYT8QVF87>
+              Test and report language uses neutral boundary, invalid-input and robustness terminology
+              </?01M0NJZ4Q1KR0CKT8GYT8QVF87>
+            ]>
+          )>
+          <Task { id = "T1.2" name = "Bind the smallest immutable package release" status = "DONE" order = 1 priority = "P0" } (
+            <Acceptance [
+              <Criterion { id = "T1.2-AC1" checked = true } ?01M0NJZ4Q1KR0CKT8GYT8QVF88>
+              The new ai-workflow-flow-dsl-reference package starts at the terminal smallest version 0.1.0 with exact Halfcode 0.2.3
+              </?01M0NJZ4Q1KR0CKT8GYT8QVF88>
+              <Criterion { id = "T1.2-AC2" checked = true } ?01M0NJZ4Q1KR0CKT8GYT8QVF89>
+              ai-workflow-contract and ai-workflow-logic remain at 0.1.2 with unchanged public manifests and runtime dependency graphs
+              </?01M0NJZ4Q1KR0CKT8GYT8QVF89>
+              <Criterion { id = "T1.2-AC3" checked = true } ?01M0NJZ4Q1KR0CKT8GYT8QVF8A>
+              The candidate contains no workspace, file, link or range dependency and no package or command-level registry override
+              </?01M0NJZ4Q1KR0CKT8GYT8QVF8A>
+            ]>
+          )>
+        ]>
+        <Gate [
+          <Criterion { checked = true } ?01M0NJZ4Q1KR0CKT8GYT8QVF8B>
+          Boundary baseline evidence and the exact 0.1.0 release seam are reproducible
+          </?01M0NJZ4Q1KR0CKT8GYT8QVF8B>
+        ]>
+      )>
+      <TaskGroup #P2 { name = "Generate package-contained Flow DSL module" status = "DONE" order = 1 } (
+        <Description ?01M0NJZ4Q1KR0CKT8GYT8QVF8C>
+        Build a deterministic ResourcePackage module from the canonical Flow DSL documentation tree.
+        </?01M0NJZ4Q1KR0CKT8GYT8QVF8C>
+        <SubNodes [
+          <Task { id = "T2.1" name = "Implement deterministic canonical-tree generation" status = "DONE" order = 0 priority = "P0" } (
+            <Acceptance [
+              <Criterion { id = "T2.1-AC1" checked = true } ?01M0NJZ4Q1KR0CKT8GYT8QVF8D>
+              The generator reads only docs/flow-dsl Markdown files, orders paths by fixed UTF-16 code-unit order and copies every selected file byte-for-byte
+              </?01M0NJZ4Q1KR0CKT8GYT8QVF8D>
+              <Criterion { id = "T2.1-AC2" checked = true } ?01M0NJZ4Q1KR0CKT8GYT8QVF8E>
+              The generated ResourcePackage contains its own KindDefinition and fixed WikiPage records with unique identities derived from full relative paths
+              </?01M0NJZ4Q1KR0CKT8GYT8QVF8E>
+              <Criterion { id = "T2.1-AC3" checked = true } ?01M0NJZ4Q1KR0CKT8GYT8QVF8F>
+              A generated provenance manifest records package version, canonical source paths and exact sha256 content digests
+              </?01M0NJZ4Q1KR0CKT8GYT8QVF8F>
+            ]>
+          )>
+          <Task { id = "T2.2" name = "Expose the package authoring module loader" status = "DONE" order = 1 priority = "P0" } (
+            <Acceptance [
+              <Criterion { id = "T2.2-AC1" checked = true } ?01M0NJZ4Q1KR0CKT8GYT8QVF8G>
+              The package root returns a fresh deeply immutable AuthoringModuleDescriptor rooted inside the installed package
+              </?01M0NJZ4Q1KR0CKT8GYT8QVF8G>
+              <Criterion { id = "T2.2-AC2" checked = true } ?01M0NJZ4Q1KR0CKT8GYT8QVF8H>
+              The module loads through the published Halfcode 0.2.3 ResourcePackage loader with no diagnostics
+              </?01M0NJZ4Q1KR0CKT8GYT8QVF8H>
+              <Criterion { id = "T2.2-AC3" checked = true } ?01M0NJZ4Q1KR0CKT8GYT8QVF8J>
+              The package exports only its immutable module identity and loader and does not alter AI workflow runtime or browser entry graphs
+              </?01M0NJZ4Q1KR0CKT8GYT8QVF8J>
+            ]>
+          )>
+        ]>
+        <Gate [
+          <Criterion { checked = true } ?01M0NJZ4Q1KR0CKT8GYT8QVF8K>
+          Canonical-tree, provenance, loader and browser-boundary tests pass
+          </?01M0NJZ4Q1KR0CKT8GYT8QVF8K>
+        ]>
+      )>
+      <TaskGroup #P3 { name = "Prove downstream Skill composition" status = "DONE" order = 2 } (
+        <Description ?01M0NJZ4Q1KR0CKT8GYT8QVF8M>
+        Show that the module can be composed into an authoring Skill without hand-maintained copies or a fifth installed system Skill.
+        </?01M0NJZ4Q1KR0CKT8GYT8QVF8M>
+        <SubNodes [
+          <Task { id = "T3.1" name = "Compose an authoring Skill fixture from the module" status = "DONE" order = 0 priority = "P0" } (
+            <Acceptance [
+              <Criterion { id = "T3.1-AC1" checked = true } ?01M0NJZ4Q1KR0CKT8GYT8QVF8N>
+              A fixture Skill uses explicit Halfcode ResourceMappings to copy selected module content into references/flow-dsl without a sibling Skill dependency
+              </?01M0NJZ4Q1KR0CKT8GYT8QVF8N>
+              <Criterion { id = "T3.1-AC2" checked = true } ?01M0NJZ4Q1KR0CKT8GYT8QVF8P>
+              The compiled reference tree preserves canonical Flow DSL folder structure and source bytes
+              </?01M0NJZ4Q1KR0CKT8GYT8QVF8P>
+              <Criterion { id = "T3.1-AC3" checked = true } ?01M0NJZ4Q1KR0CKT8GYT8QVF8Q>
+              The Skill plan binds module identity, version and provenance digests without host paths, Eidolon operations or natural-language routing
+              </?01M0NJZ4Q1KR0CKT8GYT8QVF8Q>
+            ]>
+          )>
+          <Task { id = "T3.2" name = "Verify real packed consumer behavior" status = "DONE" order = 1 priority = "P0" } (
+            <Acceptance [
+              <Criterion { id = "T3.2-AC1" checked = true } ?01M0NJZ4Q1KR0CKT8GYT8QVF8R>
+              A fresh consumer installs the local tarball, imports every declared entry and loads the package-contained module
+              </?01M0NJZ4Q1KR0CKT8GYT8QVF8R>
+              <Criterion { id = "T3.2-AC2" checked = true } ?01M0NJZ4Q1KR0CKT8GYT8QVF8S>
+              The packed candidate contains the generated tree and exact dependency identities with no source, workspace or file substitution
+              </?01M0NJZ4Q1KR0CKT8GYT8QVF8S>
+              <Criterion { id = "T3.2-AC3" checked = true } ?01M0NJZ4Q1KR0CKT8GYT8QVF8T>
+              Rebuilding from unchanged canonical docs yields the same file set, provenance and module projection
+              </?01M0NJZ4Q1KR0CKT8GYT8QVF8T>
+            ]>
+          )>
+        ]>
+        <Gate [
+          <Criterion { checked = true } ?01M0NJZ4Q1KR0CKT8GYT8QVF8V>
+          Real package and downstream Skill composition evidence is green
+          </?01M0NJZ4Q1KR0CKT8GYT8QVF8V>
+        ]>
+      )>
+      <TaskGroup #P4 { name = "Publish and verify registry identity" status = "DONE" order = 3 } (
+        <Description ?01M0NJZ4Q1KR0CKT8GYT8QVF8W>
+        Run complete gates, independently review the candidate, publish using only the user's active npm configuration, and verify readback.
+        </?01M0NJZ4Q1KR0CKT8GYT8QVF8W>
+        <SubNodes [
+          <Task { id = "T4.1" name = "Run compatibility and authority gates" status = "DONE" order = 0 priority = "P0" } (
+            <Acceptance [
+              <Criterion { id = "T4.1-AC1" checked = true } ?01M0NJZ4Q1KR0CKT8GYT8QVF8X>
+              Focused and full tests, typecheck, Flow DSL examples, package smoke, XML/XNL and diff checks pass
+              </?01M0NJZ4Q1KR0CKT8GYT8QVF8X>
+              <Criterion { id = "T4.1-AC2" checked = true } ?01M0NJZ4Q1KR0CKT8GYT8QVF8Y>
+              Static scans find no hand-maintained generated copy, second resource loader, host policy or text-based semantic routing
+              </?01M0NJZ4Q1KR0CKT8GYT8QVF8Y>
+              <Criterion { id = "T4.1-AC3" checked = true } ?01M0NJZ4Q1KR0CKT8GYT8QVF8Z>
+              Implementation report records version, candidate hashes, exact commands and dirty-base preservation
+              </?01M0NJZ4Q1KR0CKT8GYT8QVF8Z>
+            ]>
+          )>
+          <Task { id = "T4.2" name = "Publish 0.1.0 and bind readback receipt" status = "DONE" order = 1 priority = "P0" } (
+            <Acceptance [
+              <Criterion { id = "T4.2-AC1" checked = true } ?01M0NJZ4Q1KR0CKT8GYT8QVF90>
+              Publication uses npm publish with no registry argument and no manifest registry override
+              </?01M0NJZ4Q1KR0CKT8GYT8QVF90>
+              <Criterion { id = "T4.2-AC2" checked = true } ?01M0NJZ4Q1KR0CKT8GYT8QVF91>
+              Registry readback matches the reviewed candidate version, shasum, integrity, file count and exact dependencies
+              </?01M0NJZ4Q1KR0CKT8GYT8QVF91>
+              <Criterion { id = "T4.2-AC3" checked = true } ?01M0NJZ4Q1KR0CKT8GYT8QVF92>
+              A registry-only fresh consumer reproduces module loading and downstream composition
+              </?01M0NJZ4Q1KR0CKT8GYT8QVF92>
+            ]>
+          )>
+        ]>
+        <Gate [
+          <Criterion { checked = true } ?01M0NJZ4Q1KR0CKT8GYT8QVF93>
+          Independent review, publication and registry-only readback are complete
+          </?01M0NJZ4Q1KR0CKT8GYT8QVF93>
+        ]>
+        <Hooks [
+          <Hook { on = "phase:after" } (
+            <AttractorCheck { use = "coding" }>
+          )>
+        ]>
+      )>
+    ]>
+  )>
+  <Schedule [
+    <Parallel { max_concurrent = 1 spot_check = true }>
+  ]>
+  <Hooks>
+)>

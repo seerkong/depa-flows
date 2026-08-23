@@ -1,0 +1,50 @@
+<BehaviorPatch #track.r_2_0_2_6_-_0_8_-_0_2_-_1_7_2_5_-_i_m_p_l_e_m_e_n_t_-_a_i_-_d_a_t_a_-_w_o_r_k_f_l_o_w_-_o_n_-_e_a_g_e_r_-_d_a_t_a_-_f_l_o_w.behavior_patch.ai-data-workflow apiVersion="codument.tech/v1alpha1" version="1" { capability = "ai-data-workflow" } (
+  <Mutations [
+    <Upsert { selector = "behavior://ai-data-workflow/requirements/eager-data-flow-substrate" } (
+      <Requirement #eager-data-flow-substrate (
+        <Statement ?01M0NJZ4RAY6MZVF9GYGJR7G53>
+        The system SHALL implement AI Data Workflow as an EagerDataFlow-backed RunGraph layer.
+        </?01M0NJZ4RAY6MZVF9GYGJR7G53>
+        <Suites [
+          <Suite #run-graph { name = "RunGraph" } (
+            <Cases [
+              <Case #derive-from-eager-plan (
+                <Given ?01M0NJZ4RAY6MZVF9GYGJR7G54>
+                An EagerDataFlowAuthoringPlan exists
+                </?01M0NJZ4RAY6MZVF9GYGJR7G54>
+                <When ?01M0NJZ4RAY6MZVF9GYGJR7G55>
+                An AI Data Workflow run graph is created
+                </?01M0NJZ4RAY6MZVF9GYGJR7G55>
+                <Then ?01M0NJZ4RAY6MZVF9GYGJR7G56>
+                The graph SHALL preserve nodes, input/output config and dependency edges from the EagerDataFlow plan
+                </?01M0NJZ4RAY6MZVF9GYGJR7G56>
+              )>
+              <Case #invalidate-downstream (
+                <Given ?01M0NJZ4RAY6MZVF9GYGJR7G57>
+                A completed node is modified by a graph patch
+                </?01M0NJZ4RAY6MZVF9GYGJR7G57>
+                <When ?01M0NJZ4RAY6MZVF9GYGJR7G58>
+                The patch is applied
+                </?01M0NJZ4RAY6MZVF9GYGJR7G58>
+                <Then ?01M0NJZ4RAY6MZVF9GYGJR7G59>
+                The system SHALL create a new generation and invalidate downstream nodes without deleting prior records
+                </?01M0NJZ4RAY6MZVF9GYGJR7G59>
+              )>
+              <Case #run-local-reuse (
+                <Given ?01M0NJZ4RAY6MZVF9GYGJR7G5A>
+                A new generation has an invalidated node with an unchanged semantic fingerprint
+                </?01M0NJZ4RAY6MZVF9GYGJR7G5A>
+                <When ?01M0NJZ4RAY6MZVF9GYGJR7G5B>
+                The node reuse policy is semantic-hash
+                </?01M0NJZ4RAY6MZVF9GYGJR7G5B>
+                <Then ?01M0NJZ4RAY6MZVF9GYGJR7G5C>
+                The system SHALL allow run-local reuse of the previous result
+                </?01M0NJZ4RAY6MZVF9GYGJR7G5C>
+              )>
+            ]>
+          )>
+        ]>
+      )>
+    )>
+  ]>
+)>

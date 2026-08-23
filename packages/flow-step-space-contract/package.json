@@ -1,0 +1,17 @@
+{
+  "name": "flow-step-space-contract",
+  "version": "0.1.1",
+  "private": false,
+  "description": "Profile-neutral Flow StepSpace definition and immutable record contracts",
+  "type": "module",
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "src"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}

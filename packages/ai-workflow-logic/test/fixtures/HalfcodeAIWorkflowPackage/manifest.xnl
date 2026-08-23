@@ -1,0 +1,11 @@
+<ResourcePackage #depa.flows.test.resource_package apiVersion="halfcode.resources/v1" version="1.0.0" {
+  lifecycle = "Active"
+  description = "Halfcode-backed AI workflow package fixture"
+} (
+  <Catalogs [
+    <Catalog #kind_definitions { kind = "KindDefinition" shape = "directory" root = "vfs://./KindDefinitions/" entry = "manifest.xnl" }>
+    <Catalog #app_bundles { kind = "AIWorkflowAppBundle" shape = "single-file" root = "vfs://./Apps/" }>
+    <Catalog #ctrl_workflows { kind = "AICtrlWorkflow" shape = "single-file" root = "vfs://./CtrlWorkflows/" }>
+    <Catalog #data_workflows { kind = "AIDataWorkflow" shape = "single-file" root = "vfs://./DataWorkflows/" }>
+  ]>
+)>

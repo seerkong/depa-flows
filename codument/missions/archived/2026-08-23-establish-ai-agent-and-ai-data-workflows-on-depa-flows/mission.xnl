@@ -1,0 +1,155 @@
+<Mission #establish-ai-agent-and-ai-data-workflows-on-depa-flows version="1" apiVersion="codument.tech/v1alpha1" { status = "archived" goal = "在本仓库现有 flow 底座上建立 AI Ctrl Workflow 与 AI Data Workflow，并补齐 XNL authoring、embedded effect provider、docs/examples 与验证。" description = "使命只维护跨 track 控制面；真实代码、规范、测试与示例由后续真实 track 落地。" question_mode = "decision-tree" question_severity = "light" revision = 17 created_at = "2026-08-02T13:29:02Z" updated_at = "2026-08-23T16:08:12.456Z" } (
+  <Ports { scope = "mission" } [
+    <MaterialBundle { role = "state" name = "analysis" domain = "mission" path = "vfs://./analysis/" }>
+    <MaterialBundle { role = "state" name = "reports" domain = "mission" path = "vfs://./reports/" }>
+    <MaterialBundle { role = "output" name = "tracks" domain = "codument" path = "vfs://@/codument/tracks/" }>
+  ]>
+  <ProjectRefs [
+    <ProjectRef #host { kind = "host" }>
+  ]>
+  <ActorSets { default = "ai-workflow-library-loop" } [
+    <ActorSet #ai-workflow-library-loop [
+      <Actor { role = "MissionPlanner" project_ref = "host" } (
+        <Description ?01M0NJZ4NW24XEKFV6TKZQXR9T>
+        把 AI workflow 产品化目标切分为底座、资源系统、运行时、文档示例与验证 tracks，并在证据变化时修订 DAG。
+        </?01M0NJZ4NW24XEKFV6TKZQXR9T>
+      )>
+      <Actor { role = "MissionObserver" project_ref = "host" } (
+        <Description ?01M0NJZ4NW24XEKFV6TKZQXR9V>
+        观察本仓库 package 边界、flow-dsl 文档、XNL bundle 示例、测试结果、track 状态与 ignored analysis/reports。
+        </?01M0NJZ4NW24XEKFV6TKZQXR9V>
+      )>
+      <Actor { role = "MissionReconciler" project_ref = "host" } (
+        <Description ?01M0NJZ4NXZ1Z68F46ZBHG3F5E>
+        比较 mission 期望态与实现/文档/示例实际态，选择下一个 ready track 或在发现漂移时要求重规划。
+        </?01M0NJZ4NXZ1Z68F46ZBHG3F5E>
+      )>
+      <Actor { role = "MissionApplier" project_ref = "host" } (
+        <Description ?01M0NJZ4NXZ1Z68F46ZBHG3F5F>
+        创建、执行、验证或归档一个有界 track；动作验证明确且无偏差时继续推进，遇到硬约束冲突才返回。
+        </?01M0NJZ4NXZ1Z68F46ZBHG3F5F>
+      )>
+    ]>
+  ]>
+  <TaskSpace #space_establish-ai-agent-and-ai-data-workflows-on-depa-flows { name = "establish-ai-agent-and-ai-data-workflows-on-depa-flows" child_mode = "dag" } (
+    <Description ?01M0NJZ4NXZ1Z68F46ZBHG3F5G>
+    AI workflow productization mission over the existing flow library.
+    </?01M0NJZ4NXZ1Z68F46ZBHG3F5G>
+    <SubNodes [
+      <TaskGroup #G1_CONTEXT { name = "证据盘点与边界锁定" status = "DONE" order = 0 } (
+        <Description ?01M0NJZ4NXZ1Z68F46ZBHG3F5H>
+        读取本仓库 flow 底座、DSL 规范、示例和 ignored analysis 中记录的外部参考，形成后续 track 的证据边界。
+        </?01M0NJZ4NXZ1Z68F46ZBHG3F5H>
+        <SubNodes [
+          <Task #G1_CONTEXT-T1 { name = "盘点 WorkCtrlFlow 与 EagerDataFlow 当前 contract/logic/docs/examples" status = "DONE" order = 0 }>
+          <Task #G1_CONTEXT-T2 { name = "盘点 AI workflow、资源系统与 embedded effect provider 的参考证据" status = "DONE" order = 1 }>
+          <Task #G1_CONTEXT-T3 { name = "确认不使用替代 flow engine、XNL-only、路径不泄漏等硬约束" status = "DONE" order = 2 }>
+        ]>
+      )>
+      <TaskGroup #G2_FOUNDATION { name = "底座与包边界设计" status = "DONE" order = 1 } (
+        <Description ?01M0NJZ4NXZ1Z68F46ZBHG3F5J>
+        定义两个 AI workflow 类型在现有 flow 底座上的包边界、公共类型、runtime/config/effect 契约和依赖方向。
+        </?01M0NJZ4NXZ1Z68F46ZBHG3F5J>
+        <SubNodes [
+          <Task #G2_FOUNDATION-T1 { name = "创建并执行底座与包边界 track" status = "DONE" order = 0 } (
+            <TrackLink #define-ai-workflow-foundation-on-depa-flows { state = "bound" project_ref = "host" }>
+          )>
+        ]>
+      )>
+      <TaskGroup #G3_RESOURCE { name = "XNL 资源系统与 app bundle authoring" status = "DONE" order = 2 } (
+        <Description ?01M0NJZ4NXZ1Z68F46ZBHG3F5K>
+        建立 XNL-only 的 AI workflow resource tree、resource refs、bundle 文件布局和校验策略。
+        </?01M0NJZ4NXZ1Z68F46ZBHG3F5K>
+        <SubNodes [
+          <Task #G3_RESOURCE-T1 { name = "创建并执行 XNL AI workflow resource system track" status = "DONE" order = 0 } (
+            <TrackLink #define-xnl-ai-workflow-resource-system { state = "bound" project_ref = "host" }>
+          )>
+        ]>
+      )>
+      <TaskGroup #G4_AGENT { name = "AI Ctrl Workflow 实现" status = "DONE" order = 3 } (
+        <Description ?01M0NJZ4NXZ1Z68F46ZBHG3F5M>
+        在 WorkCtrlFlow 之上实现 AI agent 节点、消息/material 端口、节点状态记录、恢复与运行记录模型。
+        </?01M0NJZ4NXZ1Z68F46ZBHG3F5M>
+        <SubNodes [
+          <Task #G4_AGENT-T1 { name = "创建并执行 AI Ctrl Workflow track" status = "DONE" order = 0 } (
+            <TrackLink #implement-ai-ctrl-workflow-on-work-ctrl-flow { state = "bound" project_ref = "host" }>
+          )>
+        ]>
+      )>
+      <TaskGroup #G5_DATA { name = "AI Data Workflow 实现" status = "DONE" order = 4 } (
+        <Description ?01M0NJZ4NXZ1Z68F46ZBHG3F5N>
+        在 EagerDataFlow 之上实现 AI data DAG、RunGraph、patch/generation、invalidation 与 run-local semantic reuse。
+        </?01M0NJZ4NXZ1Z68F46ZBHG3F5N>
+        <SubNodes [
+          <Task #G5_DATA-T1 { name = "创建并执行 AI Data Workflow track" status = "DONE" order = 0 } (
+            <TrackLink #implement-ai-data-workflow-on-eager-data-flow { state = "bound" project_ref = "host" }>
+          )>
+        ]>
+      )>
+      <TaskGroup #G6_EFFECTS { name = "Embedded effect provider 集成" status = "DONE" order = 5 } (
+        <Description ?01M0NJZ4NXZ1Z68F46ZBHG3F5P>
+        把 AI effect provider 做成库内嵌 runtime capability，由封装层传入全局与 workspace 级状态根。
+        </?01M0NJZ4NXZ1Z68F46ZBHG3F5P>
+        <SubNodes [
+          <Task #G6_EFFECTS-T1 { name = "创建并执行 embedded effect provider track" status = "DONE" order = 0 } (
+            <TrackLink #integrate-embedded-ai-effect-provider { state = "bound" project_ref = "host" }>
+          )>
+        ]>
+      )>
+      <TaskGroup #G7_DOCS_EXAMPLES { name = "DSL 文档与 XNL 示例" status = "DONE" order = 6 } (
+        <Description ?01M0NJZ4NXZ1Z68F46ZBHG3F5Q>
+        为两个新流类型补充 flow-dsl 使用说明和 xnl-bundles 示例，并纳入检查链路。
+        </?01M0NJZ4NXZ1Z68F46ZBHG3F5Q>
+        <SubNodes [
+          <Task #G7_DOCS_EXAMPLES-T1 { name = "创建并执行 docs/examples track" status = "DONE" order = 0 } (
+            <TrackLink #document-ai-workflows-and-xnl-bundle-examples { state = "bound" project_ref = "host" }>
+          )>
+        ]>
+      )>
+      <TaskGroup #G8_VERIFY { name = "总体验证与收口" status = "DONE" order = 7 } (
+        <Description ?01M0NJZ4NXZ1Z68F46ZBHG3F5R>
+        验证两个新流类型、资源 authoring、embedded effects、路径卫生与现有测试检查链路。
+        </?01M0NJZ4NXZ1Z68F46ZBHG3F5R>
+        <SubNodes [
+          <Task #G8_VERIFY-T1 { name = "执行 mission 级集成验证" status = "DONE" order = 0 }>
+          <Task #G8_VERIFY-T2 { name = "修正或记录剩余 gap 并准备归档" status = "DONE" order = 1 }>
+        ]>
+      )>
+    ]>
+  )>
+  <Schedule [
+    <Dag { for = "space_establish-ai-agent-and-ai-data-workflows-on-depa-flows" } [
+      <Node #G2_FOUNDATION [
+        <After { ref = "G1_CONTEXT" }>
+      ]>
+      <Node #G3_RESOURCE [
+        <After { ref = "G2_FOUNDATION" }>
+      ]>
+      <Node #G4_AGENT [
+        <After { ref = "G2_FOUNDATION" }>
+        <After { ref = "G3_RESOURCE" }>
+      ]>
+      <Node #G5_DATA [
+        <After { ref = "G2_FOUNDATION" }>
+        <After { ref = "G3_RESOURCE" }>
+      ]>
+      <Node #G6_EFFECTS [
+        <After { ref = "G4_AGENT" }>
+        <After { ref = "G5_DATA" }>
+      ]>
+      <Node #G7_DOCS_EXAMPLES [
+        <After { ref = "G4_AGENT" }>
+        <After { ref = "G5_DATA" }>
+        <After { ref = "G6_EFFECTS" }>
+      ]>
+      <Node #G8_VERIFY [
+        <After { ref = "G7_DOCS_EXAMPLES" }>
+      ]>
+    ]>
+  ]>
+  <Hooks [
+    <Hook { on = "mission:after-node" } (
+      <MissionReconcile { max_tracks = 10 on_limit = "checkpoint" on_drift = "replan-or-block" }>
+    )>
+  ]>
+)>

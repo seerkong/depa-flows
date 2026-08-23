@@ -1,0 +1,17 @@
+<AIWorkflowAppBundle #depa.flows.test.SupportAgent apiVersion="depa.flows/v1" version="1.0.0" {
+  lifecycle = "Active"
+  description = "Support agent workflow app"
+} (
+  <WorkflowBindings [
+    <WorkflowBinding #primary {
+      kind = "AICtrlWorkflow"
+      ref = "resource://depa.flows.test.SupportAgent.Workflow"
+      entrypoint = true
+    }>
+    <WorkflowBinding #evidence {
+      kind = "AIDataWorkflow"
+      ref = "resource://depa.flows.test.SupportAgent.Evidence"
+      entrypoint = false
+    }>
+  ]>
+)>

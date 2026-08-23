@@ -1,0 +1,10 @@
+<Step #reserve-inventory (
+  <Core [
+    <Retry #reserve-inventory { maxAttempts = 3 backoffMs = 5000 } [
+      <Run #reserve-primary {
+        src = "vfs://./actions/fulfillment.actions.ts#reservePrimaryInventory"
+        config = { endpoint = "https://warehouse.example.com/api" }
+      }>
+    ]>
+  ]>
+)>

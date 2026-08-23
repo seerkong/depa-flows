@@ -1,0 +1,7 @@
+<MaterialPort #depa.flows.test.Port.Foreign apiVersion="depa.flows/v1" version="1.0.0" {
+  lifecycle = "Stable"
+  description = "Port not declared by the Support Agent"
+  materialKind = "ContextMaterial"
+  required = false
+  cardinality = "many"
+}>

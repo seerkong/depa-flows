@@ -1,0 +1,30 @@
+<decision #track.agent_resources.authority apiVersion="codument.tech/v1alpha1" { status = "accepted" priority = "P0" } (
+    <question ?01M0NJZ4P6GCCJ1HKW625FP49G>
+    Where do generic resource loading, composition, content identity and dependency closure live?
+    </?01M0NJZ4P6GCCJ1HKW625FP49G>
+    <answer { } (<raw-answer ?>Exclusively in published Halfcode 0.2.2.</?> <decision-text ?>Halfcode owns generic loading, composition, content identity and dependency closure; depa-flows owns fixed AI workflow semantics.</?> <rationale ?>This preserves one generic resource authority.</?> <evidence ?>Run-freeze and projection tests.</?>)>
+  )>
+<decision #track.agent_resources.package_split apiVersion="codument.tech/v1alpha1" { status = "accepted" priority = "P0" } (
+    <question ?01M0NJZ4P6GCCJ1HKW625FP49K>
+    How can projection remain browser-safe while run freeze uses Halfcode runtime APIs?
+    </?01M0NJZ4P6GCCJ1HKW625FP49K>
+    <answer { } (<raw-answer ?>Split browser-safe projection from Node run-freeze.</?> <decision-text ?>Export pure projection from root/browser and freeze only from the run-freeze Node/server subpath.</?> <rationale ?>This prevents filesystem and hashing dependencies from entering browser consumers.</?> <evidence ?>Browser entry and package tests.</?>)>
+  )>
+<decision #track.agent_resources.task_model apiVersion="codument.tech/v1alpha1" { status = "accepted" priority = "P0" } (
+    <question ?01M0NJZ4P6GCCJ1HKW625FP49P>
+    Does the resource model add a new AgentTask runtime node to the flow substrates?
+    </?01M0NJZ4P6GCCJ1HKW625FP49P>
+    <answer { } (<raw-answer ?>No new substrate runtime node.</?> <decision-text ?>AIWorkflowAgentTaskRef is an exact resource-selection tuple bound to an existing workflow node id.</?> <rationale ?>WorkCtrlFlow and EagerDataFlow remain substrate authorities.</?> <evidence ?>Ctrl/Data projection tests.</?>)>
+  )>
+<decision #track.agent_resources.two_revisions apiVersion="codument.tech/v1alpha1" { status = "accepted" priority = "P0" } (
+    <question ?01M0NJZ4P6GCCJ1HKW625FP49S>
+    Why is a domain semantic fingerprint separate from the Halfcode snapshot revision?
+    </?01M0NJZ4P6GCCJ1HKW625FP49S>
+    <answer { } (<raw-answer ?>The snapshot and domain fingerprint serve different scopes.</?> <decision-text ?>The snapshot retains complete registry proof; the semantic fingerprint binds selected task semantics and reachable content.</?> <rationale ?>Unrelated changes need not invalidate unchanged selected tasks.</?> <evidence ?>Fingerprint determinism tests.</?>)>
+  )>
+<decision #track.agent_resources.explicit_relations apiVersion="codument.tech/v1alpha1" { status = "accepted" priority = "P0" } (
+    <question ?01M0NJZ4P6GCCJ1HKW625FP49W>
+    How are tools, policies, schemas, ports, materials and tasks discovered?
+    </?01M0NJZ4P6GCCJ1HKW625FP49W>
+    <answer { } (<raw-answer ?>Only fixed typed XNL relations.</?> <decision-text ?>Discover tools, policies, schemas, ports, materials and tasks only from typed child nodes with exact identity.</?> <rationale ?>Names and natural language are not machine relations.</?> <evidence ?>Fail-closed relation tests and static scans.</?>)>
+  )>

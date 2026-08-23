@@ -1,0 +1,29 @@
+{
+  "name": "ai-workflow-flow-dsl-reference",
+  "version": "0.1.5",
+  "private": false,
+  "description": "Canonical depa Flow DSL reference module for Halfcode authoring assemblies",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "bun run tools/build.ts",
+    "prepack": "bun run build",
+    "test": "bun run build && bun test"
+  },
+  "dependencies": {
+    "halfcode-compiler.xnl": "0.2.3"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

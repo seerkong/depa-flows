@@ -1,0 +1,129 @@
+<Track #add-ai-workflow-profile-source-loaders version="1" apiVersion="codument.tech/v1alpha1" { status = "completed" goal = "为 AICtrlWorkflow 与 AIDataWorkflow 提供 canonical XNL profile source loaders。" description = "复用 ctrl/eager-data substrate parsing 与 validation，返回 typed AI workflow binding 和结构化诊断。" question_mode = "decision-tree" question_severity = "auto" commit_mode = "manual" created_at = "2026-08-07T15:44:00Z" updated_at = "2026-08-07T15:49:00Z" } (
+  <Ports { scope = "track" } [
+    <MaterialBundle { role = "input" name = "behavior-deltas" domain = "behavior" path = "vfs://./behavior_deltas/" }>
+    <MaterialBundle { role = "state" name = "analysis" domain = "track" path = "vfs://./analysis/" }>
+    <MaterialBundle { role = "output" name = "packages" domain = "source" path = "vfs://@/packages/" }>
+    <MaterialBundle { role = "output" name = "behavior" domain = "codument" path = "vfs://@/codument/behaviors/" }>
+  ]>
+  <TaskSpace #space_add-ai-workflow-profile-source-loaders { name = "add-ai-workflow-profile-source-loaders" } (
+    <Description ?01M0NJZ4T0TCT0XRSMC8QNMK5P>
+    Canonical AI workflow profile source loaders over existing substrate parsers.
+    </?01M0NJZ4T0TCT0XRSMC8QNMK5P>
+    <SubNodes [
+      <TaskGroup #P1 { name = "Substrate profile-root primitives" status = "DONE" order = 0 } (
+        <Description ?01M0NJZ4T0TCT0XRSMC8QNMK5Q>
+        Add explicit profile-root loading paths while preserving existing substrate loader behavior.
+        </?01M0NJZ4T0TCT0XRSMC8QNMK5Q>
+        <Gate [
+          <Criterion ?01M0NJZ4T0TCT0XRSMC8QNMK5R>
+          Existing substrate loader characterization tests pass
+          </?01M0NJZ4T0TCT0XRSMC8QNMK5R>
+          <Criterion ?01M0NJZ4T0TCT0XRSMC8QNMK5S>
+          Profile roots lower through the same grammar and validation rules
+          </?01M0NJZ4T0TCT0XRSMC8QNMK5S>
+        ]>
+        <SubNodes [
+          <Task { id = "T1.1" name = "Add ctrl profile-root source loading primitive" status = "DONE" order = 0 priority = "P0" } (
+            <Description ?01M0NJZ4T0TCT0XRSMC8QNMK5T>
+            Parameterize ctrl source loading for an explicit profile root and WorkCtrlFlow target without widening the existing loader.
+            </?01M0NJZ4T0TCT0XRSMC8QNMK5T>
+            <Acceptance [
+              <Criterion { id = "T1.1-AC1" checked = true } ?01M0NJZ4T0TCT0XRSMC8QNMK5V>
+              AICtrlWorkflow sources can be validated with WorkCtrlFlow grammar and lowered to a WorkCtrlFlow spec
+              </?01M0NJZ4T0TCT0XRSMC8QNMK5V>
+              <Criterion { id = "T1.1-AC2" checked = true } ?01M0NJZ4T0TCT0XRSMC8QNMK5W>
+              Existing InstantCtrlFlow/WorkCtrlFlow/BPCtrlFlow loader tests remain unchanged and pass
+              </?01M0NJZ4T0TCT0XRSMC8QNMK5W>
+            ]>
+          )>
+          <Task { id = "T1.2" name = "Add eager-data profile-root source loading primitive" status = "DONE" order = 1 priority = "P0" } (
+            <Description ?01M0NJZ4T0TCT0XRSMC8QNMK5X>
+            Parameterize eager-data source loading for an explicit AIDataWorkflow root without widening the existing loader.
+            </?01M0NJZ4T0TCT0XRSMC8QNMK5X>
+            <Acceptance [
+              <Criterion { id = "T1.2-AC1" checked = true } ?01M0NJZ4T0TCT0XRSMC8QNMK5Y>
+              AIDataWorkflow sources reuse EagerDataFlow node, port, contract and DAG validation
+              </?01M0NJZ4T0TCT0XRSMC8QNMK5Y>
+              <Criterion { id = "T1.2-AC2" checked = true } ?01M0NJZ4T0TCT0XRSMC8QNMK5Z>
+              Existing EagerDataFlow loader tests remain unchanged and pass
+              </?01M0NJZ4T0TCT0XRSMC8QNMK5Z>
+            ]>
+          )>
+        ]>
+      )>
+      <TaskGroup #P2 { name = "AI workflow loader facades" status = "DONE" order = 1 } (
+        <Description ?01M0NJZ4T0TCT0XRSMC8QNMK60>
+        Expose typed public source loaders from AI workflow logic packages.
+        </?01M0NJZ4T0TCT0XRSMC8QNMK60>
+        <Gate [
+          <Criterion ?01M0NJZ4T0TCT0XRSMC8QNMK61>
+          Both AI workflow logic packages export canonical loaders
+          </?01M0NJZ4T0TCT0XRSMC8QNMK61>
+          <Criterion ?01M0NJZ4T0TCT0XRSMC8QNMK62>
+          Invalid sources return diagnostics without executable bindings
+          </?01M0NJZ4T0TCT0XRSMC8QNMK62>
+        ]>
+        <SubNodes [
+          <Task { id = "T2.1" name = "Add AICtrlWorkflow loader facade" status = "DONE" order = 0 priority = "P0" } (
+            <Description ?01M0NJZ4T0TCT0XRSMC8QNMK63>
+            Load canonical sources, lower through the ctrl primitive and wrap the result as an AICtrlWorkflow definition binding.
+            </?01M0NJZ4T0TCT0XRSMC8QNMK63>
+            <Acceptance [
+              <Criterion { id = "T2.1-AC1" checked = true } ?01M0NJZ4T0TCT0XRSMC8QNMK64>
+              Canonical ai-ctrl-workflow example loads with no diagnostics and a WorkCtrlFlow-backed binding
+              </?01M0NJZ4T0TCT0XRSMC8QNMK64>
+              <Criterion { id = "T2.1-AC2" checked = true } ?01M0NJZ4T0TCT0XRSMC8QNMK65>
+              Wrong roots and invalid statements produce stable diagnostics and no binding
+              </?01M0NJZ4T0TCT0XRSMC8QNMK65>
+            ]>
+          )>
+          <Task { id = "T2.2" name = "Add AIDataWorkflow loader facade" status = "DONE" order = 1 priority = "P0" } (
+            <Description ?01M0NJZ4T0TCT0XRSMC8QNMK66>
+            Load canonical sources, lower through the eager-data primitive and wrap the result as an AIDataWorkflow definition binding.
+            </?01M0NJZ4T0TCT0XRSMC8QNMK66>
+            <Acceptance [
+              <Criterion { id = "T2.2-AC1" checked = true } ?01M0NJZ4T0TCT0XRSMC8QNMK67>
+              Canonical ai-data-workflow example loads with no diagnostics and an EagerDataFlow-backed binding
+              </?01M0NJZ4T0TCT0XRSMC8QNMK67>
+              <Criterion { id = "T2.2-AC2" checked = true } ?01M0NJZ4T0TCT0XRSMC8QNMK68>
+              Wrong roots and invalid nodes produce stable diagnostics and no binding
+              </?01M0NJZ4T0TCT0XRSMC8QNMK68>
+            ]>
+          )>
+        ]>
+      )>
+      <TaskGroup #P3 { name = "Compatibility and release readiness" status = "DONE" order = 2 } (
+        <Description ?01M0NJZ4T0TCT0XRSMC8QNMK69>
+        Validate exports, package tests and workspace compatibility for downstream host consumption.
+        </?01M0NJZ4T0TCT0XRSMC8QNMK69>
+        <Gate [
+          <Criterion ?01M0NJZ4T0TCT0XRSMC8QNMK6A>
+          Affected package tests and workspace typecheck pass
+          </?01M0NJZ4T0TCT0XRSMC8QNMK6A>
+          <Criterion ?01M0NJZ4T0TCT0XRSMC8QNMK6B>
+          Public browser entrypoints expose the source loaders
+          </?01M0NJZ4T0TCT0XRSMC8QNMK6B>
+        ]>
+        <SubNodes [
+          <Task { id = "T3.1" name = "Run compatibility and package export verification" status = "DONE" order = 0 priority = "P0" } (
+            <Description ?01M0NJZ4T0TCT0XRSMC8QNMK6C>
+            Run affected and workspace checks, verify browser exports and record evidence for downstream binding.
+            </?01M0NJZ4T0TCT0XRSMC8QNMK6C>
+            <Acceptance [
+              <Criterion { id = "T3.1-AC1" checked = true } ?01M0NJZ4T0TCT0XRSMC8QNMK6D>
+              Affected package tests and typecheck pass
+              </?01M0NJZ4T0TCT0XRSMC8QNMK6D>
+              <Criterion { id = "T3.1-AC2" checked = true } ?01M0NJZ4T0TCT0XRSMC8QNMK6E>
+              Package entrypoints expose both canonical loader APIs
+              </?01M0NJZ4T0TCT0XRSMC8QNMK6E>
+            ]>
+          )>
+        ]>
+      )>
+    ]>
+  )>
+  <Schedule [
+    <Parallel { max_concurrent = 1 spot_check = true }>
+  ]>
+  <Hooks>
+)>

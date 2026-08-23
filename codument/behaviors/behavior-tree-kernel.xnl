@@ -1,0 +1,37 @@
+<Behavior #behavior-tree-kernel apiVersion="codument.tech/v1alpha1" version="1" (
+  <Requirements [
+    <Requirement #kernel-migration (
+      <Statement ?01M0NJZ4KJVG0P6XZBWBA33HZ0>
+      packages/depa-behavior-tree SHALL 提供与 depa-processor src/control 行为等价的行为树内核（BehaviorTreeCore 两层分发 + CtrlFlowEngine 及内置 ActionHandlers），processor 底层能力经 npm depa-processor 导入，不复制 dispatch/component 源码。
+      </?01M0NJZ4KJVG0P6XZBWBA33HZ0>
+      <Suites [
+        <Suite { name = "kernel-migration" } (
+          <Cases [
+            <Case { name = "等价测试" } (
+              <Given ?01M0NJZ4KJVG0P6XZBWBA33HZ1>
+              迁移自上游 tests 的 basic/actions/unit/integration 测试套件
+              </?01M0NJZ4KJVG0P6XZBWBA33HZ1>
+              <When ?01M0NJZ4KJVG0P6XZBWBA33HZ2>
+              bun test packages/depa-behavior-tree
+              </?01M0NJZ4KJVG0P6XZBWBA33HZ2>
+              <Then ?01M0NJZ4KJVG0P6XZBWBA33HZ3>
+              全部通过（244 case）
+              </?01M0NJZ4KJVG0P6XZBWBA33HZ3>
+            )>
+            <Case { name = "无内核源码残留耦合" } (
+              <Given ?01M0NJZ4KK6ZA0QZWB2CC5TCC7>
+              包源码
+              </?01M0NJZ4KK6ZA0QZWB2CC5TCC7>
+              <When ?01M0NJZ4KK6ZA0QZWB2CC5TCC8>
+              检索 ../../dispatch 与 ../../component 相对导入
+              </?01M0NJZ4KK6ZA0QZWB2CC5TCC8>
+              <Then ?01M0NJZ4KK6ZA0QZWB2CC5TCC9>
+              0 命中；对应符号一律 from 'depa-processor'
+              </?01M0NJZ4KK6ZA0QZWB2CC5TCC9>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+  ]>
+)>

@@ -1,0 +1,39 @@
+<decision #api-surface apiVersion="codument.tech/v1alpha1" { status = "accepted" priority = "P0" } (
+  <question ?>Agent invocation的canonical Processor与authored facade使用什么surface？</?>
+  <answer (
+    <raw-answer ?>底层保留runtime首参，canonical与bound facade统一命名runAgent和runTargetedAgent。</?>
+    <decision-text ?>The canonical Processors SHALL be `runAgent(agentRuntime,input,config)` and `runTargetedAgent(agentRuntime,selector,invocation,config)`. A bound authored facade MAY hide agentRuntime but SHALL keep the same method names. Generic dispatch SHALL NOT be the authored Agent API.</?>
+    <rationale ?>该surface同时保持DEPA Processor公式、显式依赖和typed authoring DX。</?>
+    <evidence ?>Mission期已接受的Processor/API约束、当前generic effect surface与DEPA runtime-first attractor。</?>
+  )>
+)>
+
+<decision #selector-contract apiVersion="codument.tech/v1alpha1" { status = "accepted" priority = "P0" } (
+  <question ?>Agent instance selector的closed contract和失败语义是什么？</?>
+  <answer (
+    <raw-answer ?>只允许byInstanceId或byInstanceName，两者互斥且都使用nonempty canonical string。</?>
+    <decision-text ?>`AIAgentSelector` SHALL be the exact union `{byInstanceId:string}|{byInstanceName:string}`. Both, missing, empty, extra, unresolved, duplicated or conflicting selections SHALL fail closed without host dispatch or silent instance creation.</?>
+    <rationale ?>精确寻址避免多种同义结构、隐藏fallback和不可恢复的实例分叉。</?>
+    <evidence ?>Mission selector decision、Flow checkpoint id/name index目标与DEPA targets/invocation分列。</?>
+  )>
+)>
+
+<decision #profile-state-owner apiVersion="codument.tech/v1alpha1" { status = "accepted" priority = "P0" } (
+  <question ?>Agent instance引用、name index和invocation receipt由谁持久化？</?>
+  <answer (
+    <raw-answer ?>只进入同一Flow run的canonical checkpoint AI profile state，host继续拥有真实Agent runtime。</?>
+    <decision-text ?>The AI profile SHALL own run-local id/name indexes and invocation receipts under the single FlowRunCheckpoint version. It SHALL persist only stable opaque external runtime references and SHALL reject copied conversation, history, compaction or actor state.</?>
+    <rationale ?>Flow需要可恢复引用但不得复制host actor/session authority或增加第二state store。</?>
+    <evidence ?>已完成instance/run authority Track、mission state-owner decision与当前AI profile durable state。</?>
+  )>
+)>
+
+<decision #ctrl-data-dsl apiVersion="codument.tech/v1alpha1" { status = "accepted" priority = "P0" } (
+  <question ?>Ctrl/Data DSL怎样表达typed Agent invocation和跨节点复用？</?>
+  <answer (
+    <raw-answer ?>复用各自generic substrate node，以exact Agent task/config和runtime-first code调用named facade。</?>
+    <decision-text ?>AICtrlWorkflow SHALL bind Agent semantics to ordinary WorkCtrlFlow `Run` nodes; AIDataWorkflow SHALL bind them to ordinary processor nodes. A selector MAY be an authored constant or be built from predecessor result data. No role-specific `AgentTask` substrate statement or semantic heuristic SHALL be introduced.</?>
+    <rationale ?>领域profile拥有Agent解释，而generic substrate grammar保持通用；数据依赖继续显式。</?>
+    <evidence ?>Mission Ctrl/Data DSL ledger、现有AgentTaskRef tuple、WorkCtrl/EagerData node surfaces。</?>
+  )>
+)>

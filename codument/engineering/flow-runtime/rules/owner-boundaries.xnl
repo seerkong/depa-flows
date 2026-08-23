@@ -1,11 +1,20 @@
-<rule #flow-runtime.rules.owner-boundaries.owner_boundaries {
-  kind = "rule"
-  applies_to = ["modeling://domain/flow/definition" "modeling://domain/flow/runtime_lifecycle"]
-} [
-  <rule ?>canonical XNL definition、derived execution plan 和 runtime snapshot MUST remain separate facts。</?>
-  <rationale ?>避免把执行事实、编辑投影或布局误写回 DSL；保持 DEPA data/effect/processor/actor 的 owner 清晰。</?>
-  <enforcement ?>loader/compiler 只读 definition 并生成可重建 plan；runtime stores 通过 ports 注入；测试检查 snapshot、task facts 和 derived plan 不反写 canonical XNL。</?>
-  <rule ?>Flow execution MUST delegate all external IO, clock, storage and child lifecycle operations to explicit runtime ports。</?>
-  <rule ?>每个 runtime fact 只能有一个明确 owner；不同 profile 不得共享未声明的 mutable state。</?>
-  <related ?>behavior://flow-dsl-runtime/requirements/canonical-compile-projection、modeling://domain/flow/definition</?>
+<rule #flow-runtime.rules.owner-boundaries.owner_boundaries apiVersion="codument.tech/v1alpha1" { kind = "rule" applies_to = ["modeling://domain/flow/definition" "modeling://domain/flow/runtime_lifecycle"] } [
+  <rule ?01M0NJZ4NS0Q710HX8FADFBZJV>
+  canonical XNL definition、derived execution plan 和 runtime snapshot MUST remain separate facts。
+  </?01M0NJZ4NS0Q710HX8FADFBZJV>
+  <rationale ?01M0NJZ4NS0Q710HX8FADFBZJW>
+  避免把执行事实、编辑投影或布局误写回 DSL；保持 DEPA data/effect/processor/actor 的 owner 清晰。
+  </?01M0NJZ4NS0Q710HX8FADFBZJW>
+  <enforcement ?01M0NJZ4NS0Q710HX8FADFBZJX>
+  loader/compiler 只读 definition 并生成可重建 plan；runtime stores 通过 ports 注入；测试检查 snapshot、task facts 和 derived plan 不反写 canonical XNL。
+  </?01M0NJZ4NS0Q710HX8FADFBZJX>
+  <rule ?01M0NJZ4NS0Q710HX8FADFBZJY>
+  Flow execution MUST delegate all external IO, clock, storage and child lifecycle operations to explicit runtime ports。
+  </?01M0NJZ4NS0Q710HX8FADFBZJY>
+  <rule ?01M0NJZ4NS0Q710HX8FADFBZJZ>
+  每个 runtime fact 只能有一个明确 owner；不同 profile 不得共享未声明的 mutable state。
+  </?01M0NJZ4NS0Q710HX8FADFBZJZ>
+  <related ?01M0NJZ4NS0Q710HX8FADFBZK0>
+  behavior://flow-dsl-runtime/requirements/canonical-compile-projection、modeling://domain/flow/definition
+  </?01M0NJZ4NS0Q710HX8FADFBZK0>
 ]>

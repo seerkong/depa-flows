@@ -1,0 +1,103 @@
+<Behavior #ai-ctrl-workflow apiVersion="codument.tech/v1alpha1" version="1" (
+  <Requirements [
+    <Requirement #work-ctrl-flow-substrate (
+      <Statement ?01M0QP09M3TRB2Q7M9KH2GDDAH>
+      The system SHALL implement AI Ctrl Workflow as a WorkCtrlFlow-backed profile adapter.
+      </?01M0QP09M3TRB2Q7M9KH2GDDAH>
+      <Suites [
+        <Suite #runtime { name = "Runtime" } (
+          <Cases [
+            <Case #start-workflow-backed-run (
+              <Given ?01M0QP09M3TRB2Q7M9KH2GDDAJ>
+              An AI Ctrl Workflow definition wraps a WorkCtrlFlow definition
+              </?01M0QP09M3TRB2Q7M9KH2GDDAJ>
+              <When ?01M0QP09M3TRB2Q7M9KH2GDDAK>
+              The adapter starts a run
+              </?01M0QP09M3TRB2Q7M9KH2GDDAK>
+              <Then ?01M0QP09M3TRB2Q7M9KH2GDDAM>
+              The system SHALL execute through WorkCtrlFlowEngine and persist WorkCtrlFlow snapshot facts
+              </?01M0QP09M3TRB2Q7M9KH2GDDAM>
+            )>
+            <Case #resume-through-workflow (
+              <Given ?01M0QP09M3TRB2Q7M9KH2GDDAN>
+              An AI Ctrl Workflow run is waiting on a WorkCtrlFlow wait handle
+              </?01M0QP09M3TRB2Q7M9KH2GDDAN>
+              <When ?01M0QP09M3TRB2Q7M9KH2GDDAP>
+              A ResumeSignal is submitted
+              </?01M0QP09M3TRB2Q7M9KH2GDDAP>
+              <Then ?01M0QP09M3TRB2Q7M9KH2GDDAQ>
+              The system SHALL resume through WorkCtrlFlowEngine
+              </?01M0QP09M3TRB2Q7M9KH2GDDAQ>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+    <Requirement #step-space-sidecar-runtime (
+      <Statement ?01M0QP09M3TRB2Q7M9KH2GDDAR>
+      AICtrlWorkflow SHALL assemble StepSpace control structure into the existing WorkCtrl tree and SHALL persist node results, waits, branch/orchestration step facts and custom step extensions through the canonical step record codec without copying generic Agent runtime state.
+      </?01M0QP09M3TRB2Q7M9KH2GDDAR>
+      <Suites [
+        <Suite #ctrl-step-recovery { name = "Ctrl step-local recovery" } (
+          <Cases [
+            <Case #wait-resume-continuity (
+              <Given ?01M0QP09M3TRB2Q7M9KH2GDDAS>
+              a Ctrl run has accepted earlier steps and one open wait
+              </?01M0QP09M3TRB2Q7M9KH2GDDAS>
+              <When ?01M0QP09M3TRB2Q7M9KH2GDDAT>
+              a fresh process reconstructs and resumes the wait
+              </?01M0QP09M3TRB2Q7M9KH2GDDAT>
+              <Then ?01M0QP09M3TRB2Q7M9KH2GDDAV>
+              it SHALL preserve exact earlier step facts, apply one local transition and keep generic Agent state outside Flow records
+              </?01M0QP09M3TRB2Q7M9KH2GDDAV>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+    <Requirement #typed-agent-task-binding (
+      <Statement ?01M0QP09M3TRB2Q7M9KH2GDDAW>
+      AICtrlWorkflow SHALL execute typed Agent tasks through ordinary WorkCtrlFlow nodes and the named Agent facade without adding a role-specific substrate statement.
+      </?01M0QP09M3TRB2Q7M9KH2GDDAW>
+      <Suites [
+        <Suite #ctrl-agent-reuse { name = "Ctrl Agent instance reuse" } (
+          <Cases [
+            <Case #create-named-and-reuse-by-name (
+              <Given ?01M0QP09M3TRB2Q7M9KH2GDDAX>
+              a runtime-first `Run` node is exactly bound to an Agent definition and authors an instance name
+              </?01M0QP09M3TRB2Q7M9KH2GDDAX>
+              <When ?01M0QP09M3TRB2Q7M9KH2GDDAY>
+              a later `Run` selects that name through `runTargetedAgent`
+              </?01M0QP09M3TRB2Q7M9KH2GDDAY>
+              <Then ?01M0QP09M3TRB2Q7M9KH2GDDAZ>
+              both nodes SHALL use the same Agent instance and persist their receipts with the WorkCtrl snapshot
+              </?01M0QP09M3TRB2Q7M9KH2GDDAZ>
+            )>
+            <Case #reuse-returned-id-after-resume (
+              <Given ?01M0QP09M3TRB2Q7M9KH2GDDB0>
+              a Ctrl node output contains a stable Agent instance id and the flow later waits
+              </?01M0QP09M3TRB2Q7M9KH2GDDB0>
+              <When ?01M0QP09M3TRB2Q7M9KH2GDDB1>
+              a fresh controller resumes and a later node selects the returned id
+              </?01M0QP09M3TRB2Q7M9KH2GDDB1>
+              <Then ?01M0QP09M3TRB2Q7M9KH2GDDB2>
+              the later invocation SHALL resolve from checkpoint AI profile state without reading child conversation history or creating another instance
+              </?01M0QP09M3TRB2Q7M9KH2GDDB2>
+            )>
+            <Case #exact-task-binding (
+              <Given ?01M0QP09M3TRB2Q7M9KH2GDDB3>
+              a `Run` node has missing, mismatched or ambiguous Agent task/config binding
+              </?01M0QP09M3TRB2Q7M9KH2GDDB3>
+              <When ?01M0QP09M3TRB2Q7M9KH2GDDB4>
+              the AICtrl loader or runtime prepares Agent invocation
+              </?01M0QP09M3TRB2Q7M9KH2GDDB4>
+              <Then ?01M0QP09M3TRB2Q7M9KH2GDDB5>
+              it SHALL report an exact diagnostic and SHALL NOT infer Agent semantics from node names, source names or topology
+              </?01M0QP09M3TRB2Q7M9KH2GDDB5>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+  ]>
+)>

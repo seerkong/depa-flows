@@ -1,14 +1,13 @@
-<decisions #implement-ai-data-workflow-on-eager-data-flow {
-  version = "1"
-}
-(
-  <decision #track.data.substrate {
-    status = "accepted"
-    priority = "P0"
-  }
-  (
-    <question ?>What engine owns AI Data Workflow DAG authoring?</?>
-    <answer ?>EagerDataFlow owns the underlying DAG plan; AI Data Workflow adds run graph, patch, invalidation and reuse state.</?>
-    <rationale ?>This preserves the required substrate boundary.</?>
+<decisions #implement-ai-data-workflow-on-eager-data-flow apiVersion="codument.tech/v1alpha1" { version = "1" } (
+  <decision #track.data.substrate { status = "accepted" priority = "P0" } (
+    <question ?01M0NJZ4RDG2FA443GBA9YWZWD>
+    What engine owns AI Data Workflow DAG authoring?
+    </?01M0NJZ4RDG2FA443GBA9YWZWD>
+    <answer ?01M0NJZ4RDG2FA443GBA9YWZWE>
+    EagerDataFlow owns the underlying DAG plan; AI Data Workflow adds run graph, patch, invalidation and reuse state.
+    </?01M0NJZ4RDG2FA443GBA9YWZWE>
+    <rationale ?01M0NJZ4RDG2FA443GBA9YWZWF>
+    This preserves the required substrate boundary.
+    </?01M0NJZ4RDG2FA443GBA9YWZWF>
   )>
 )>

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'bun:test';
 import path from 'node:path';
-import { WorkCtrlFlowEngine, WorkCtrlFlowLoadError } from '../src/engine.js';
+import { compareDurableLaneIds, WorkCtrlFlowEngine, WorkCtrlFlowLoadError } from '../src/engine.js';
 import { createWorkCtrlFlowEngineFromDirectory } from '../src/filesystem.js';
 import { InMemoryWorkCtrlFlowStore, FileWorkCtrlFlowStore } from '../src/stores.js';
 import { FLOW_STATE_KEY, loadFlowBundleFromSources } from 'instant-ctrl-flow-logic/browser';
@@ -37,6 +37,12 @@ function makeEngine(store = new InMemoryWorkCtrlFlowStore(), nowRef = { t: 1_000
 }
 
 describe('WorkCtrlFlow 引擎：中断/恢复/幂等', () => {
+  it('orders durable lane identities by explicit numeric and UTF-16 rules', () => {
+    const identities = ['中2', 'lane10', 'lane02', 'lane2', 'ä1', 'lane1', '中1'];
+    const expected = ['lane1', 'lane2', 'lane02', 'lane10', 'ä1', '中1', '中2'];
+    expect([...identities].sort(compareDurableLaneIds)).toEqual(expected);
+    expect([...identities].reverse().sort(compareDurableLaneIds)).toEqual(expected);
+  });
   it('constructs from a named-source spec with injected resolver, store and clock', async () => {
     const loaded = loadFlowBundleFromSources({
       'manifest.xnl': `<WorkCtrlFlow #test.SourceWork apiVersion="depa.flows/v1" version="1" (
@@ -102,16 +108,24 @@ describe('WorkCtrlFlow 引擎：中断/恢复/幂等', () => {
   it('跨引擎实例恢复（进程重启模拟，WF-1 状态外置）', async () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'wf-'));
     const nowRef = { t: 5_000_000 };
-    expect(loadFlowBundleFromSources({
-      'manifest.xnl': fs.readFileSync(path.join(demo('order-fulfillment'), 'manifest.xnl'), 'utf8'),
-    }).spec?.flowContract).toEqual({
+    const bundleDir = demo('order-fulfillment');
+    const definitionSources = Object.fromEntries([
+      'manifest.xnl',
+      'step-space.xnl',
+      'steps/reserve-inventory/step.xnl',
+      'steps/pack/step.xnl',
+      'steps/cool-down/step.xnl',
+      'steps/fulfilled/step.xnl',
+      'steps/complete-fulfillment/step.xnl',
+    ].map((relativePath) => [relativePath, fs.readFileSync(path.join(bundleDir, relativePath), 'utf8')]));
+    expect(loadFlowBundleFromSources(definitionSources).spec?.flowContract).toEqual({
       id: 'depa.flows.demo.OrderFulfillment',
       input: 'vfs://./actions/fulfillment.actions.ts#FulfillmentInput',
       output: 'vfs://./actions/fulfillment.actions.ts#FulfillmentResult',
     });
     const mk = () =>
       createWorkCtrlFlowEngineFromDirectory({
-        bundleDir: demo('order-fulfillment'),
+        bundleDir,
         instancesDir: path.join(dir, 'instances'),
         store: new FileWorkCtrlFlowStore(path.join(dir, 'snapshots')),
         runtime: runtime(nowRef),

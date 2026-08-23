@@ -1,0 +1,5 @@
+<ContextMaterial #depa.flows.test.Material.Context.A apiVersion="depa.flows/v1" version="1.0.0" {
+  lifecycle = "Active"
+  description = "Context material A"
+  value = "context-a"
+}>

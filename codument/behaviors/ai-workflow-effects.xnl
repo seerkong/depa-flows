@@ -1,0 +1,129 @@
+<Behavior #ai-workflow-effects apiVersion="codument.tech/v1alpha1" version="1" (
+  <Requirements [
+    <Requirement #embedded-effect-provider (
+      <Statement ?01M0QP09MAYK46QAXWRKDF8831>
+      The system SHALL provide a programmable embedded AI workflow effect provider instead of requiring an external CLI bridge.
+      </?01M0QP09MAYK46QAXWRKDF8831>
+      <Suites [
+        <Suite #handler-dispatch { name = "Handler dispatch" } (
+          <Cases [
+            <Case #dispatches-registered-operation (
+              <Given ?01M0QP09MAYK46QAXWRKDF8832>
+              An AI workflow runtime context has an embedded effect provider with a registered operation handler
+              </?01M0QP09MAYK46QAXWRKDF8832>
+              <When ?01M0QP09MAYK46QAXWRKDF8833>
+              The workflow invokes an effect request for that operation
+              </?01M0QP09MAYK46QAXWRKDF8833>
+              <Then ?01M0QP09MAYK46QAXWRKDF8834>
+              The provider SHALL call the registered handler with the original request and injected runtime roots
+              </?01M0QP09MAYK46QAXWRKDF8834>
+            )>
+            <Case #rejects-missing-operation (
+              <Given ?01M0QP09MAYK46QAXWRKDF8835>
+              An AI workflow runtime context has no handler for an effect operation
+              </?01M0QP09MAYK46QAXWRKDF8835>
+              <When ?01M0QP09MAYK46QAXWRKDF8836>
+              The workflow invokes that operation
+              </?01M0QP09MAYK46QAXWRKDF8836>
+              <Then ?01M0QP09MAYK46QAXWRKDF8837>
+              The provider SHALL fail with a stable missing-handler error before dispatching any effect
+              </?01M0QP09MAYK46QAXWRKDF8837>
+            )>
+            <Case #preserves-runtime-boundary (
+              <Given ?01M0QP09MAYK46QAXWRKDF8838>
+              A handler needs run identity, node identity, material refs, config and cancellation signal
+              </?01M0QP09MAYK46QAXWRKDF8838>
+              <When ?01M0QP09MAYK46QAXWRKDF8839>
+              The embedded provider dispatches the request
+              </?01M0QP09MAYK46QAXWRKDF8839>
+              <Then ?01M0QP09MAYK46QAXWRKDF883A>
+              The provider SHALL pass those request fields through without deriving runtime roots from ambient process state
+              </?01M0QP09MAYK46QAXWRKDF883A>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+    <Requirement #typed-agent-invocation (
+      <Statement ?01M0QP09MAYK46QAXWRKDF883B>
+      The system SHALL expose runtime-first `runAgent` and `runTargetedAgent` Processors plus same-named runtime-bound authored methods, while keeping generic Agent dispatch outside the authored API.
+      </?01M0QP09MAYK46QAXWRKDF883B>
+      <Suites [
+        <Suite #processor-surface { name = "Runtime-first processor surface" } (
+          <Cases [
+            <Case #direct-and-bound-equivalence (
+              <Given ?01M0QP09MAYK46QAXWRKDF883C>
+              a typed Agent runtime, input, config and an equivalent runtime-bound facade
+              </?01M0QP09MAYK46QAXWRKDF883C>
+              <When ?01M0QP09MAYK46QAXWRKDF883D>
+              the direct Processor and bound method execute the same invocation
+              </?01M0QP09MAYK46QAXWRKDF883D>
+              <Then ?01M0QP09MAYK46QAXWRKDF883E>
+              both SHALL preserve the same runtime dependency, result and receipt semantics without a runtime-less core
+              </?01M0QP09MAYK46QAXWRKDF883E>
+            )>
+            <Case #stable-instance-result (
+              <Given ?01M0QP09MAYK46QAXWRKDF883F>
+              `runAgent` creates or resumes an Agent invocation for a Flow node
+              </?01M0QP09MAYK46QAXWRKDF883F>
+              <When ?01M0QP09MAYK46QAXWRKDF883G>
+              the invocation produces an observable result
+              </?01M0QP09MAYK46QAXWRKDF883G>
+              <Then ?01M0QP09MAYK46QAXWRKDF883H>
+              the result SHALL contain output, a stable `instance.instanceId` and a durable invocation receipt
+              </?01M0QP09MAYK46QAXWRKDF883H>
+            )>
+            <Case #authored-api-is-named (
+              <Given ?01M0QP09MAYK46QAXWRKDF883J>
+              authored Ctrl or Data code receives an AI effects facade
+              </?01M0QP09MAYK46QAXWRKDF883J>
+              <When ?01M0QP09MAYK46QAXWRKDF883K>
+              its public type surface is inspected
+              </?01M0QP09MAYK46QAXWRKDF883K>
+              <Then ?01M0QP09MAYK46QAXWRKDF883M>
+              the facade SHALL expose `runAgent` and `runTargetedAgent` and SHALL NOT require a generic effect id or operation envelope
+              </?01M0QP09MAYK46QAXWRKDF883M>
+            )>
+          ]>
+        )>
+        <Suite #selector-resolution { name = "Closed instance selection" } (
+          <Cases [
+            <Case #select-by-id-or-name (
+              <Given ?01M0QP09MAYK46QAXWRKDF883N>
+              a canonical run profile contains one mutually consistent id index and name index
+              </?01M0QP09MAYK46QAXWRKDF883N>
+              <When ?01M0QP09MAYK46QAXWRKDF883P>
+              `runTargetedAgent` receives exactly `{byInstanceId}` or exactly `{byInstanceName}`
+              </?01M0QP09MAYK46QAXWRKDF883P>
+              <Then ?01M0QP09MAYK46QAXWRKDF883Q>
+              it SHALL resolve the existing instance and dispatch the invocation to that instance without creating another instance
+              </?01M0QP09MAYK46QAXWRKDF883Q>
+            )>
+            <Case #reject-invalid-selector (
+              <Given ?01M0QP09MAYK46QAXWRKDF883R>
+              a selector has both keys, no key, an empty value, an extra field or an unresolved identity
+              </?01M0QP09MAYK46QAXWRKDF883R>
+              <When ?01M0QP09MAYK46QAXWRKDF883S>
+              target resolution is attempted
+              </?01M0QP09MAYK46QAXWRKDF883S>
+              <Then ?01M0QP09MAYK46QAXWRKDF883T>
+              the Processor SHALL fail with a stable structured diagnostic before host dispatch
+              </?01M0QP09MAYK46QAXWRKDF883T>
+            )>
+            <Case #reject-conflicting-binding (
+              <Given ?01M0QP09MAYK46QAXWRKDF883V>
+              the name and id indexes conflict, the name is duplicated, or the resolved instance uses another frozen Agent definition
+              </?01M0QP09MAYK46QAXWRKDF883V>
+              <When ?01M0QP09MAYK46QAXWRKDF883W>
+              a targeted invocation is requested
+              </?01M0QP09MAYK46QAXWRKDF883W>
+              <Then ?01M0QP09MAYK46QAXWRKDF883X>
+              the Processor SHALL fail closed and SHALL NOT fall back to `runAgent`
+              </?01M0QP09MAYK46QAXWRKDF883X>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+  ]>
+)>

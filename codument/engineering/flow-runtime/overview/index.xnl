@@ -1,15 +1,21 @@
-<overview #flow-runtime.overview.overview.architecture {
-  kind = "overview"
-} [
-  <desc ?>depa-flows 是四类 Flow 产品的 canonical DSL、contract 和执行引擎。</?>
-  <mental-model ?>一套 XNL definition → profile-aware contract/loader → 产品 runtime；InstantCtrlFlow 负责即时编排，WorkCtrlFlow 负责持久中断恢复，BPCtrlFlow 负责任务驱动业务过程，EagerDataFlow 负责 eager DAG 数据处理。</?>
-  <main-components ?>
+<overview #flow-runtime.overview.overview.architecture apiVersion="codument.tech/v1alpha1" { kind = "overview" } [
+  <desc ?01M0NJZ4NP43W8EPVZQVRMFC5P>
+  depa-flows 是四类 Flow 产品的 canonical DSL、contract 和执行引擎。
+  </?01M0NJZ4NP43W8EPVZQVRMFC5P>
+  <mental-model ?01M0NJZ4NP43W8EPVZQVRMFC5Q>
+  一套 XNL definition → profile-aware contract/loader → 产品 runtime；InstantCtrlFlow 负责即时编排，WorkCtrlFlow 负责持久中断恢复，BPCtrlFlow 负责任务驱动业务过程，EagerDataFlow 负责 eager DAG 数据处理。
+  </?01M0NJZ4NP43W8EPVZQVRMFC5Q>
+  <main-components ?01M0NJZ4NP43W8EPVZQVRMFC5R>
   - instant-ctrl-flow-contract / logic：无状态 CtrlFlow 合同与执行。
   - work-ctrl-flow-contract / logic：snapshot、WaitHandle、ResumeSignal、durable composite scheduler。
   - bp-ctrl-flow-contract / logic：TaskSpace、TaskStep、人工任务推进。
   - eager-data-flow-contract / logic：端口、waitFor、DAG 调度。
   - depa-behavior-tree：内部执行内核，不是公开 DSL authoring API。
-  </?>
-  <boundaries ?>canonical definition 是事实源；runtime snapshot 是独立控制事实；derived execution plan 只由 loader/compiler 生成，不回写 definition；外部依赖通过显式 runtime port 注入。</?>
-  <related ?>modeling://domain.flow.definition、modeling://domain.flow.runtime_lifecycle、behavior://flow-dsl-runtime</?>
+  </?01M0NJZ4NP43W8EPVZQVRMFC5R>
+  <boundaries ?01M0NJZ4NP43W8EPVZQVRMFC5S>
+  canonical definition 是事实源；runtime snapshot 是独立控制事实；derived execution plan 只由 loader/compiler 生成，不回写 definition；外部依赖通过显式 runtime port 注入。
+  </?01M0NJZ4NP43W8EPVZQVRMFC5S>
+  <related ?01M0NJZ4NP43W8EPVZQVRMFC5T>
+  modeling://domain.flow.definition、modeling://domain.flow.runtime_lifecycle、behavior://flow-dsl-runtime
+  </?01M0NJZ4NP43W8EPVZQVRMFC5T>
 ]>

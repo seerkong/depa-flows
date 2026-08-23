@@ -1,8 +1,10 @@
-<reference #flow-runtime.reference.delivery-status.delivery_status {
-  kind = "reference"
-} [
-  <scope ?>记录已清空的 mission/track 的最终交付面、未完成边界和验证证据；这是历史删除后的审计索引，不替代代码测试或 behavior registry。</?>
-  <source-of-truth ?>代码包、docs/flow-dsl、示例 bundle 和测试是实现真源；本节点只保留交付摘要。</?>
+<reference #flow-runtime.reference.delivery-status.delivery_status apiVersion="codument.tech/v1alpha1" { kind = "reference" } [
+  <scope ?01M0NJZ4NRFR73MJMN6CJ75PM6>
+  记录已清空的 mission/track 的最终交付面、未完成边界和验证证据；这是历史删除后的审计索引，不替代代码测试或 behavior registry。
+  </?01M0NJZ4NRFR73MJMN6CJ75PM6>
+  <source-of-truth ?01M0NJZ4NRFR73MJMN6CJ75PM7>
+  代码包、docs/flow-dsl、示例 bundle 和测试是实现真源；本节点只保留交付摘要。
+  </?01M0NJZ4NRFR73MJMN6CJ75PM7>
   <missions [
     <mission #flow-runtime.reference.delivery-status.bp-ctrl-flow-engine { id = "bp-ctrl-flow-engine" status = "completed" outcome = "BPCtrlFlow TaskStep + task manager + approval lifecycle" }>
     <mission #flow-runtime.reference.delivery-status.instant-ctrl-flow-engine { id = "instant-ctrl-flow-engine" status = "completed" outcome = "bun monorepo + behavior kernel migration + InstantCtrlFlow" }>
@@ -17,7 +19,13 @@
     <track #flow-runtime.reference.delivery-status.runtime { ids = ["add-profiled-ctrl-flow-primitives" "implement-unified-ctrl-flow-engines" "implement-profiled-ctrl-flow-runtime" "implement-durable-composite-scheduler" "implement-eager-data-flow-engine"] status = "completed" }>
     <track #flow-runtime.reference.delivery-status.integration-boundary { ids = ["integrate-halfcode-unified-flows" "upgrade-unified-flow-editor" "refactor-flow-editor-capsules" "implement-flow-definition-editing" "implement-vfs-flow-workspace"] status = "not-current-repository" }>
   ]>
-  <open-items ?>extend-profiled-flow-orchestration 的 SPEC、RUNTIME、BUNDLES 阶段已完成；其 integration、editor、verify 阶段在本仓库没有完成证据，因此不计入当前项目能力。integration-boundary 下的历史 track 只保留状态索引，不作为本仓库当前实现承诺。</?>
-  <verification ?>本仓库的 DSL、contract、runtime、bundle 和 test 证据已沉淀；未宣称跨工程或可视化编辑器验证。</?>
-  <update-procedure ?>新增 Flow profile 时只更新本仓库 docs/flow-dsl、canonical contracts、loader/compiler/runtime、examples 和 tests；完成后同步 modeling、engineering 与 behavior registry。</?>
+  <open-items ?01M0NJZ4NRFR73MJMN6CJ75PM8>
+  extend-profiled-flow-orchestration 的 SPEC、RUNTIME、BUNDLES 阶段已完成；其 integration、editor、verify 阶段在本仓库没有完成证据，因此不计入当前项目能力。integration-boundary 下的历史 track 只保留状态索引，不作为本仓库当前实现承诺。
+  </?01M0NJZ4NRFR73MJMN6CJ75PM8>
+  <verification ?01M0NJZ4NRFR73MJMN6CJ75PM9>
+  本仓库的 DSL、contract、runtime、bundle 和 test 证据已沉淀；未宣称跨工程或可视化编辑器验证。
+  </?01M0NJZ4NRFR73MJMN6CJ75PM9>
+  <update-procedure ?01M0NJZ4NRFR73MJMN6CJ75PMA>
+  新增 Flow profile 时只更新本仓库 docs/flow-dsl、canonical contracts、loader/compiler/runtime、examples 和 tests；完成后同步 modeling、engineering 与 behavior registry。
+  </?01M0NJZ4NRFR73MJMN6CJ75PMA>
 ]>

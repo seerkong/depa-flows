@@ -1,0 +1,49 @@
+<BehaviorPatch #track.add-typed-agent-invocation-and-instance-selection.behavior_patch.ai-workflow-effects apiVersion="codument.tech/v1alpha1" version="1" { capability = "ai-workflow-effects" } (
+  <Mutations [
+    <Upsert { selector = "behavior://ai-workflow-effects/requirements/typed-agent-invocation" } (
+      <Requirement #typed-agent-invocation (
+        <Statement ?>The system SHALL expose runtime-first `runAgent` and `runTargetedAgent` Processors plus same-named runtime-bound authored methods, while keeping generic Agent dispatch outside the authored API.</?>
+        <Suites [
+          <Suite #processor-surface { name = "Runtime-first processor surface" } (
+            <Cases [
+              <Case #direct-and-bound-equivalence (
+                <Given ?>a typed Agent runtime, input, config and an equivalent runtime-bound facade</?>
+                <When ?>the direct Processor and bound method execute the same invocation</?>
+                <Then ?>both SHALL preserve the same runtime dependency, result and receipt semantics without a runtime-less core</?>
+              )>
+              <Case #stable-instance-result (
+                <Given ?>`runAgent` creates or resumes an Agent invocation for a Flow node</?>
+                <When ?>the invocation produces an observable result</?>
+                <Then ?>the result SHALL contain output, a stable `instance.instanceId` and a durable invocation receipt</?>
+              )>
+              <Case #authored-api-is-named (
+                <Given ?>authored Ctrl or Data code receives an AI effects facade</?>
+                <When ?>its public type surface is inspected</?>
+                <Then ?>the facade SHALL expose `runAgent` and `runTargetedAgent` and SHALL NOT require a generic effect id or operation envelope</?>
+              )>
+            ]>
+          )>
+          <Suite #selector-resolution { name = "Closed instance selection" } (
+            <Cases [
+              <Case #select-by-id-or-name (
+                <Given ?>a canonical run profile contains one mutually consistent id index and name index</?>
+                <When ?>`runTargetedAgent` receives exactly `{byInstanceId}` or exactly `{byInstanceName}`</?>
+                <Then ?>it SHALL resolve the existing instance and dispatch the invocation to that instance without creating another instance</?>
+              )>
+              <Case #reject-invalid-selector (
+                <Given ?>a selector has both keys, no key, an empty value, an extra field or an unresolved identity</?>
+                <When ?>target resolution is attempted</?>
+                <Then ?>the Processor SHALL fail with a stable structured diagnostic before host dispatch</?>
+              )>
+              <Case #reject-conflicting-binding (
+                <Given ?>the name and id indexes conflict, the name is duplicated, or the resolved instance uses another frozen Agent definition</?>
+                <When ?>a targeted invocation is requested</?>
+                <Then ?>the Processor SHALL fail closed and SHALL NOT fall back to `runAgent`</?>
+              )>
+            ]>
+          )>
+        ]>
+      )>
+    )>
+  ]>
+)>

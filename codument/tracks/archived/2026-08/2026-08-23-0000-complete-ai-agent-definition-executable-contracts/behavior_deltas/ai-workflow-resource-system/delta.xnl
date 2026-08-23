@@ -1,0 +1,22 @@
+<BehaviorPatch #track.complete-ai-agent-definition-executable-contracts.ai-workflow-resource-system apiVersion="codument.tech/v1alpha1" version="1" { capability = "ai-workflow-resource-system" } (
+  <Mutations [
+    <Upsert { selector = "behavior://ai-workflow-resource-system/requirements/executable-agent-contracts" } (
+      <Requirement #executable-agent-contracts (
+        <Statement ?>AI Workflow resource projection SHALL expose closed executable schema, effect-policy and Material-value facts for every standard AIAgentDefinition field while preserving Halfcode as the generic resource authority.</?>
+        <Suites [
+          <Suite #schema-policy { name = "Schema and policy projection" } (
+            <Cases [
+              <Case #project-closed-schema-policy (<Given ?>An Agent references exact MessageSchema and EffectPolicy resources</?> <When ?>The effective registry is projected</?> <Then ?>The projection SHALL contain detached immutable schema maps and a closed exact tool mode</?>)>
+              <Case #reject-unknown-contract-shape (<Given ?>A standard schema or policy claims an unsupported or malformed executable shape</?> <When ?>The effective registry is projected</?> <Then ?>Projection SHALL fail closed with stable diagnostics and no partial Agent result</?>)>
+            ]>
+          )>
+          <Suite #material-delivery { name = "Typed Material delivery facts" } (
+            <Cases [
+              <Case #project-material-values (<Given ?>MaterialBindings select explicit values for one exact Ctrl or Data workflow Agent task</?> <When ?>Projection and run freeze complete</?> <Then ?>Values SHALL remain in authored port order, be deeply immutable and contribute to the semantic fingerprint</?>)>
+            ]>
+          )>
+        ]>
+      )>
+    )>
+  ]>
+)>

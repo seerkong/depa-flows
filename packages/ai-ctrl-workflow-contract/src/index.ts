@@ -1,6 +1,8 @@
 import type {
   AICtrlWorkflowDefinitionBinding,
+  AICtrlWorkflowRunProfileState,
   AIWorkflowRuntimeContext,
+  FlowRunCheckpoint,
 } from 'ai-workflow-contract';
 import type {
   ResumeSignal,
@@ -51,3 +53,7 @@ export interface AICtrlWorkflowSnapshotProjectionInput {
   readonly snapshot: WorkCtrlFlowSnapshot;
   readonly outcome?: TickOutcome;
 }
+
+export type AICtrlWorkflowRunCheckpoint = FlowRunCheckpoint<
+  AICtrlWorkflowRunProfileState<WorkCtrlFlowSnapshot>
+>;

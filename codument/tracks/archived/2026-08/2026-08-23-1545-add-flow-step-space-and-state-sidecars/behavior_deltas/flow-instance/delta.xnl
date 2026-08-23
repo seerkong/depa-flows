@@ -1,0 +1,20 @@
+<BehaviorPatch #track.add-flow-step-space-and-state-sidecars.behavior_patch.flow-instance apiVersion="codument.tech/v1alpha1" version="1" { capability = "flow-instance" } (
+  <Mutations [
+    <Upsert { selector = "behavior://flow-instance/requirements/step-space-instance-freeze" } (
+      <Requirement #step-space-instance-freeze (
+        <Statement ?>Instance materialization SHALL freeze the complete explicit StepSpace reference closure and every step/core/extension byte before any run exists; run-local step records SHALL live under the same run directory as checkpoint.json and SHALL never read the later live Definition.</?>
+        <Suites [
+          <Suite #step-space-freeze { name = "StepSpace Definition to Instance isolation" } (
+            <Cases [
+              <Case #source-change-isolation (
+                <Given ?>an instance has accepted StepSpace revision R1 and the live source is changed or removed</?>
+                <When ?>a fresh process creates or resumes a run for that instance</?>
+                <Then ?>it SHALL assemble and execute only frozen R1 step and extension bytes</?>
+              )>
+            ]>
+          )>
+        ]>
+      )>
+    )>
+  ]>
+)>

@@ -1,0 +1,5 @@
+<StepExtension #summarize-review-policy {
+  kind = "depa.example.review-policy"
+  schema = "schema://depa.example.review-policy/v1"
+  value = { reviewDepth = 2 audience = "support" }
+}>

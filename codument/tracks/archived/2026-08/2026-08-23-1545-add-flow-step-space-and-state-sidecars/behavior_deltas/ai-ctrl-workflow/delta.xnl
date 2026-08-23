@@ -1,0 +1,20 @@
+<BehaviorPatch #track.add-flow-step-space-and-state-sidecars.behavior_patch.ai-ctrl-workflow apiVersion="codument.tech/v1alpha1" version="1" { capability = "ai-ctrl-workflow" } (
+  <Mutations [
+    <Upsert { selector = "behavior://ai-ctrl-workflow/requirements/step-space-sidecar-runtime" } (
+      <Requirement #step-space-sidecar-runtime (
+        <Statement ?>AICtrlWorkflow SHALL assemble StepSpace control structure into the existing WorkCtrl tree and SHALL persist node results, waits, branch/orchestration step facts and custom step extensions through the canonical step record codec without copying generic Agent runtime state.</?>
+        <Suites [
+          <Suite #ctrl-step-recovery { name = "Ctrl step-local recovery" } (
+            <Cases [
+              <Case #wait-resume-continuity (
+                <Given ?>a Ctrl run has accepted earlier steps and one open wait</?>
+                <When ?>a fresh process reconstructs and resumes the wait</?>
+                <Then ?>it SHALL preserve exact earlier step facts, apply one local transition and keep generic Agent state outside Flow records</?>
+              )>
+            ]>
+          )>
+        ]>
+      )>
+    )>
+  ]>
+)>

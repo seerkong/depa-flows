@@ -1,0 +1,37 @@
+<BehaviorPatch #track.restore-ai-workflow-definition-instance-run-authority.behavior_patch.flow-instance apiVersion="codument.tech/v1alpha1" version="1" { capability = "flow-instance" } (
+  <Mutations [
+    <Upsert { selector = "behavior://flow-instance/requirements/instance-materialization/suites/definition-instance-isolation" } (
+      <Suite #definition-instance-isolation { name = "Definition and instance isolation" } (
+        <Cases [
+          <Case #definition-change-isolation (<Given ?>instance A started from revision R1 and R2 is later published</?> <When ?>a fresh process resumes A and creates B</?> <Then ?>A SHALL use R1 and B SHALL use R2 without A reading the live definition</?>)>
+          <Case #complete-bundle-copy (<Given ?>a definition contains manifest, code, state and config facets</?> <When ?>the materializer creates a candidate</?> <Then ?>it SHALL copy and byte-check the full bundle before run admission</?>)>
+        ]>
+      )>
+    )>
+    <Upsert { selector = "behavior://flow-instance/requirements/definition-instance-run-envelope" } (
+      <Requirement #definition-instance-run-envelope (
+        <Statement ?>Filesystem support SHALL aggregate runs under instances/&lt;instanceId&gt;/runs/&lt;runId&gt;/ and each run SHALL have exactly one versioned canonical checkpoint; derived events, indexes, node views and receipts SHALL NOT write back to it.</?>
+        <Suites [
+          <Suite #run-envelope { name = "Run envelope" } (
+            <Cases [
+              <Case #multiple-runs (<Given ?>one frozen instance creates two runs</?> <When ?>both advance and recover from fresh stores</?> <Then ?>each SHALL use its own checkpoint while sharing the frozen definition</?>)>
+              <Case #derived-rebuild (<Given ?>the checkpoint is complete and derived views are deleted</?> <When ?>support rebuilds projections</?> <Then ?>the result SHALL match without changing checkpoint bytes or version</?>)>
+            ]>
+          )>
+        ]>
+      )>
+    )>
+    <Upsert { selector = "behavior://flow-instance/requirements/state-seed-immutability" } (
+      <Requirement #state-seed-immutability (
+        <Statement ?>state.seed SHALL be copied as a read-only instance facet and applied exactly once to each new run checkpoint; mutable flow and profile state SHALL persist only through checkpoint transitions.</?>
+        <Suites [
+          <Suite #seed-state { name = "Seed and runtime state" } (
+            <Cases [
+              <Case #seed-read-once (<Given ?>state.seed defines S0</?> <When ?>a run evolves to S1 and recovers</?> <Then ?>recovery SHALL return S1 while definition and instance seed remain byte-equal to S0</?>)>
+            ]>
+          )>
+        ]>
+      )>
+    )>
+  ]>
+)>

@@ -1,0 +1,177 @@
+<BehaviorPatch #track.r_2_0_2_6_-_0_8_-_0_3_-_0_9_3_8_-_d_e_f_i_n_e_-_e_i_d_o_l_o_n_-_n_a_t_i_v_e_-_w_o_r_k_f_l_o_w_-_b_o_u_n_d_a_r_i_e_s.behavior_patch.eidolon-workflow-integration apiVersion="codument.tech/v1alpha1" version="1" { capability = "eidolon-workflow-integration" } (
+  <Mutations [
+    <Upsert { selector = "behavior://eidolon-workflow-integration/requirements/native-package-boundaries" } (
+      <Requirement #native-package-boundaries (
+        <Statement ?01M0NJZ4SK2E3Y789WN5F8C2DT>
+        The system SHALL define Eidolon-native workflow package boundaries so contracts, tools, effects and profile enablement have separate owners.
+        </?01M0NJZ4SK2E3Y789WN5F8C2DT>
+        <Suites [
+          <Suite #package-placement { name = "Package placement" } (
+            <Cases [
+              <Case #contract-package (
+                <Given ?01M0NJZ4SK2E3Y789WN5F8C2DV>
+                Workflow becomes a native Eidolon capability
+                </?01M0NJZ4SK2E3Y789WN5F8C2DV>
+                <When ?01M0NJZ4SK2E3Y789WN5F8C2DW>
+                The integration defines shared workflow state and data-subgraph contracts
+                </?01M0NJZ4SK2E3Y789WN5F8C2DW>
+                <Then ?01M0NJZ4SK2E3Y789WN5F8C2DX>
+                The contracts SHALL live in a dedicated workflow contract package rather than being hidden inside tool implementation code
+                </?01M0NJZ4SK2E3Y789WN5F8C2DX>
+              )>
+              <Case #tool-directory (
+                <Given ?01M0NJZ4SK2E3Y789WN5F8C2DY>
+                Workflow native tools are implemented
+                </?01M0NJZ4SK2E3Y789WN5F8C2DY>
+                <When ?01M0NJZ4SK2E3Y789WN5F8C2DZ>
+                The tool source files are placed
+                </?01M0NJZ4SK2E3Y789WN5F8C2DZ>
+                <Then ?01M0NJZ4SK2E3Y789WN5F8C2E0>
+                The implementation SHALL live under the workflow tools directory, with AIAgent composer code limited to bundle registration
+                </?01M0NJZ4SK2E3Y789WN5F8C2E0>
+              )>
+              <Case #effect-directory (
+                <Given ?01M0NJZ4SK2E3Y789WN5F8C2E1>
+                Workflow node effects need host runtime adapters
+                </?01M0NJZ4SK2E3Y789WN5F8C2E1>
+                <When ?01M0NJZ4SK2E3Y789WN5F8C2E2>
+                The effect handler source files are placed
+                </?01M0NJZ4SK2E3Y789WN5F8C2E2>
+                <Then ?01M0NJZ4SK2E3Y789WN5F8C2E3>
+                The implementation SHALL live under the workflow effects directory and remain scheduler-facing
+                </?01M0NJZ4SK2E3Y789WN5F8C2E3>
+              )>
+            ]>
+          )>
+        ]>
+      )>
+    )>
+    <Upsert { selector = "behavior://eidolon-workflow-integration/requirements/native-tool-surface" } (
+      <Requirement #native-tool-surface (
+        <Statement ?01M0NJZ4SK2E3Y789WN5F8C2E4>
+        The system SHALL expose first-party workflow operations as native Eidolon tools, including both runtime control and authoring workspace operations.
+        </?01M0NJZ4SK2E3Y789WN5F8C2E4>
+        <Suites [
+          <Suite #tool-scope { name = "Tool scope" } (
+            <Cases [
+              <Case #runtime-tools (
+                <Given ?01M0NJZ4SK2E3Y789WN5F8C2E5>
+                An AI agent needs to operate a workflow run
+                </?01M0NJZ4SK2E3Y789WN5F8C2E5>
+                <When ?01M0NJZ4SK2E3Y789WN5F8C2E6>
+                It asks to start, inspect, resume, patch or promote a workflow run
+                </?01M0NJZ4SK2E3Y789WN5F8C2E6>
+                <Then ?01M0NJZ4SK2E3Y789WN5F8C2E7>
+                The native workflow tool surface SHALL provide stable tool definitions for those operations
+                </?01M0NJZ4SK2E3Y789WN5F8C2E7>
+              )>
+              <Case #authoring-tools (
+                <Given ?01M0NJZ4SK2E3Y789WN5F8C2E8>
+                An AI agent needs to edit workflow resources in an authoring workspace
+                </?01M0NJZ4SK2E3Y789WN5F8C2E8>
+                <When ?01M0NJZ4SK2E3Y789WN5F8C2E9>
+                It asks to create, patch, validate or inspect workflow definitions, app bundle resources, material ports, material bindings or RunGraph patches
+                </?01M0NJZ4SK2E3Y789WN5F8C2E9>
+                <Then ?01M0NJZ4SK2E3Y789WN5F8C2EA>
+                The native workflow tool surface SHALL provide first-class authoring tools rather than requiring MCP-only functions
+                </?01M0NJZ4SK2E3Y789WN5F8C2EA>
+              )>
+            ]>
+          )>
+        ]>
+      )>
+    )>
+    <Upsert { selector = "behavior://eidolon-workflow-integration/requirements/effect-boundary" } (
+      <Requirement #effect-boundary (
+        <Statement ?01M0NJZ4SK2E3Y789WN5F8C2EB>
+        The system SHALL keep workflow effect handlers internal to the workflow scheduler and map them onto existing Eidolon runtime mechanisms.
+        </?01M0NJZ4SK2E3Y789WN5F8C2EB>
+        <Suites [
+          <Suite #effect-execution { name = "Effect execution" } (
+            <Cases [
+              <Case #agent-node-uses-actor-runtime (
+                <Given ?01M0NJZ4SK2E3Y789WN5F8C2EC>
+                A workflow node represents an AI agent task
+                </?01M0NJZ4SK2E3Y789WN5F8C2EC>
+                <When ?01M0NJZ4SK2E3Y789WN5F8C2ED>
+                The node is executed
+                </?01M0NJZ4SK2E3Y789WN5F8C2ED>
+                <Then ?01M0NJZ4SK2E3Y789WN5F8C2EE>
+                The runtime SHALL use existing actor, fiber, delegate and detached task mechanisms instead of a workflow-specific actor/session runtime
+                </?01M0NJZ4SK2E3Y789WN5F8C2EE>
+              )>
+              <Case #tool-node-uses-tool-registry (
+                <Given ?01M0NJZ4SK2E3Y789WN5F8C2EF>
+                A workflow node invokes a tool-like effect
+                </?01M0NJZ4SK2E3Y789WN5F8C2EF>
+                <When ?01M0NJZ4SK2E3Y789WN5F8C2EG>
+                The node is executed
+                </?01M0NJZ4SK2E3Y789WN5F8C2EG>
+                <Then ?01M0NJZ4SK2E3Y789WN5F8C2EH>
+                The runtime SHALL execute through existing tool registry and actor turn machinery so tool-call facts and runtime-control evidence remain authoritative
+                </?01M0NJZ4SK2E3Y789WN5F8C2EH>
+              )>
+              <Case #effect-not-direct-tool (
+                <Given ?01M0NJZ4SK2E3Y789WN5F8C2EJ>
+                An internal workflow effect handler exists
+                </?01M0NJZ4SK2E3Y789WN5F8C2EJ>
+                <When ?01M0NJZ4SK2E3Y789WN5F8C2EK>
+                The model-visible native tool list is built
+                </?01M0NJZ4SK2E3Y789WN5F8C2EK>
+                <Then ?01M0NJZ4SK2E3Y789WN5F8C2EM>
+                The handler SHALL NOT be exposed directly as an AI-callable tool
+                </?01M0NJZ4SK2E3Y789WN5F8C2EM>
+              )>
+            ]>
+          )>
+        ]>
+      )>
+    )>
+    <Upsert { selector = "behavior://eidolon-workflow-integration/requirements/workflow-fact-authority" } (
+      <Requirement #workflow-fact-authority (
+        <Statement ?01M0NJZ4SK2E3Y789WN5F8C2EN>
+        The system SHALL persist only workflow-owned orchestration facts and reference Eidolon-owned runtime facts by stable identifiers.
+        </?01M0NJZ4SK2E3Y789WN5F8C2EN>
+        <Suites [
+          <Suite #authority-boundary { name = "Authority boundary" } (
+            <Cases [
+              <Case #workflow-owned-facts (
+                <Given ?01M0NJZ4SK2E3Y789WN5F8C2EP>
+                A workflow run graph changes over time
+                </?01M0NJZ4SK2E3Y789WN5F8C2EP>
+                <When ?01M0NJZ4SK2E3Y789WN5F8C2EQ>
+                The workflow persistence layer records state
+                </?01M0NJZ4SK2E3Y789WN5F8C2EQ>
+                <Then ?01M0NJZ4SK2E3Y789WN5F8C2ER>
+                It SHALL store definitions, RunGraph structure, node generations, invalidation/reuse policy, material bindings, node status refs, graph patch/promote records and workflow audit decisions
+                </?01M0NJZ4SK2E3Y789WN5F8C2ER>
+              )>
+              <Case #eidolon-owned-facts (
+                <Given ?01M0NJZ4SK2E3Y789WN5F8C2ES>
+                A workflow node creates actor, conversation, tool, provider, checkpoint, mailbox, member, holon or detached-task state
+                </?01M0NJZ4SK2E3Y789WN5F8C2ES>
+                <When ?01M0NJZ4SK2E3Y789WN5F8C2ET>
+                The workflow records the node result
+                </?01M0NJZ4SK2E3Y789WN5F8C2ET>
+                <Then ?01M0NJZ4SK2E3Y789WN5F8C2EV>
+                It SHALL store references to Eidolon-owned facts rather than duplicating their state
+                </?01M0NJZ4SK2E3Y789WN5F8C2EV>
+              )>
+              <Case #recovery-reconcile (
+                <Given ?01M0NJZ4SK2E3Y789WN5F8C2EW>
+                An Eidolon session is restored from durable state
+                </?01M0NJZ4SK2E3Y789WN5F8C2EW>
+                <When ?01M0NJZ4SK2E3Y789WN5F8C2EX>
+                Workflow state is loaded
+                </?01M0NJZ4SK2E3Y789WN5F8C2EX>
+                <Then ?01M0NJZ4SK2E3Y789WN5F8C2EY>
+                The workflow SHALL reconcile node refs against restored actor, fiber, task and domain facts before continuing scheduling
+                </?01M0NJZ4SK2E3Y789WN5F8C2EY>
+              )>
+            ]>
+          )>
+        ]>
+      )>
+    )>
+  ]>
+)>

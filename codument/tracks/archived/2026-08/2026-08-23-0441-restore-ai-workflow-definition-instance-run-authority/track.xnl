@@ -1,0 +1,133 @@
+<Track #restore-ai-workflow-definition-instance-run-authority version="1" apiVersion="codument.tech/v1alpha1" { status = "completed" goal = "Restore Definition→Instance→Run materialization and a single canonical run checkpoint for WorkCtrl, AI Ctrl and AI Data profiles." description = "Implement path-independent contracts and a robust filesystem backend before Eidolon migrates its flat workflow facts." question_mode = "decision-tree" question_severity = "auto" commit_mode = "manual" created_at = "2026-08-22T20:40:00Z" updated_at = "2026-08-23T01:41:35.546Z" } (
+  <Ports { scope = "track" } [
+    <MaterialBundle { role = "input" name = "behavior-deltas" domain = "behavior" path = "vfs://./behavior_deltas/" }>
+    <MaterialBundle { role = "input" name = "analysis" domain = "memory" path = "vfs://./analysis/" }>
+    <MaterialBundle { role = "output" name = "packages" domain = "code" path = "vfs://@/packages/" }>
+    <MaterialBundle { role = "output" name = "flow-dsl" domain = "docs" path = "vfs://@/docs/flow-dsl/" }>
+    <MaterialBundle { role = "output" name = "examples" domain = "artifact" path = "vfs://@/examples/xnl-bundles/" }>
+  ]>
+  <TaskSpace #space_restore-ai-workflow-definition-instance-run-authority { name = "restore-ai-workflow-definition-instance-run-authority" } (
+    <Description ?01M0NMJYMQNA7XFDYC9C0JEWRF>
+    Restore executable Definition/Instance/Run authority and profile checkpoint persistence.
+    </?01M0NMJYMQNA7XFDYC9C0JEWRF>
+    <SubNodes [
+      <TaskGroup #P1 { name = "Evidence baseline and RED" status = "DONE" order = 0 } (
+        <SubNodes [
+          <Task #T1-1 { name = "Characterize live-definition resume and flat snapshot gaps" status = "DONE" order = 0 priority = "P0" } (
+            <Acceptance [
+              <Criterion { id = "T1.1-AC1" checked = true } ?01M0NMJYMQNA7XFDYC9C0JEWRG>
+              A focused baseline reproduces that current start/resume can depend on live definition content
+              </?01M0NMJYMQNA7XFDYC9C0JEWRG>
+              <Criterion { id = "T1.1-AC2" checked = true } ?01M0NMJYMRDTB055C6YZF9V73E>
+              A focused baseline shows flat snapshots cannot reconstruct a complete instance/run capsule
+              </?01M0NMJYMRDTB055C6YZF9V73E>
+            ]>
+          )>
+          <Task #T1-2 { name = "Freeze checkpoint and materialization contracts" status = "DONE" order = 1 priority = "P0" } (
+            <Acceptance [
+              <Criterion { id = "T1.2-AC1" checked = true } ?01M0NMJYMRDTB055C6YZF9V73F>
+              Closed public data binds definition revision, instance, run, version, IO, sidecars and typed profile state
+              </?01M0NMJYMRDTB055C6YZF9V73F>
+              <Criterion { id = "T1.2-AC2" checked = true } ?01M0NMJYMRDTB055C6YZF9V73G>
+              Malformed and non-plain checkpoint data fails closed before partial persistence
+              </?01M0NMJYMRDTB055C6YZF9V73G>
+            ]>
+          )>
+        ]>
+      )>
+      <TaskGroup #P2 { name = "Instance materialization and profile authority" status = "DONE" order = 1 } (
+        <SubNodes [
+          <Task #T2-1 { name = "Materialize and execute from frozen instances" status = "DONE" order = 0 priority = "P0" } (
+            <Acceptance [
+              <Criterion { id = "T2.1-AC1" checked = true } ?01M0NMJYMRDTB055C6YZF9V73H>
+              Complete bundle copy and digest readback finish before first node execution
+              </?01M0NMJYMRDTB055C6YZF9V73H>
+              <Criterion { id = "T2.1-AC2" checked = true } ?01M0NMJYMRDTB055C6YZF9V73J>
+              Fresh start/resume compiles only the frozen instance and definition changes affect only new instances
+              </?01M0NMJYMRDTB055C6YZF9V73J>
+              <Criterion { id = "T2.1-AC3" checked = true } ?01M0NMJYMRDTB055C6YZF9V73K>
+              state.seed remains a byte-identical instance facet and initializes each new run checkpoint exactly once without creating mutable instance state
+              </?01M0NMJYMRDTB055C6YZF9V73K>
+            ]>
+          )>
+          <Task #T2-2 { name = "Contain Ctrl Data and AI state in one checkpoint" status = "DONE" order = 1 priority = "P0" } (
+            <Acceptance [
+              <Criterion { id = "T2.2-AC1" checked = true } ?01M0NMJYMRDTB055C6YZF9V73M>
+              WorkCtrl snapshot and AIData RunGraph are typed profile payloads under one run version
+              </?01M0NMJYMRDTB055C6YZF9V73M>
+              <Criterion { id = "T2.2-AC2" checked = true } ?01M0NMJYMRDTB055C6YZF9V73N>
+              Controller/node sidecars and future AI system state have one declared checkpoint owner
+              </?01M0NMJYMRDTB055C6YZF9V73N>
+              <Criterion { id = "T2.2-AC3" checked = true } ?01M0NMJYMRDTB055C6YZF9V73P>
+              No events, indexes or views can backwrite checkpoint authority
+              </?01M0NMJYMRDTB055C6YZF9V73P>
+            ]>
+          )>
+        ]>
+      )>
+      <TaskGroup #P3 { name = "Filesystem backend and compatibility" status = "DONE" order = 2 } (
+        <SubNodes [
+          <Task #T3-1 { name = "Implement atomic CAS instance/run store" status = "DONE" order = 0 priority = "P0" } (
+            <Acceptance [
+              <Criterion { id = "T3.1-AC1" checked = true } ?01M0NMJYMRDTB055C6YZF9V73Q>
+              Independent stores enforce expectedVersion CAS and atomic readback
+              </?01M0NMJYMRDTB055C6YZF9V73Q>
+              <Criterion { id = "T3.1-AC2" checked = true } ?01M0NMJYMRDTB055C6YZF9V73R>
+              Unsafe ids, symlinks, traversal, invalid records and partial staging fail before live mutation
+              </?01M0NMJYMRDTB055C6YZF9V73R>
+              <Criterion { id = "T3.1-AC3" checked = true } ?01M0NMJYMRDTB055C6YZF9V73S>
+              Derived indexes and projections rebuild from canonical instances/checkpoints
+              </?01M0NMJYMRDTB055C6YZF9V73S>
+            ]>
+          )>
+          <Task #T3-2 { name = "Provide one-way legacy compatibility" status = "DONE" order = 1 priority = "P0" } (
+            <Acceptance [
+              <Criterion { id = "T3.2-AC1" checked = true } ?01M0NMJYMRDTB055C6YZF9V73T>
+              Legacy flat snapshots remain explicit read/import inputs
+              </?01M0NMJYMRDTB055C6YZF9V73T>
+              <Criterion { id = "T3.2-AC2" checked = true } ?01M0NMJYMRDTB055C6YZF9V73V>
+              New runs single-write canonical checkpoints and never dual-write legacy state
+              </?01M0NMJYMRDTB055C6YZF9V73V>
+              <Criterion { id = "T3.2-AC3" checked = true } ?01M0NMJYMRDTB055C6YZF9V73W>
+              Interrupted repeated imports are idempotent and preserve recoverability
+              </?01M0NMJYMRDTB055C6YZF9V73W>
+            ]>
+          )>
+        ]>
+      )>
+      <TaskGroup #P4 { name = "Docs examples and independent verification" status = "DONE" order = 3 } (
+        <SubNodes [
+          <Task #T4-1 { name = "Update Flow DSL docs and physical examples" status = "DONE" order = 0 priority = "P0" } (
+            <Acceptance [
+              <Criterion { id = "T4.1-AC1" checked = true } ?01M0NMJYMRDTB055C6YZF9V73X>
+              order-fulfillment and Ctrl/Data examples show definition, instance, runs, seed and profile state boundaries
+              </?01M0NMJYMRDTB055C6YZF9V73X>
+              <Criterion { id = "T4.1-AC2" checked = true } ?01M0NMJYMRDTB055C6YZF9V73Y>
+              Docs preserve runtime-first Processor and reserve named Agent APIs for the next track
+              </?01M0NMJYMRDTB055C6YZF9V73Y>
+            ]>
+          )>
+          <Task #T4-2 { name = "Run focused full type package and recovery gates" status = "DONE" order = 1 priority = "P0" } (
+            <Acceptance [
+              <Criterion { id = "T4.2-AC1" checked = true } ?01M0NMJYMRDTB055C6YZF9V73Z>
+              Ctrl/Data fresh-process suites, full tests, typecheck, docs checks and package smoke pass
+              </?01M0NMJYMRDTB055C6YZF9V73Z>
+              <Criterion { id = "T4.2-AC2" checked = true } ?01M0NMJYMRDTB055C6YZF9V740>
+              Static scan finds no host paths, second state authority, runtime-less core or copied actor history
+              </?01M0NMJYMRDTB055C6YZF9V740>
+            ]>
+          )>
+        ]>
+        <Hooks [
+          <Hook { on = "phase:after" } (
+            <AttractorCheck { use = "coding" }>
+          )>
+        ]>
+      )>
+    ]>
+  )>
+  <Schedule [
+    <Parallel { max_concurrent = 1 spot_check = true }>
+  ]>
+  <Hooks>
+)>

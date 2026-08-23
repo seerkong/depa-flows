@@ -1,0 +1,9 @@
+<Step #pack (
+  <Core [
+    <ExternalJob #pack {
+      signalKind = "job.completed"
+      signalKey = "pack"
+      timeoutMs = 86400000
+    }>
+  ]>
+)>

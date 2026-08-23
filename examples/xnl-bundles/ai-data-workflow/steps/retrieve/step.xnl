@@ -1,0 +1,10 @@
+<Step #retrieve (
+  <Core [
+    <TransformNode #retrieve {
+      inputs = { ticket = "flow-port://#entry/ticket" }
+      outputs = ["evidence" "instance"]
+      src = "vfs://./flow-code/evidence.ts#retrieveEvidence"
+      config = { reuse_policy = "semantic-hash" agent = { agentDefinitionRef = "resource://depa.examples.Agent.Support" instanceName = "evidence-reviewer" } }
+    }>
+  ]>
+)>

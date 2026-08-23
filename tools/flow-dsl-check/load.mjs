@@ -1,6 +1,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { parseXnl } from 'xnl-core';
+import {
+  assembleDefinitionStepProfileDirectory,
+  createFilesystemDefinitionStepProfileRuntime,
+} from 'flow-step-space-logic/filesystem';
 
 export const CTRL_FLOW_FORMS = ['InstantCtrlFlow', 'WorkCtrlFlow', 'BPCtrlFlow', 'AICtrlWorkflow'];
 export const DAG_FORMS = ['EagerDataFlow', 'AIDataWorkflow'];
@@ -22,6 +26,7 @@ const LEGACY_ROOT_CODES = {
   CtrlFlow: ['legacy-ctrl-flow-root', 'standalone CtrlFlow is removed; use an InstantCtrlFlow, WorkCtrlFlow, or BPCtrlFlow root'],
   DataFlow: ['legacy-data-flow-root', 'DataFlow is removed; data DAG definitions use EagerDataFlow'],
 };
+const compareCodeUnits = (left, right) => left < right ? -1 : left > right ? 1 : 0;
 
 export const els = (nodes) =>
   (nodes ?? []).filter((node) => node && (node.kind === 'DataElement' || node.kind === 'TextElement'));
@@ -42,7 +47,7 @@ export const idOf = (element) => {
   return namespace + element.id.name;
 };
 
-export function loadBundle(dir) {
+export function loadBundle(dir, runtime = { extensionCodecs: { resolve: () => undefined } }) {
   const diagnostics = [];
   const noted = new Set();
   const note = (code, message) => diagnostics.push({ code, message });
@@ -53,7 +58,7 @@ export function loadBundle(dir) {
   };
 
   const xnlFiles = fs.existsSync(dir)
-    ? fs.readdirSync(dir).filter((file) => file.endsWith('.xnl')).sort()
+    ? fs.readdirSync(dir).filter((file) => file.endsWith('.xnl')).sort(compareCodeUnits)
     : [];
   if (!xnlFiles.length) {
     note('empty-bundle', `no .xnl files in ${dir}`);
@@ -114,13 +119,49 @@ export function loadBundle(dir) {
     else facets[name] = section;
   }
 
+  const assembled = assembleDefinitionStepProfileDirectory(
+    createFilesystemDefinitionStepProfileRuntime({
+      rootDir: dir,
+      extensionCodecs: runtime.extensionCodecs,
+    }),
+    {},
+    { profileRoot: form },
+  );
+  for (const diagnostic of assembled.diagnostics) note(diagnostic.code, diagnostic.message);
+  const definitionStepForest = assembled.forest;
+  const statements = definitionStepForest
+    ? definitionStepForest.stepOrder.map((stepId) => coreElement(definitionStepForest.steps[stepId].core))
+    : listChildren(container);
+
   return {
     form,
     container,
     fqn: idOf(container),
-    statements: listChildren(container),
+    statements,
+    definitionStepForest,
     facets,
     dir,
     diagnostics,
   };
+}
+
+function coreElement(core) {
+  const sectionEntries = Object.entries(core.sections).map(([tag, child]) => [tag, coreElement(child)]);
+  return {
+    kind: 'DataElement',
+    tag: core.tag,
+    id: core.id ? word(core.id) : undefined,
+    metadata: { ...core.metadata },
+    attributes: { ...core.attrs },
+    body: core.children.map(coreElement),
+    extend: sectionEntries.length > 0 ? {
+      order: sectionEntries.map(([tag]) => tag),
+      children: Object.fromEntries(sectionEntries),
+    } : undefined,
+  };
+}
+
+function word(value) {
+  const parts = value.split('.');
+  return { kind: 'Word', namespace: parts.slice(0, -1), name: parts.at(-1) };
 }

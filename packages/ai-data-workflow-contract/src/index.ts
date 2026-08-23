@@ -1,4 +1,5 @@
 import type {
+  AIDataWorkflowRunProfileState,
   AIDataWorkflowDefinitionBinding,
   AIWorkflowDefinitionRef,
   AIWorkflowEffectiveReusePolicy,
@@ -8,6 +9,7 @@ import type {
   AIWorkflowRunRef,
   AIWorkflowRunStatus,
   AIWorkflowSemanticFingerprint,
+  FlowRunCheckpoint,
 } from 'ai-workflow-contract';
 import type {
   EagerDataFlowAuthoringPlan,
@@ -105,6 +107,7 @@ export type AIDataWorkflowGraphPatchOperation =
 
 export interface AIDataWorkflowGraphPatch {
   readonly patchId: string;
+  readonly generation?: number;
   readonly reason?: string;
   readonly operations: readonly AIDataWorkflowGraphPatchOperation[];
   readonly atMs?: number;
@@ -121,6 +124,7 @@ export interface AIDataWorkflowPatchRecord {
 export interface AIDataWorkflowRunGraph {
   readonly runId: string;
   readonly binding: AIDataWorkflowDefinitionBinding;
+  readonly platformDefaultPolicy?: AIWorkflowReusePolicy;
   readonly currentGeneration: number;
   readonly nodes: Readonly<Record<string, AIDataWorkflowRunNode>>;
   readonly declarationOrder: readonly string[];
@@ -161,3 +165,7 @@ export interface AIDataWorkflowPlanProjection {
   readonly binding: AIDataWorkflowDefinitionBinding;
   readonly plan: EagerDataFlowAuthoringPlan;
 }
+
+export type AIDataWorkflowRunCheckpoint = FlowRunCheckpoint<
+  AIDataWorkflowRunProfileState<AIDataWorkflowRunGraph>
+>;

@@ -1,0 +1,79 @@
+<decision #track.flow_dsl_reference.owner apiVersion="codument.tech/v1alpha1" { status = "accepted" priority = "P0" } (
+  <question ?01M0NJZ4PTDBX59S5JD27A6M2D>
+  Where is Flow DSL reference content authored and versioned?
+  </?01M0NJZ4PTDBX59S5JD27A6M2D>
+  <answer {  } (
+    <raw-answer ?01M0NJZ4PTDBX59S5JD27A6M2E>
+    Use depa-flows canonical docs/flow-dsl as the only authored source.
+    </?01M0NJZ4PTDBX59S5JD27A6M2E>
+    <decision-text ?01M0NJZ4PTDBX59S5JD27A6M2F>
+    Only in depa-flows canonical docs/flow-dsl; the package module is a generated projection.
+    </?01M0NJZ4PTDBX59S5JD27A6M2F>
+    <rationale ?01M0NJZ4PTDBX59S5JD27A6M2G>
+    This prevents Eidolon and Halfcode from maintaining divergent copies of depa-owned semantics.
+    </?01M0NJZ4PTDBX59S5JD27A6M2G>
+    <evidence ?01M0NJZ4PTDBX59S5JD27A6M2H>
+    The 29 canonical Markdown files and their byte identities are frozen by the package generator and focused tests.
+    </?01M0NJZ4PTDBX59S5JD27A6M2H>
+  )>
+)>
+
+<decision #track.flow_dsl_reference.shape apiVersion="codument.tech/v1alpha1" { status = "accepted" priority = "P0" } (
+  <question ?01M0NJZ4PTDBX59S5JD27A6M2J>
+  Is the published unit another system Skill?
+  </?01M0NJZ4PTDBX59S5JD27A6M2J>
+  <answer {  } (
+    <raw-answer ?01M0NJZ4PTDBX59S5JD27A6M2K>
+    Publish a shared authoring module, not another installed system Skill.
+    </?01M0NJZ4PTDBX59S5JD27A6M2K>
+    <decision-text ?01M0NJZ4PTDBX59S5JD27A6M2M>
+    No. It is a shared Halfcode authoring module with WikiPage resources that downstream Skills consume through explicit ResourceMappings and no sibling Skill dependency.
+    </?01M0NJZ4PTDBX59S5JD27A6M2M>
+    <rationale ?01M0NJZ4PTDBX59S5JD27A6M2N>
+    The installed product surface remains four system Skills while reusable reference knowledge stays composable.
+    </?01M0NJZ4PTDBX59S5JD27A6M2N>
+    <evidence ?01M0NJZ4PTDBX59S5JD27A6M2P>
+    The generated ResourcePackage contains WikiPage resources and no SkillCapsule resource.
+    </?01M0NJZ4PTDBX59S5JD27A6M2P>
+  )>
+)>
+
+<decision #track.flow_dsl_reference.public_entry apiVersion="codument.tech/v1alpha1" { status = "accepted" priority = "P0" } (
+  <question ?01M0NJZ4PTDBX59S5JD27A6M2Q>
+  Where is the loader exported?
+  </?01M0NJZ4PTDBX59S5JD27A6M2Q>
+  <answer {  } (
+    <raw-answer ?01M0NJZ4PTDBX59S5JD27A6M2R>
+    Export the loader from an isolated package root.
+    </?01M0NJZ4PTDBX59S5JD27A6M2R>
+    <decision-text ?01M0NJZ4PTDBX59S5JD27A6M2S>
+    From the isolated ai-workflow-flow-dsl-reference package root.
+    </?01M0NJZ4PTDBX59S5JD27A6M2S>
+    <rationale ?01M0NJZ4PTDBX59S5JD27A6M2T>
+    Documentation assets and package location remain independent of AI workflow runtime and browser graphs.
+    </?01M0NJZ4PTDBX59S5JD27A6M2T>
+    <evidence ?01M0NJZ4PTDBX59S5JD27A6M2V>
+    The package has one compiled root export and only an exact Halfcode runtime dependency.
+    </?01M0NJZ4PTDBX59S5JD27A6M2V>
+  )>
+)>
+
+<decision #track.flow_dsl_reference.release apiVersion="codument.tech/v1alpha1" { status = "accepted" priority = "P0" } (
+  <question ?01M0NJZ4PTDBX59S5JD27A6M2W>
+  Which package version changes and how is the registry selected?
+  </?01M0NJZ4PTDBX59S5JD27A6M2W>
+  <answer {  } (
+    <raw-answer ?01M0NJZ4PTDBX59S5JD27A6M2X>
+    Start at 0.1.0 and use the user's active npm configuration.
+    </?01M0NJZ4PTDBX59S5JD27A6M2X>
+    <decision-text ?01M0NJZ4PTDBX59S5JD27A6M2Y>
+    The new package starts at 0.1.0 with exact Halfcode 0.2.3; npm uses the user active configuration with no registry override.
+    </?01M0NJZ4PTDBX59S5JD27A6M2Y>
+    <rationale ?01M0NJZ4PTDBX59S5JD27A6M2Z>
+    This is the terminal smallest patch and preserves the user's registry authority.
+    </?01M0NJZ4PTDBX59S5JD27A6M2Z>
+    <evidence ?01M0NJZ4PTDBX59S5JD27A6M30>
+    Package metadata, lockfile, pack validation, and the release procedure contain no registry override.
+    </?01M0NJZ4PTDBX59S5JD27A6M30>
+  )>
+)>

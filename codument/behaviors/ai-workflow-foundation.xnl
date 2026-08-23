@@ -1,0 +1,158 @@
+<Behavior #ai-workflow-foundation apiVersion="codument.tech/v1alpha1" version="1" (
+  <Requirements [
+    <Requirement #substrate-binding (
+      <Statement ?01M0NJZ4JZ06X0A75VA0WA1MSN>
+      The system SHALL expose AI workflow profile descriptors that explicitly bind AI Ctrl Workflow to WorkCtrlFlow and AI Data Workflow to EagerDataFlow.
+      </?01M0NJZ4JZ06X0A75VA0WA1MSN>
+      <Suites [
+        <Suite #profile-descriptors { name = "Profile descriptors" } (
+          <Cases [
+            <Case #agent-workflow-substrate (
+              <Given ?01M0NJZ4JZ06X0A75VA0WA1MSP>
+              An AI Ctrl Workflow descriptor is inspected
+              </?01M0NJZ4JZ06X0A75VA0WA1MSP>
+              <When ?01M0NJZ4JZ06X0A75VA0WA1MSQ>
+              The descriptor substrate is read
+              </?01M0NJZ4JZ06X0A75VA0WA1MSQ>
+              <Then ?01M0NJZ4JZ06X0A75VA0WA1MSR>
+              The descriptor SHALL identify WorkCtrlFlow as the substrate
+              </?01M0NJZ4JZ06X0A75VA0WA1MSR>
+            )>
+            <Case #data-workflow-substrate (
+              <Given ?01M0NJZ4JZ06X0A75VA0WA1MSS>
+              An AI Data Workflow descriptor is inspected
+              </?01M0NJZ4JZ06X0A75VA0WA1MSS>
+              <When ?01M0NJZ4JZ06X0A75VA0WA1MST>
+              The descriptor substrate is read
+              </?01M0NJZ4JZ06X0A75VA0WA1MST>
+              <Then ?01M0NJZ4JZ06X0A75VA0WA1MSV>
+              The descriptor SHALL identify EagerDataFlow as the substrate
+              </?01M0NJZ4JZ06X0A75VA0WA1MSV>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+    <Requirement #runtime-injection (
+      <Statement ?01M0NJZ4JZ06X0A75VA0WA1MSW>
+      The system SHALL model global roots, workspace roots, state stores and AI effect providers as injected runtime/config contracts.
+      </?01M0NJZ4JZ06X0A75VA0WA1MSW>
+      <Suites [
+        <Suite #runtime-contracts { name = "Runtime contracts" } (
+          <Cases [
+            <Case #no-hardcoded-roots (
+              <Given ?01M0NJZ4JZ06X0A75VA0WA1MSX>
+              A foundation helper creates an AI workflow runtime context
+              </?01M0NJZ4JZ06X0A75VA0WA1MSX>
+              <When ?01M0NJZ4JZ06X0A75VA0WA1MSY>
+              The helper receives wrapper-provided roots
+              </?01M0NJZ4JZ06X0A75VA0WA1MSY>
+              <Then ?01M0NJZ4JZ06X0A75VA0WA1MSZ>
+              The helper SHALL preserve those roots without constructing host-specific paths
+              </?01M0NJZ4JZ06X0A75VA0WA1MSZ>
+            )>
+            <Case #embedded-effect-provider (
+              <Given ?01M0NJZ4JZ06X0A75VA0WA1MT0>
+              An AI workflow node requires an AI effect
+              </?01M0NJZ4JZ06X0A75VA0WA1MT0>
+              <When ?01M0NJZ4JZ06X0A75VA0WA1MT1>
+              The node invokes the provider through runtime
+              </?01M0NJZ4JZ06X0A75VA0WA1MT1>
+              <Then ?01M0NJZ4JZ06X0A75VA0WA1MT2>
+              The system SHALL use the injected provider interface instead of an external CLI boundary
+              </?01M0NJZ4JZ06X0A75VA0WA1MT2>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+    <Requirement #reuse-policy-vocabulary (
+      <Statement ?01M0NJZ4JZ06X0A75VA0WA1MT3>
+      The system SHALL define node-level reuse policy vocabulary with semantic-hash as the default machine node policy and never as the default manual node policy.
+      </?01M0NJZ4JZ06X0A75VA0WA1MT3>
+      <Suites [
+        <Suite #reuse-policy { name = "Reuse policy" } (
+          <Cases [
+            <Case #machine-default (
+              <Given ?01M0NJZ4JZ06X0A75VA0WA1MT4>
+              A non-manual AI workflow node has no explicit reuse policy
+              </?01M0NJZ4JZ06X0A75VA0WA1MT4>
+              <When ?01M0NJZ4JZ06X0A75VA0WA1MT5>
+              The platform resolves the effective policy
+              </?01M0NJZ4JZ06X0A75VA0WA1MT5>
+              <Then ?01M0NJZ4JZ06X0A75VA0WA1MT6>
+              The policy SHALL be semantic-hash
+              </?01M0NJZ4JZ06X0A75VA0WA1MT6>
+            )>
+            <Case #manual-default (
+              <Given ?01M0NJZ4JZ06X0A75VA0WA1MT7>
+              A manual AI workflow node has no explicit reuse policy
+              </?01M0NJZ4JZ06X0A75VA0WA1MT7>
+              <When ?01M0NJZ4JZ06X0A75VA0WA1MT8>
+              The platform resolves the effective policy
+              </?01M0NJZ4JZ06X0A75VA0WA1MT8>
+              <Then ?01M0NJZ4JZ06X0A75VA0WA1MT9>
+              The policy SHALL be never
+              </?01M0NJZ4JZ06X0A75VA0WA1MT9>
+            )>
+            <Case #manual-authoring (
+              <Given ?01M0NJZ4JZ06X0A75VA0WA1MTA>
+              An AIDataWorkflow XNL node declares config.node_type as manual
+              </?01M0NJZ4JZ06X0A75VA0WA1MTA>
+              <When ?01M0NJZ4JZ06X0A75VA0WA1MTB>
+              The canonical profile loader creates its RunGraph
+              </?01M0NJZ4JZ06X0A75VA0WA1MTB>
+              <Then ?01M0NJZ4JZ06X0A75VA0WA1MTC>
+              The node SHALL have nodeType manual and SHALL resolve the never node-type default without reinterpreting the EagerDataFlow implementation type field
+              </?01M0NJZ4JZ06X0A75VA0WA1MTC>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+    <Requirement #profile-source-loading (
+      <Statement ?01M0NJZ4JZ06X0A75VA0WA1MTD>
+      The system SHALL provide canonical source loaders for AICtrlWorkflow and AIDataWorkflow roots that reuse substrate parsing and validation and return typed AI workflow definition bindings with structured diagnostics.
+      </?01M0NJZ4JZ06X0A75VA0WA1MTD>
+      <Suites [
+        <Suite #canonical-profile-loading { name = "Canonical profile loading" } (
+          <Cases [
+            <Case #load-ai-ctrl-workflow (
+              <Given ?01M0NJZ4JZ06X0A75VA0WA1MTE>
+              Named XNL sources contain a canonical AICtrlWorkflow root
+              </?01M0NJZ4JZ06X0A75VA0WA1MTE>
+              <When ?01M0NJZ4JZ06X0A75VA0WA1MTF>
+              The AICtrlWorkflow source loader loads the sources
+              </?01M0NJZ4JZ06X0A75VA0WA1MTF>
+              <Then ?01M0NJZ4JZ06X0A75VA0WA1MTG>
+              The system SHALL return a WorkCtrlFlow-backed AICtrlWorkflow definition binding without diagnostics
+              </?01M0NJZ4JZ06X0A75VA0WA1MTG>
+            )>
+            <Case #load-ai-data-workflow (
+              <Given ?01M0NJZ4JZ06X0A75VA0WA1MTH>
+              Named XNL sources contain a canonical AIDataWorkflow root
+              </?01M0NJZ4JZ06X0A75VA0WA1MTH>
+              <When ?01M0NJZ4JZ06X0A75VA0WA1MTJ>
+              The AIDataWorkflow source loader loads the sources
+              </?01M0NJZ4JZ06X0A75VA0WA1MTJ>
+              <Then ?01M0NJZ4JZ06X0A75VA0WA1MTK>
+              The system SHALL return an EagerDataFlow-backed AIDataWorkflow definition binding without diagnostics
+              </?01M0NJZ4JZ06X0A75VA0WA1MTK>
+            )>
+            <Case #reject-invalid-profile-source (
+              <Given ?01M0NJZ4JZ06X0A75VA0WA1MTM>
+              AI workflow sources contain a wrong root or invalid substrate body
+              </?01M0NJZ4JZ06X0A75VA0WA1MTM>
+              <When ?01M0NJZ4JZ06X0A75VA0WA1MTN>
+              The corresponding profile loader validates the sources
+              </?01M0NJZ4JZ06X0A75VA0WA1MTN>
+              <Then ?01M0NJZ4JZ06X0A75VA0WA1MTP>
+              The system SHALL return stable structured diagnostics and SHALL NOT fabricate an executable binding
+              </?01M0NJZ4JZ06X0A75VA0WA1MTP>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+  ]>
+)>

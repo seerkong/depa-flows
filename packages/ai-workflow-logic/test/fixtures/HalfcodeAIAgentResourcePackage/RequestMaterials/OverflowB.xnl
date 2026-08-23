@@ -1,0 +1,5 @@
+<RequestMaterial #depa.flows.test.Material.Request.Overflow.B apiVersion="depa.flows/v1" version="1.0.0" {
+  lifecycle = "Active"
+  description = "Overflow request material B"
+  value = "overflow-b"
+}>

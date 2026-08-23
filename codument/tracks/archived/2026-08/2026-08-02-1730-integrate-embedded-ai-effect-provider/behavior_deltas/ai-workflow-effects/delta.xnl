@@ -1,0 +1,50 @@
+<BehaviorPatch #track.r_2_0_2_6_-_0_8_-_0_2_-_1_7_3_0_-_i_n_t_e_g_r_a_t_e_-_e_m_b_e_d_d_e_d_-_a_i_-_e_f_f_e_c_t_-_p_r_o_v_i_d_e_r.behavior_patch.ai-workflow-effects apiVersion="codument.tech/v1alpha1" version="1" { capability = "ai-workflow-effects" } (
+  <Mutations [
+    <Upsert { selector = "behavior://ai-workflow-effects/requirements/embedded-effect-provider" } (
+      <Requirement #embedded-effect-provider (
+        <Statement ?01M0NJZ4RJM1MDE6FQANH8CH58>
+        The system SHALL provide a programmable embedded AI workflow effect provider instead of requiring an external CLI bridge.
+        </?01M0NJZ4RJM1MDE6FQANH8CH58>
+        <Suites [
+          <Suite #handler-dispatch { name = "Handler dispatch" } (
+            <Cases [
+              <Case #dispatches-registered-operation (
+                <Given ?01M0NJZ4RJM1MDE6FQANH8CH59>
+                An AI workflow runtime context has an embedded effect provider with a registered operation handler
+                </?01M0NJZ4RJM1MDE6FQANH8CH59>
+                <When ?01M0NJZ4RJM1MDE6FQANH8CH5A>
+                The workflow invokes an effect request for that operation
+                </?01M0NJZ4RJM1MDE6FQANH8CH5A>
+                <Then ?01M0NJZ4RJM1MDE6FQANH8CH5B>
+                The provider SHALL call the registered handler with the original request and injected runtime roots
+                </?01M0NJZ4RJM1MDE6FQANH8CH5B>
+              )>
+              <Case #rejects-missing-operation (
+                <Given ?01M0NJZ4RJM1MDE6FQANH8CH5C>
+                An AI workflow runtime context has no handler for an effect operation
+                </?01M0NJZ4RJM1MDE6FQANH8CH5C>
+                <When ?01M0NJZ4RJM1MDE6FQANH8CH5D>
+                The workflow invokes that operation
+                </?01M0NJZ4RJM1MDE6FQANH8CH5D>
+                <Then ?01M0NJZ4RJM1MDE6FQANH8CH5E>
+                The provider SHALL fail with a stable missing-handler error before dispatching any effect
+                </?01M0NJZ4RJM1MDE6FQANH8CH5E>
+              )>
+              <Case #preserves-runtime-boundary (
+                <Given ?01M0NJZ4RJM1MDE6FQANH8CH5F>
+                A handler needs run identity, node identity, material refs, config and cancellation signal
+                </?01M0NJZ4RJM1MDE6FQANH8CH5F>
+                <When ?01M0NJZ4RJM1MDE6FQANH8CH5G>
+                The embedded provider dispatches the request
+                </?01M0NJZ4RJM1MDE6FQANH8CH5G>
+                <Then ?01M0NJZ4RJM1MDE6FQANH8CH5H>
+                The provider SHALL pass those request fields through without deriving runtime roots from ambient process state
+                </?01M0NJZ4RJM1MDE6FQANH8CH5H>
+              )>
+            ]>
+          )>
+        ]>
+      )>
+    )>
+  ]>
+)>

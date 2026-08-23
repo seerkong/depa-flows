@@ -1,0 +1,294 @@
+<Behavior #ai-workflow-resource-system apiVersion="codument.tech/v1alpha1" version="1" (
+  <Requirements [
+    <Requirement #xnl-only-resource-authoring (
+      <Statement ?01M0QNV2QYQ5J85QV8SN6A4VP1>
+      The system SHALL receive AI workflow resources as normalized XNL ResourceRecord facts loaded and validated by Halfcode.
+      </?01M0QNV2QYQ5J85QV8SN6A4VP1>
+      <Suites [
+        <Suite #authoring-authority { name = "Authoring authority" } (
+          <Cases [
+            <Case #delegate-xnl-loading (
+              <Given ?01M0QNV2QYQ5J85QV8SN6A4VP2>
+              An AI workflow ResourcePackage is loaded from a filesystem root
+              </?01M0QNV2QYQ5J85QV8SN6A4VP2>
+              <When ?01M0QNV2QYQ5J85QV8SN6A4VP3>
+              depa-flows requests workflow app projections
+              </?01M0QNV2QYQ5J85QV8SN6A4VP3>
+              <Then ?01M0QNV2QYQ5J85QV8SN6A4VP4>
+              The system SHALL delegate package loading, catalog discovery and containment validation to Halfcode
+              </?01M0QNV2QYQ5J85QV8SN6A4VP4>
+            )>
+            <Case #reject-parallel-loader (
+              <Given ?01M0QNV2QYQ5J85QV8SN6A4VP5>
+              A normalized Halfcode registry is available
+              </?01M0QNV2QYQ5J85QV8SN6A4VP5>
+              <When ?01M0QNV2QYQ5J85QV8SN6A4VP6>
+              depa-flows projects workflow resources
+              </?01M0QNV2QYQ5J85QV8SN6A4VP6>
+              <Then ?01M0QNV2QYQ5J85QV8SN6A4VP7>
+              The system MUST NOT scan directories, parse a second generic catalog, or derive identities from paths
+              </?01M0QNV2QYQ5J85QV8SN6A4VP7>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+    <Requirement #workflow-app-projection (
+      <Statement ?01M0QNV2QYQ5J85QV8SN6A4VP8>
+      The system SHALL project AIWorkflowAppBundle as a workflow-domain view over Halfcode ResourceRecord facts.
+      </?01M0QNV2QYQ5J85QV8SN6A4VP8>
+      <Suites [
+        <Suite #typed-workflow-bindings { name = "Typed workflow bindings" } (
+          <Cases [
+            <Case #project-valid-bindings (
+              <Given ?01M0QNV2QYQ5J85QV8SN6A4VP9>
+              An AIWorkflowAppBundle record declares ordered WorkflowBinding nodes to existing workflow records
+              </?01M0QNV2QYQ5J85QV8SN6A4VP9>
+              <When ?01M0QNV2QYQ5J85QV8SN6A4VPA>
+              The registry is projected
+              </?01M0QNV2QYQ5J85QV8SN6A4VPA>
+              <Then ?01M0QNV2QYQ5J85QV8SN6A4VPB>
+              The system SHALL preserve binding order, validate exact workflow kinds, and expose immutable workflow-domain projections
+              </?01M0QNV2QYQ5J85QV8SN6A4VPB>
+            )>
+            <Case #fail-closed-invalid-binding (
+              <Given ?01M0QNV2QYQ5J85QV8SN6A4VPC>
+              A binding is missing, duplicated, malformed, or refers to a record of another kind
+              </?01M0QNV2QYQ5J85QV8SN6A4VPC>
+              <When ?01M0QNV2QYQ5J85QV8SN6A4VPD>
+              The registry is projected
+              </?01M0QNV2QYQ5J85QV8SN6A4VPD>
+              <Then ?01M0QNV2QYQ5J85QV8SN6A4VPE>
+              The system SHALL fail with stable workflow-domain diagnostics and SHALL NOT return a partial app projection
+              </?01M0QNV2QYQ5J85QV8SN6A4VPE>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+    <Requirement #compatibility-boundary (
+      <Statement ?01M0QNV2QYQ5J85QV8SN6A4VPF>
+      The system SHALL preserve existing public AI workflow DTO/ref imports additively while retiring them from canonical resource authority.
+      </?01M0QNV2QYQ5J85QV8SN6A4VPF>
+      <Suites [
+        <Suite #public-surface { name = "Public surface" } (
+          <Cases [
+            <Case #legacy-root-and-browser-imports (
+              <Given ?01M0QNV2QYQ5J85QV8SN6A4VPG>
+              An existing consumer imports legacy DTO/ref helpers from the package root or browser entry
+              </?01M0QNV2QYQ5J85QV8SN6A4VPG>
+              <When ?01M0QNV2QYQ5J85QV8SN6A4VPH>
+              The packages are upgraded within the 0.1 line
+              </?01M0QNV2QYQ5J85QV8SN6A4VPH>
+              <Then ?01M0QNV2QYQ5J85QV8SN6A4VPJ>
+              The imports SHALL remain source-compatible and the new projection path MUST NOT consume the legacy catalog or ref parser
+              </?01M0QNV2QYQ5J85QV8SN6A4VPJ>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+    <Requirement #agent-material-projection (
+      <Statement ?01M0QNV2QYQ5J85QV8SN6A4VPK>
+      The system SHALL project fixed AI Agent and Material resource relations from normalized Halfcode records without acquiring generic resource authority.
+      </?01M0QNV2QYQ5J85QV8SN6A4VPK>
+      <Suites [
+        <Suite #structured-agent-material-relations { name = "Structured Agent and Material relations" } (
+          <Cases [
+            <Case #preserve-authored-agent-order (
+              <Given ?01M0QNV2QYQ5J85QV8SN6A4VPM>
+              An AIAgentDefinition declares ordered Message and MaterialPortRef nodes with explicit typed refs
+              </?01M0QNV2QYQ5J85QV8SN6A4VPM>
+              <When ?01M0QNV2QYQ5J85QV8SN6A4VPN>
+              The effective registry is projected
+              </?01M0QNV2QYQ5J85QV8SN6A4VPN>
+              <Then ?01M0QNV2QYQ5J85QV8SN6A4VPP>
+              The system SHALL preserve authored order, exact-resolve every ref and return a deeply immutable domain projection
+              </?01M0QNV2QYQ5J85QV8SN6A4VPP>
+            )>
+            <Case #fail-closed-invalid-agent-material-structure (
+              <Given ?01M0QNV2QYQ5J85QV8SN6A4VPQ>
+              A required fixed node, id, role, kind, ref, port fact or binding relation is malformed, duplicated, missing or inconsistent
+              </?01M0QNV2QYQ5J85QV8SN6A4VPQ>
+              <When ?01M0QNV2QYQ5J85QV8SN6A4VPR>
+              The effective registry is projected
+              </?01M0QNV2QYQ5J85QV8SN6A4VPR>
+              <Then ?01M0QNV2QYQ5J85QV8SN6A4VPS>
+              The system SHALL return stable diagnostics and SHALL NOT return a partial projection
+              </?01M0QNV2QYQ5J85QV8SN6A4VPS>
+            )>
+            <Case #ignore-untyped-text (
+              <Given ?01M0QNV2QYQ5J85QV8SN6A4VPT>
+              Ordinary prompt or metadata text contains resource-like content or domain phrases
+              </?01M0QNV2QYQ5J85QV8SN6A4VPT>
+              <When ?01M0QNV2QYQ5J85QV8SN6A4VPV>
+              The effective registry is projected
+              </?01M0QNV2QYQ5J85QV8SN6A4VPV>
+              <Then ?01M0QNV2QYQ5J85QV8SN6A4VPW>
+              The system MUST NOT infer a resource edge, tool, policy, task or binding from that text
+              </?01M0QNV2QYQ5J85QV8SN6A4VPW>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+    <Requirement #run-resource-freeze (
+      <Statement ?01M0QNV2QYQ5J85QV8SN6A4VPX>
+      The system SHALL freeze one explicit workflow Agent task through Halfcode content identities and dependency snapshot authority.
+      </?01M0QNV2QYQ5J85QV8SN6A4VPX>
+      <Suites [
+        <Suite #freeze-proof { name = "Run freeze proof" } (
+          <Cases [
+            <Case #delegate-dependency-snapshot (
+              <Given ?01M0QNV2QYQ5J85QV8SN6A4VPY>
+              An authentic Halfcode effective registry, loader-owned content identities, a valid domain projection and an exact task tuple
+              </?01M0QNV2QYQ5J85QV8SN6A4VPY>
+              <When ?01M0QNV2QYQ5J85QV8SN6A4VPZ>
+              Run resources are frozen
+              </?01M0QNV2QYQ5J85QV8SN6A4VPZ>
+              <Then ?01M0QNV2QYQ5J85QV8SN6A4VQ0>
+              The system SHALL validate selected bindings and delegate closure, provenance and revision proof to Halfcode buildResourceDependencySnapshot
+              </?01M0QNV2QYQ5J85QV8SN6A4VQ0>
+            )>
+            <Case #reject-invalid-task-bindings (
+              <Given ?01M0QNV2QYQ5J85QV8SN6A4VQ1>
+              The Agent is absent, a port is foreign, required or cardinality constraints fail, or a material kind differs
+              </?01M0QNV2QYQ5J85QV8SN6A4VQ1>
+              <When ?01M0QNV2QYQ5J85QV8SN6A4VQ2>
+              Run resources are frozen
+              </?01M0QNV2QYQ5J85QV8SN6A4VQ2>
+              <Then ?01M0QNV2QYQ5J85QV8SN6A4VQ3>
+              The system SHALL fail with stable domain diagnostics before returning a receipt
+              </?01M0QNV2QYQ5J85QV8SN6A4VQ3>
+            )>
+            <Case #immutable-freeze-receipt (
+              <Given ?01M0QNV2QYQ5J85QV8SN6A4VQ4>
+              A valid task and selected resource closure
+              </?01M0QNV2QYQ5J85QV8SN6A4VQ4>
+              <When ?01M0QNV2QYQ5J85QV8SN6A4VQ5>
+              Run resources are frozen
+              </?01M0QNV2QYQ5J85QV8SN6A4VQ5>
+              <Then ?01M0QNV2QYQ5J85QV8SN6A4VQ6>
+              The system SHALL return a deeply immutable receipt containing the complete Halfcode snapshot and deterministic ordered binding identities
+              </?01M0QNV2QYQ5J85QV8SN6A4VQ6>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+    <Requirement #run-resource-semantic-fingerprint (
+      <Statement ?01M0QNV2QYQ5J85QV8SN6A4VQ7>
+      The system SHALL distinguish complete Halfcode freeze proof from selected workflow resource semantic identity.
+      </?01M0QNV2QYQ5J85QV8SN6A4VQ7>
+      <Suites [
+        <Suite #semantic-reuse-identity { name = "Semantic reuse identity" } (
+          <Cases [
+            <Case #bind-selected-domain-facts (
+              <Given ?01M0QNV2QYQ5J85QV8SN6A4VQ8>
+              Selected task, message, tool, policy, port, binding, edge or reachable content facts change
+              </?01M0QNV2QYQ5J85QV8SN6A4VQ8>
+              <When ?01M0QNV2QYQ5J85QV8SN6A4VQ9>
+              The semantic fingerprint is recomputed
+              </?01M0QNV2QYQ5J85QV8SN6A4VQ9>
+              <Then ?01M0QNV2QYQ5J85QV8SN6A4VQA>
+              The fingerprint SHALL change using canonical SHA-256 domain facts
+              </?01M0QNV2QYQ5J85QV8SN6A4VQA>
+            )>
+            <Case #exclude-unrelated-and-host-facts (
+              <Given ?01M0QNV2QYQ5J85QV8SN6A4VQB>
+              Only an unreachable resource or host run/session/generation/path fact changes
+              </?01M0QNV2QYQ5J85QV8SN6A4VQB>
+              <When ?01M0QNV2QYQ5J85QV8SN6A4VQC>
+              The semantic fingerprint is recomputed
+              </?01M0QNV2QYQ5J85QV8SN6A4VQC>
+              <Then ?01M0QNV2QYQ5J85QV8SN6A4VQD>
+              The domain fingerprint SHALL remain stable while the complete Halfcode proof MAY change for an unreachable resource
+              </?01M0QNV2QYQ5J85QV8SN6A4VQD>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+    <Requirement #agent-resource-package-boundary (
+      <Statement ?01M0QNV2QYQ5J85QV8SN6A4VQE>
+      The system SHALL keep pure projection browser-safe and expose run freeze only through a Node/server subpath.
+      </?01M0QNV2QYQ5J85QV8SN6A4VQE>
+      <Suites [
+        <Suite #package-boundary { name = "Package boundary" } (
+          <Cases [
+            <Case #pure-root-browser (
+              <Given ?01M0QNV2QYQ5J85QV8SN6A4VQF>
+              A browser consumer imports the package root or browser entry
+              </?01M0QNV2QYQ5J85QV8SN6A4VQF>
+              <When ?01M0QNV2QYQ5J85QV8SN6A4VQG>
+              Agent and Material projections are used
+              </?01M0QNV2QYQ5J85QV8SN6A4VQG>
+              <Then ?01M0QNV2QYQ5J85QV8SN6A4VQH>
+              No Node filesystem, Halfcode runtime loader, layer composer or snapshot implementation SHALL enter the browser dependency graph
+              </?01M0QNV2QYQ5J85QV8SN6A4VQH>
+            )>
+            <Case #registry-installable-package-metadata (
+              <Given ?01M0QNV2QYQ5J85QV8SN6A4VQJ>
+              The contract and logic packages are prepared as a public patch release
+              </?01M0QNV2QYQ5J85QV8SN6A4VQJ>
+              <When ?01M0QNV2QYQ5J85QV8SN6A4VQK>
+              A fresh consumer installs the packed artifacts and imports every declared entry
+              </?01M0QNV2QYQ5J85QV8SN6A4VQK>
+              <Then ?01M0QNV2QYQ5J85QV8SN6A4VQM>
+              All dependency versions SHALL be exact registry identities with no workspace or file protocols, and the consumer SHALL resolve Halfcode 0.2.2
+              </?01M0QNV2QYQ5J85QV8SN6A4VQM>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+    <Requirement #executable-agent-contracts (
+      <Statement ?01M0QNV2QYQ5J85QV8SN6A4VQN>
+      AI Workflow resource projection SHALL expose closed executable schema, effect-policy and Material-value facts for every standard AIAgentDefinition field while preserving Halfcode as the generic resource authority.
+      </?01M0QNV2QYQ5J85QV8SN6A4VQN>
+      <Suites [
+        <Suite #schema-policy { name = "Schema and policy projection" } (
+          <Cases [
+            <Case #project-closed-schema-policy (
+              <Given ?01M0QNV2QYQ5J85QV8SN6A4VQP>
+              An Agent references exact MessageSchema and EffectPolicy resources
+              </?01M0QNV2QYQ5J85QV8SN6A4VQP>
+              <When ?01M0QNV2QYQ5J85QV8SN6A4VQQ>
+              The effective registry is projected
+              </?01M0QNV2QYQ5J85QV8SN6A4VQQ>
+              <Then ?01M0QNV2QYQ5J85QV8SN6A4VQR>
+              The projection SHALL contain detached immutable schema maps and a closed exact tool mode
+              </?01M0QNV2QYQ5J85QV8SN6A4VQR>
+            )>
+            <Case #reject-unknown-contract-shape (
+              <Given ?01M0QNV2QYQ5J85QV8SN6A4VQS>
+              A standard schema or policy claims an unsupported or malformed executable shape
+              </?01M0QNV2QYQ5J85QV8SN6A4VQS>
+              <When ?01M0QNV2QYQ5J85QV8SN6A4VQT>
+              The effective registry is projected
+              </?01M0QNV2QYQ5J85QV8SN6A4VQT>
+              <Then ?01M0QNV2QYQ5J85QV8SN6A4VQV>
+              Projection SHALL fail closed with stable diagnostics and no partial Agent result
+              </?01M0QNV2QYQ5J85QV8SN6A4VQV>
+            )>
+          ]>
+        )>
+        <Suite #material-delivery { name = "Typed Material delivery facts" } (
+          <Cases [
+            <Case #project-material-values (
+              <Given ?01M0QNV2QYQ5J85QV8SN6A4VQW>
+              MaterialBindings select explicit values for one exact Ctrl or Data workflow Agent task
+              </?01M0QNV2QYQ5J85QV8SN6A4VQW>
+              <When ?01M0QNV2QYQ5J85QV8SN6A4VQX>
+              Projection and run freeze complete
+              </?01M0QNV2QYQ5J85QV8SN6A4VQX>
+              <Then ?01M0QNV2QYQ5J85QV8SN6A4VQY>
+              Values SHALL remain in authored port order, be deeply immutable and contribute to the semantic fingerprint
+              </?01M0QNV2QYQ5J85QV8SN6A4VQY>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+  ]>
+)>

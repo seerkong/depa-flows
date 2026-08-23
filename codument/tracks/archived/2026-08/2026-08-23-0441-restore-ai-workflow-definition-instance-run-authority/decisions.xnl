@@ -1,0 +1,59 @@
+<decision #track.restore-ai-workflow-definition-instance-run-authority.canonical-envelope apiVersion="codument.tech/v1alpha1" { status = "accepted" priority = "P0" } (
+  <question ?>Flow filesystem backend 的canonical聚合边界是什么？</?>
+  <answer (
+    <raw-answer ?>Definition冻结为Instance，Run从属于Instance，checkpoint是run live authority。</?>
+    <decision-text ?>The store SHALL implement Definition→frozen Instance→Run. Instance SHALL contain a complete frozen bundle and each run SHALL have exactly one canonical checkpoint under that instance.</?>
+    <rationale ?>恢复历史设计并使加载、恢复和人工排查围绕一个instance/run聚合。</?>
+    <evidence ?>Python workflow persistence；depa materializeInstance与flow-instance behavior；用户明确纠偏。</?>
+  )>
+)>
+
+<decision #track.restore-ai-workflow-definition-instance-run-authority.single-checkpoint-owner apiVersion="codument.tech/v1alpha1" { status = "accepted" priority = "P0" } (
+  <question ?>Ctrl snapshot、Data RunGraph和profile state是否可以分别持久化为并列authority？</?>
+  <answer (
+    <raw-answer ?>不可以；它们必须是一个versioned run checkpoint内的typed profile state。</?>
+    <decision-text ?>A run checkpoint SHALL be the only mutable durable authority. WorkCtrl snapshot, AIData RunGraph and AI profile state SHALL be typed checkpoint payloads; events, indexes and node files SHALL be derived records.</?>
+    <rationale ?>多个可写半真源无法定义原子恢复、幂等和跨profile一致性。</?>
+    <evidence ?>当前flat store布局与DEPA DataTopology authority判据。</?>
+  )>
+)>
+
+<decision #track.restore-ai-workflow-definition-instance-run-authority.seed-and-source-immutability apiVersion="codument.tech/v1alpha1" { status = "accepted" priority = "P0" } (
+  <question ?>definition、state.seed和运行state的写入关系是什么？</?>
+  <answer (
+    <raw-answer ?>definition和seed只读；seed只初始化新run，所有运行transition只写checkpoint。</?>
+    <decision-text ?>Materialization SHALL preserve source bytes and provenance. state.seed SHALL initialize checkpoint state once and SHALL never be mutated by runtime transitions.</?>
+    <rationale ?>definition是authoring authority，checkpoint是instance runtime authority；projection不能反写来源。</?>
+    <evidence ?>order-fulfillment state.seed注释、WorkCtrl axioms、Python process-state seed。</?>
+  )>
+)>
+
+<decision #track.restore-ai-workflow-definition-instance-run-authority.host-boundary apiVersion="codument.tech/v1alpha1" { status = "accepted" priority = "P0" } (
+  <question ?>depa-flows与Eidolon分别拥有filesystem persistence的什么部分？</?>
+  <answer (
+    <raw-answer ?>depa拥有contract、state semantics和portable filesystem support；Eidolon只绑定roots并适配通用actor runtime。</?>
+    <decision-text ?>depa-flows SHALL own the path-independent store contract and reference filesystem support. Hosts MAY bind roots and durability policy but SHALL NOT redefine the hierarchy or create parallel workflow state authorities.</?>
+    <rationale ?>避免Eidolon集成时再次丢失depa store设计，同时不把host绝对路径写入library contract。</?>
+    <evidence ?>用户明确边界；现有createFilesystemBindings options；Halfcode/depa/Eidolon authority decisions。</?>
+  )>
+)>
+
+<decision #track.restore-ai-workflow-definition-instance-run-authority.legacy-direction apiVersion="codument.tech/v1alpha1" { status = "accepted" priority = "P1" } (
+  <question ?>旧flat snapshot怎样兼容？</?>
+  <answer (
+    <raw-answer ?>只兼容读或单向导入；新engine单写checkpoint，不能双写。</?>
+    <decision-text ?>Legacy stores SHALL remain explicit compatibility inputs. Migration SHALL be one-way, idempotent and CAS-bound; new executions SHALL NOT dual-write legacy and canonical stores.</?>
+    <rationale ?>兼顾历史恢复和唯一authority。</?>
+    <evidence ?>现有FileWorkCtrlFlowStore consumers与后续Eidolon migration要求。</?>
+  )>
+)>
+
+<decision #track.restore-ai-workflow-definition-instance-run-authority.reference-scope apiVersion="codument.tech/v1alpha1" { status = "accepted" priority = "P1" } (
+  <question ?>历史设计证据范围是什么？</?>
+  <answer (
+    <raw-answer ?>只采用指定Python workflow fixture/host persistence和depa-flows canonical examples。</?>
+    <decision-text ?>This track SHALL distill the specified Python workflow evidence and depa-flows examples. Other translation projects SHALL NOT be read or cited as design authority.</?>
+    <rationale ?>防止扩大职责后的其他设计覆盖AI workflow原始不变量。</?>
+    <evidence ?>用户明确限定。</?>
+  )>
+)>

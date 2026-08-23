@@ -5,4 +5,4 @@ description: Maintain an existing Codument track with mode=discuss-phase|revise|
 
 # Codument · maintain-track
 
-Read and follow `@/codument/std/actions/maintain-track.md`.
+Read and follow `@/codument/std/operations/maintain-track.md`.

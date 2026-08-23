@@ -38,4 +38,4 @@ canonical DSL 是纯声明式：**禁止函数、闭包、回调、构造器**�
 
 ## M-D4 · seed 是启动快照，不是活状态
 
-初始数据（`X.seed`，见 M-N3）只作为**启动 checkpoint**，只读。运行期的活状态由 runtime owner 持有、经事件/命令更新——绝不把 live state 写回 seed。这条把"初值声明"与"运行时状态"两个事实源彻底分开。
+初始数据（`X.seed`，见 M-N3）只作为**启动 checkpoint**，只读。每个新 run 创建 checkpoint v0 时恰好应用一次；resume 从 checkpoint 恢复，不重复应用 seed。运行期的活状态由 canonical runtime owner 持有、经事件/命令更新——绝不把 live state 写回 seed。这条把"初值声明"与"运行时状态"两个事实源彻底分开。

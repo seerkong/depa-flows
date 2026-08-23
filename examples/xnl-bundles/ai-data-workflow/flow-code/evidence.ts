@@ -1,3 +1,5 @@
+import type { AIDataWorkflowRuntime, AIAgentEffectConfig, AIAgentInstanceReference, AIWorkflowAuthoredEffects, FlowClosedValue } from 'ai-workflow-contract';
+
 export interface SupportTicket {
   ticketId: string;
   message: string;
@@ -8,17 +10,27 @@ export interface EvidenceRecord {
   facts: string[];
 }
 
-export function retrieveEvidence(_runtime: unknown, input: { ticket: SupportTicket }) {
+type Runtime = AIDataWorkflowRuntime<AIWorkflowAuthoredEffects>;
+type AgentConfig = { agent: AIAgentEffectConfig };
+
+export async function retrieveEvidence(runtime: Runtime, input: { ticket: SupportTicket }, config: AgentConfig) {
+  const result = await runtime.ai.effects.runAgent({
+    ticketId: input.ticket.ticketId,
+    message: input.ticket.message,
+  }, config.agent);
   return {
-    evidence: {
-      ticketId: input.ticket.ticketId,
-      facts: [`message:${input.ticket.message}`],
-    } satisfies EvidenceRecord,
+    evidence: result.output as unknown as EvidenceRecord,
+    instance: result.instance,
   };
 }
 
-export function summarizeEvidence(_runtime: unknown, input: { evidence: EvidenceRecord }) {
+export async function summarizeEvidence(runtime: Runtime, input: { evidence: EvidenceRecord; prior: AIAgentInstanceReference }, config: AgentConfig) {
+  const result = await runtime.ai.effects.runTargetedAgent(
+    { byInstanceId: input.prior.instanceId },
+    { kind: 'ai.agent', payload: { evidence: input.evidence as unknown as FlowClosedValue } },
+    config.agent,
+  );
   return {
-    summary: `${input.evidence.ticketId}: ${input.evidence.facts.join('; ')}`,
+    summary: String((result.output as { summary?: string }).summary ?? ''),
   };
 }

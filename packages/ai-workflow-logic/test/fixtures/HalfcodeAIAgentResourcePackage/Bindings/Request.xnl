@@ -1,0 +1,13 @@
+<MaterialBinding #depa.flows.test.Binding.Request apiVersion="depa.flows/v1" version="1.0.0" {
+  lifecycle = "Active"
+  description = "Request binding"
+} (
+  <AgentTaskRef {
+    workflowKind = "AICtrlWorkflow"
+    workflowRef = "resource://depa.flows.test.Workflow.Support"
+    nodeId = "collect-request"
+    agentDefinitionRef = "resource://depa.flows.test.Agent.Support"
+  }>
+  <PortRef { kind = "MaterialPort" ref = "resource://depa.flows.test.Port.Request" }>
+  <MaterialRef { kind = "RequestMaterial" ref = "resource://depa.flows.test.Material.Request" }>
+)>

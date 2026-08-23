@@ -15,9 +15,9 @@ WorkCtrlFlow 使用与 InstantCtrlFlow 完全相同的 `Run`、`If`、`Fallback`
 
 进入上述 statement 时，引擎登记包含稳定 statement path 与 resume token 的 open WaitHandle，原子保存 snapshot，然后返回 suspension。`Run`、predicate 和其他公共 statements 必须在当前 tick 内正常返回或产生技术 fault，不能暗中跨 tick 挂起。
 
-## WF-3 · snapshot 是实例真源
+## WF-3 · checkpoint 是 run 真源
 
-snapshot 至少保存：
+每个 run 的 canonical checkpoint 至少保存 input/config/state/output、controller/node sidecars，以及包含以下事实的 WorkCtrl typed snapshot：
 
 - definition identity/version 与当前 statement path、嵌套 body frame、循环 invocation 等恢复位置。
 - 当前 data 以及恢复后继续数据链所需的 statement output。
@@ -25,7 +25,7 @@ snapshot 至少保存：
 - 已发生的 branch decision，键由稳定 `If` path 与 invocation identity 构成。
 - profile runtime 明确声明的持久 state；definition 和 `state.seed` 不被回写。
 
-definition 仍是 authoring topology 真源，snapshot 只拥有某个实例的运行事实。definition 变更若会改变已有 statement path，必须显式迁移在途 snapshot。
+definition 仍是 authoring topology 真源；执行前必须录取完整 frozen instance，已有 instance/run 只从该副本编译与恢复。snapshot 不是并列 store，而是 checkpoint profile payload。definition 变更只影响新 instance；若要改变已有 instance 的 statement path，必须显式创建迁移后的新 authority。
 
 ## WF-4 · branch decision 先记录，后进入 body
 

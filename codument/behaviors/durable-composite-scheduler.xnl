@@ -1,0 +1,37 @@
+<Behavior #durable-composite-scheduler apiVersion="codument.tech/v1alpha1" version="1" (
+  <Requirements [
+    <Requirement #resume-composites (
+      <Statement ?01M0NJZ4M05DE71N6EQVQY511H>
+      WorkCtrlFlow 与 BPCtrlFlow SHALL 以 snapshot orchestration facts 调度和恢复复合原语。
+      </?01M0NJZ4M05DE71N6EQVQY511H>
+      <Suites [
+        <Suite #recovery { name = "恢复" } (
+          <Cases [
+            <Case #no-replay-completed-lane (
+              <Given ?01M0NJZ4M05DE71N6EQVQY511J>
+              复合节点部分 lane 或 attempt 已完成并持久化
+              </?01M0NJZ4M05DE71N6EQVQY511J>
+              <When ?01M0NJZ4M05DE71N6EQVQY511K>
+              新 engine instance 恢复该流程
+              </?01M0NJZ4M05DE71N6EQVQY511K>
+              <Then ?01M0NJZ4M05DE71N6EQVQY511M>
+              scheduler SHALL 只推进未完成工作且不得重复已完成 effect
+              </?01M0NJZ4M05DE71N6EQVQY511M>
+            )>
+            <Case #winner-cancel (
+              <Given ?01M0NJZ4M05DE71N6EQVQY511N>
+              Race 已选择并持久化 winner
+              </?01M0NJZ4M05DE71N6EQVQY511N>
+              <When ?01M0NJZ4M05DE71N6EQVQY511P>
+              流程恢复
+              </?01M0NJZ4M05DE71N6EQVQY511P>
+              <Then ?01M0NJZ4M05DE71N6EQVQY511Q>
+              scheduler SHALL 复用 winner 并保持 loser cancellation facts
+              </?01M0NJZ4M05DE71N6EQVQY511Q>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+  ]>
+)>

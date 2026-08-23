@@ -1,0 +1,63 @@
+<Behavior #ai-workflow-docs-examples apiVersion="codument.tech/v1alpha1" version="1" (
+  <Requirements [
+    <Requirement #xnl-docs-and-examples (
+      <Statement ?01M0NJZ4JSTGF255RMFJHVKP5J>
+      The system SHALL document and provide checkable XNL bundle examples for AI Ctrl Workflow and AI Data Workflow.
+      </?01M0NJZ4JSTGF255RMFJHVKP5J>
+      <Suites [
+        <Suite #docs { name = "Documentation" } (
+          <Cases [
+            <Case #document-agent-profile (
+              <Given ?01M0NJZ4JSTGF255RMFJHVKP5K>
+              Readers open the flow-dsl documentation
+              </?01M0NJZ4JSTGF255RMFJHVKP5K>
+              <When ?01M0NJZ4JSTGF255RMFJHVKP5M>
+              They look for AI Ctrl Workflow guidance
+              </?01M0NJZ4JSTGF255RMFJHVKP5M>
+              <Then ?01M0NJZ4JSTGF255RMFJHVKP5N>
+              The docs SHALL describe the WorkCtrlFlow-backed root, runtime state boundary and embedded effects contract
+              </?01M0NJZ4JSTGF255RMFJHVKP5N>
+            )>
+            <Case #document-data-profile (
+              <Given ?01M0NJZ4JSTGF255RMFJHVKP5P>
+              Readers open the flow-dsl documentation
+              </?01M0NJZ4JSTGF255RMFJHVKP5P>
+              <When ?01M0NJZ4JSTGF255RMFJHVKP5Q>
+              They look for AI Data Workflow guidance
+              </?01M0NJZ4JSTGF255RMFJHVKP5Q>
+              <Then ?01M0NJZ4JSTGF255RMFJHVKP5R>
+              The docs SHALL describe the EagerDataFlow-backed DAG root, RunGraph state boundary and reuse semantics
+              </?01M0NJZ4JSTGF255RMFJHVKP5R>
+            )>
+          ]>
+        )>
+        <Suite #examples { name = "Examples" } (
+          <Cases [
+            <Case #check-agent-example (
+              <Given ?01M0NJZ4JSTGF255RMFJHVKP5S>
+              An AI Ctrl Workflow example bundle exists
+              </?01M0NJZ4JSTGF255RMFJHVKP5S>
+              <When ?01M0NJZ4JSTGF255RMFJHVKP5T>
+              The flow-dsl checker runs on it
+              </?01M0NJZ4JSTGF255RMFJHVKP5T>
+              <Then ?01M0NJZ4JSTGF255RMFJHVKP5V>
+              The checker SHALL accept the bundle without diagnostics
+              </?01M0NJZ4JSTGF255RMFJHVKP5V>
+            )>
+            <Case #check-data-example (
+              <Given ?01M0NJZ4JSTGF255RMFJHVKP5W>
+              An AI Data Workflow example bundle exists
+              </?01M0NJZ4JSTGF255RMFJHVKP5W>
+              <When ?01M0NJZ4JSTGF255RMFJHVKP5X>
+              The flow-dsl checker runs on it
+              </?01M0NJZ4JSTGF255RMFJHVKP5X>
+              <Then ?01M0NJZ4JSTGF255RMFJHVKP5Y>
+              The checker SHALL accept the bundle without diagnostics
+              </?01M0NJZ4JSTGF255RMFJHVKP5Y>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+  ]>
+)>

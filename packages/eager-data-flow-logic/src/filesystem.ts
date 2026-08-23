@@ -9,6 +9,10 @@ import type {
   LoadEagerDataFlowOptions,
 } from 'eager-data-flow-contract';
 import { loadEagerDataFlowSources } from './source-loader.js';
+import {
+  assembleDefinitionStepProfileDirectory,
+  createFilesystemDefinitionStepProfileRuntime,
+} from 'flow-step-space-logic/filesystem';
 
 /** Filesystem convenience only; all parsing and validation stays in the source loader. */
 export function loadEagerDataFlowDirectory(
@@ -26,10 +30,29 @@ export function loadEagerDataFlowDirectory(
           content: fs.readFileSync(path.join(absoluteDir, entry.name), 'utf8'),
         }))
     : [];
-  return loadEagerDataFlowSources(sources, {
+  const assembled = assembleDefinitionStepProfileDirectory(
+    createFilesystemDefinitionStepProfileRuntime({ rootDir: absoluteDir }),
+    {},
+    { ...(options.stepSpace ?? {}), profileRoot: 'EagerDataFlow' },
+  );
+  if (assembled.diagnostics.length > 0) {
+    return { diagnostics: assembled.diagnostics.map(({ code, message, sourceRef }) => ({
+      code,
+      message,
+      ...(sourceRef ? { source: sourceRef } : {}),
+    })) };
+  }
+  const effectiveSources: EagerDataFlowXnlSource[] = assembled.forest
+    ? (assembled.sources as readonly ({ readonly ref: string; readonly content: string } | { readonly name: string; readonly content: string })[])
+        .map((source) => ({ name: 'name' in source ? source.name : source.ref, content: source.content }))
+    : sources;
+  const loaded = loadEagerDataFlowSources(effectiveSources, {
     ...options,
     baseUri: options.baseUri ?? absoluteDir,
   });
+  return loaded.plan && assembled.forest
+    ? { ...loaded, plan: { ...loaded.plan, definitionStepForest: assembled.forest } }
+    : loaded;
 }
 
 export type EagerDataFlowModuleImporter = (

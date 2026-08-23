@@ -1,0 +1,109 @@
+<BehaviorPatch #track.r_2_0_2_6_-_0_8_-_0_2_-_1_6_5_3_-_d_e_f_i_n_e_-_a_i_-_w_o_r_k_f_l_o_w_-_f_o_u_n_d_a_t_i_o_n_-_o_n_-_d_e_p_a_-_f_l_o_w_s.behavior_patch.ai-workflow-foundation apiVersion="codument.tech/v1alpha1" version="1" { capability = "ai-workflow-foundation" } (
+  <Mutations [
+    <Upsert { selector = "behavior://ai-workflow-foundation/requirements/substrate-binding" } (
+      <Requirement #substrate-binding (
+        <Statement ?01M0NJZ4Q6THB1S401XGRJQJKZ>
+        The system SHALL expose AI workflow profile descriptors that explicitly bind AI Ctrl Workflow to WorkCtrlFlow and AI Data Workflow to EagerDataFlow.
+        </?01M0NJZ4Q6THB1S401XGRJQJKZ>
+        <Suites [
+          <Suite #profile-descriptors { name = "Profile descriptors" } (
+            <Cases [
+              <Case #agent-workflow-substrate (
+                <Given ?01M0NJZ4Q6THB1S401XGRJQJM0>
+                An AI Ctrl Workflow descriptor is inspected
+                </?01M0NJZ4Q6THB1S401XGRJQJM0>
+                <When ?01M0NJZ4Q6THB1S401XGRJQJM1>
+                The descriptor substrate is read
+                </?01M0NJZ4Q6THB1S401XGRJQJM1>
+                <Then ?01M0NJZ4Q6THB1S401XGRJQJM2>
+                The descriptor SHALL identify WorkCtrlFlow as the substrate
+                </?01M0NJZ4Q6THB1S401XGRJQJM2>
+              )>
+              <Case #data-workflow-substrate (
+                <Given ?01M0NJZ4Q6THB1S401XGRJQJM3>
+                An AI Data Workflow descriptor is inspected
+                </?01M0NJZ4Q6THB1S401XGRJQJM3>
+                <When ?01M0NJZ4Q6THB1S401XGRJQJM4>
+                The descriptor substrate is read
+                </?01M0NJZ4Q6THB1S401XGRJQJM4>
+                <Then ?01M0NJZ4Q6THB1S401XGRJQJM5>
+                The descriptor SHALL identify EagerDataFlow as the substrate
+                </?01M0NJZ4Q6THB1S401XGRJQJM5>
+              )>
+            ]>
+          )>
+        ]>
+      )>
+    )>
+    <Upsert { selector = "behavior://ai-workflow-foundation/requirements/runtime-injection" } (
+      <Requirement #runtime-injection (
+        <Statement ?01M0NJZ4Q6THB1S401XGRJQJM6>
+        The system SHALL model global roots, workspace roots, state stores and AI effect providers as injected runtime/config contracts.
+        </?01M0NJZ4Q6THB1S401XGRJQJM6>
+        <Suites [
+          <Suite #runtime-contracts { name = "Runtime contracts" } (
+            <Cases [
+              <Case #no-hardcoded-roots (
+                <Given ?01M0NJZ4Q6THB1S401XGRJQJM7>
+                A foundation helper creates an AI workflow runtime context
+                </?01M0NJZ4Q6THB1S401XGRJQJM7>
+                <When ?01M0NJZ4Q6THB1S401XGRJQJM8>
+                The helper receives wrapper-provided roots
+                </?01M0NJZ4Q6THB1S401XGRJQJM8>
+                <Then ?01M0NJZ4Q6THB1S401XGRJQJM9>
+                The helper SHALL preserve those roots without constructing host-specific paths
+                </?01M0NJZ4Q6THB1S401XGRJQJM9>
+              )>
+              <Case #embedded-effect-provider (
+                <Given ?01M0NJZ4Q6THB1S401XGRJQJMA>
+                An AI workflow node requires an AI effect
+                </?01M0NJZ4Q6THB1S401XGRJQJMA>
+                <When ?01M0NJZ4Q6THB1S401XGRJQJMB>
+                The node invokes the provider through runtime
+                </?01M0NJZ4Q6THB1S401XGRJQJMB>
+                <Then ?01M0NJZ4Q6THB1S401XGRJQJMC>
+                The system SHALL use the injected provider interface instead of an external CLI boundary
+                </?01M0NJZ4Q6THB1S401XGRJQJMC>
+              )>
+            ]>
+          )>
+        ]>
+      )>
+    )>
+    <Upsert { selector = "behavior://ai-workflow-foundation/requirements/reuse-policy-vocabulary" } (
+      <Requirement #reuse-policy-vocabulary (
+        <Statement ?01M0NJZ4Q6THB1S401XGRJQJMD>
+        The system SHALL define node-level reuse policy vocabulary with semantic-hash as the default machine node policy and never as the default manual node policy.
+        </?01M0NJZ4Q6THB1S401XGRJQJMD>
+        <Suites [
+          <Suite #reuse-policy { name = "Reuse policy" } (
+            <Cases [
+              <Case #machine-default (
+                <Given ?01M0NJZ4Q6THB1S401XGRJQJME>
+                A non-manual AI workflow node has no explicit reuse policy
+                </?01M0NJZ4Q6THB1S401XGRJQJME>
+                <When ?01M0NJZ4Q6THB1S401XGRJQJMF>
+                The platform resolves the effective policy
+                </?01M0NJZ4Q6THB1S401XGRJQJMF>
+                <Then ?01M0NJZ4Q6THB1S401XGRJQJMG>
+                The policy SHALL be semantic-hash
+                </?01M0NJZ4Q6THB1S401XGRJQJMG>
+              )>
+              <Case #manual-default (
+                <Given ?01M0NJZ4Q6THB1S401XGRJQJMH>
+                A manual AI workflow node has no explicit reuse policy
+                </?01M0NJZ4Q6THB1S401XGRJQJMH>
+                <When ?01M0NJZ4Q6THB1S401XGRJQJMJ>
+                The platform resolves the effective policy
+                </?01M0NJZ4Q6THB1S401XGRJQJMJ>
+                <Then ?01M0NJZ4Q6THB1S401XGRJQJMK>
+                The policy SHALL be never
+                </?01M0NJZ4Q6THB1S401XGRJQJMK>
+              )>
+            ]>
+          )>
+        ]>
+      )>
+    )>
+  ]>
+)>

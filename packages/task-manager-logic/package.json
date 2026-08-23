@@ -1,6 +1,6 @@
 {
   "name": "task-manager-logic",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": false,
   "description": "任务管理实现：状态机、组聚合、任务树存储",
   "type": "module",
@@ -9,13 +9,12 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "task-manager-contract": "workspace:*"
+    "task-manager-contract": "0.1.1"
   },
   "files": [
     "src"
   ],
   "publishConfig": {
-    "access": "public",
-    "registry": "https://registry.npmjs.com"
+    "access": "public"
   }
 }

@@ -68,7 +68,7 @@ L2  std/ai-data-workflow/ AIDataWorkflow DAG + RunGraph 公理
 L3  spec/flow-core/    公共 CtrlFlow 文件、statement、引用与代码协议
 L3  spec/<profile>/    各产品 capability 与扩展节点
 L3  spec/eager-data-flow/ EagerDataFlow contract、node、port 与 subflow
-L3  spec/ai-workflow/  AI workflow app bundle resource tree、logical refs 与 XNL-only authoring
+L3  spec/ai-workflow/  Halfcode-backed resource records 与 AI workflow domain projection
 ```
 
 遇到未明示的写法，先按 L1 分段与引用公理推导，再由 flow-core 和对应 profile 收窄；不得从实现细节或旧 bundle 反推新语法。
@@ -92,11 +92,12 @@ L3  spec/ai-workflow/  AI workflow app bundle resource tree、logical refs 与 X
 | L3 | [spec/flow-core/files.md](spec/flow-core/files.md) | 单文件和目录 bundle 怎么组织。 |
 | L3 | [spec/flow-core/refs.md](spec/flow-core/refs.md) | code ref 和 bundle 内引用怎么解析。 |
 | L3 | [spec/flow-core/domains.md](spec/flow-core/domains.md) | 哪些事实是定义、派生物或运行态。 |
+| L3 | [spec/flow-core/instance-run.md](spec/flow-core/instance-run.md) | Definition 如何冻结为 Instance，以及 Ctrl/Data profile 如何在单一 checkpoint 中持久化与恢复。 |
 | L3 | [spec/instant-ctrl-flow/nodes.md](spec/instant-ctrl-flow/nodes.md) · [spec/instant-ctrl-flow/domains.md](spec/instant-ctrl-flow/domains.md) | InstantCtrlFlow statements 与 capability。 |
 | L3 | [spec/work-ctrl-flow/nodes.md](spec/work-ctrl-flow/nodes.md) · [spec/work-ctrl-flow/domains.md](spec/work-ctrl-flow/domains.md) | WorkCtrlFlow statements、恢复与持久事实。 |
 | L3 | [spec/bp-ctrl-flow/nodes.md](spec/bp-ctrl-flow/nodes.md) · [spec/bp-ctrl-flow/domains.md](spec/bp-ctrl-flow/domains.md) | BPCtrlFlow statements、TaskSpace 与事实 owner。 |
 | L3 | [spec/eager-data-flow/nodes.md](spec/eager-data-flow/nodes.md) · [spec/eager-data-flow/domains.md](spec/eager-data-flow/domains.md) · [spec/eager-data-flow/files.md](spec/eager-data-flow/files.md) · [spec/eager-data-flow/refs.md](spec/eager-data-flow/refs.md) | EagerDataFlow 根、FlowContract、五种节点、端口、waitFor 与 subflow。 |
-| L3 | [spec/ai-workflow/resources.md](spec/ai-workflow/resources.md) | AI workflow app bundle resource tree、logical refs 与 XNL-only authoring。 |
+| L3 | [spec/ai-workflow/resources.md](spec/ai-workflow/resources.md) | Halfcode resource authority、App/Agent/Material projection、typed relations 与 run resource freeze。 |
 | L3 | [spec/ai-workflow/ctrl-workflow.md](spec/ai-workflow/ctrl-workflow.md) | AICtrlWorkflow root、messages/materials、state projection 与 effects。 |
 | L3 | [spec/ai-workflow/data-workflow.md](spec/ai-workflow/data-workflow.md) | AIDataWorkflow root、RunGraph、GraphPatch、invalidation 与 reuse。 |
 
@@ -109,8 +110,8 @@ L3  spec/ai-workflow/  AI workflow app bundle resource tree、logical refs 与 X
 - `Run` 调用代码，其 output 直接成为下一条 statement 的 input；`Return` 立即终止当前 flow 并产生公开 output。
 - 所有动态代码遵守 `output = fn(runtime, input, config)`；predicate 只是 output 被约束为 boolean 的同一协议。
 - `EagerDataFlow` 的 `flow-port://` 是 data edge，`flow-node://` 是 completion edge；两者共同参与 DAG 校验，所有 ready nodes 可并发调度；`SubFlowNode.flow` 只使用 `eager-data-flow://<FQN>`。
-- `AICtrlWorkflow` 复用 WorkCtrlFlow statements，可挂起/恢复；AI runtime context、state store 和 embedded effects 由 wrapper 注入。
-- `AIDataWorkflow` 复用 EagerDataFlow nodes；definition 不保存运行结果，RunGraph 保存 patch/generation/invalidation/reuse 运行态。
+- `AICtrlWorkflow` 复用 WorkCtrlFlow statements，可挂起/恢复；WorkCtrl snapshot 与 AI durable state 在同一个 run checkpoint profile 中提交。
+- `AIDataWorkflow` 复用 EagerDataFlow nodes；definition 不保存运行结果，RunGraph 的 patch/generation/invalidation/reuse 事实在同一个 run checkpoint profile 中提交。
 
 ## 事实源
 
@@ -125,22 +126,34 @@ XNL EagerDataFlow definition
   -> eager invocation scheduler
 
 XNL AICtrlWorkflow definition
-  -> WorkCtrlFlow-backed definition binding
-  -> workflow snapshot + AI run record projection
+  -> complete frozen Instance
+  -> FlowRunCheckpoint<AICtrlWorkflow profile>
 
 XNL AIDataWorkflow definition
-  -> EagerDataFlow-backed definition binding
-  -> AI RunGraph state (patches + generations + invalidations + reuse records)
+  -> complete frozen Instance
+  -> FlowRunCheckpoint<AIDataWorkflow profile>
+
+XNL ResourcePackage (Halfcode authority)
+  -> ResourceTree / EffectiveResourceRegistry
+  -> AIWorkflowAppBundleProjection / AIWorkflowAgentResourceProjection (depa workflow domain)
+  -> ResourceDependencySnapshot + run resource semantic fingerprint
 ```
 
 - XNL definition：唯一 authoring 真源。
 - CtrlFlow AST：解析后的规范内存投影，不形成可独立加载的 definition。
 - BehaviorTreePlan：编译器可重建的内部执行计划，不得持久化为 authoring definition。
-- WorkCtrlFlow snapshot：某个运行实例的生命周期状态，不得回写 definition。
+- Frozen Instance：完整 definition bundle 的不可变录取副本；existing instance 不受 live definition 修改影响。
+- FlowRunCheckpoint：某个 instance/run 的唯一可变事实 owner；input/config/state/output、sidecars 与 typed profile 以同一 CAS version 提交。
+- WorkCtrlFlow snapshot：FlowRunCheckpoint 的 typed profile payload，不是并列 store，不得回写 definition。
 - TaskSpace store：人工任务事实源；业务结果作为 data 进入后续 predicate。
 - FlowAuthoring：布局与 viewport 真源，不复制 statement topology 或配置。
 - AI workflow runtime roots：运行期注入事实，不属于 bundle authoring identity。
-- AIDataWorkflow RunGraph：某个 run 的可恢复状态，不得回写 definition root。
+- ResourcePackage、Catalog、KindDefinition、resource containment 与 layer composition：Halfcode 事实，不由 depa-flows 重定义。
+- AIWorkflowAppBundleProjection：从 Halfcode ResourceRecord 重建的 workflow domain view，不是第二份 catalog。
+- AIWorkflowAgentResourceProjection：从固定 typed relations 重建的 Agent/Material domain view，不是第二份 registry。
+- Run resource freeze receipt：完整 Halfcode snapshot proof 与 selected-resource semantic fingerprint 的不可变组合，不拥有 actor/session runtime。
+- AIDataWorkflow RunGraph：FlowRunCheckpoint 的 typed profile payload，不得回写 definition root。
+- Events、run index 与 status view：从 checkpoint 重建的只读投影，不得回写 checkpoint 或 frozen definition。
 
 ## Removed Authoring Syntax
 

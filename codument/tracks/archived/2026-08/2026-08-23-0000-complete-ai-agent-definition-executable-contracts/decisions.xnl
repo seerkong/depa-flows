@@ -1,0 +1,9 @@
+<decision #track.complete-ai-agent-definition-executable-contracts.closed-profile apiVersion="codument.tech/v1alpha1" { status = "accepted" priority = "P0" } (
+  <question ?>Which executable semantics belong in the first complete standard profile?</?>
+  <answer (
+    <raw-answer ?>Closed JSON Schema values, exact tool policy and explicit Material values.</?>
+    <decision-text ?>MessageSchema SHALL project one schema map; EffectPolicy SHALL project a closed toolMode; MaterialBinding SHALL project the selected resource's explicit value. Hosts enforce these facts without re-parsing XNL or inferring semantics.</?>
+    <rationale ?>These fields cover every standard AIAgentDefinition contract while preserving depa/host authority boundaries.</?>
+    <evidence ?>Mission replan 038 and current public Agent projection/run-freeze APIs.</?>
+  )>
+)>

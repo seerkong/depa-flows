@@ -1,0 +1,5 @@
+<ContextMaterial #depa.flows.test.Material.Unused apiVersion="depa.flows/v1" version="1.0.0" {
+  lifecycle = "Active"
+  description = "Unreachable material used to distinguish proof and selected semantics"
+  value = "unused"
+}>

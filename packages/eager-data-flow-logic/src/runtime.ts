@@ -2,6 +2,7 @@ import type {
   EagerDataFlowAuthoringPlan,
   EagerDataFlowCode,
   EagerDataFlowCodeResolver,
+  EagerDataFlowDurableNodeState,
   EagerDataFlowExecutable,
   EagerDataFlowExecutableRegistry,
   EagerDataFlowInvocationOptions,
@@ -257,27 +258,64 @@ async function invokeMaterialized<Runtime>(
   const faults: EagerDataFlowNodeFault[] = [];
   let returned: EagerDataFlowRecord | undefined;
 
-  const runNode = async (node: EagerDataFlowNodePlan): Promise<NodeSuccess> => {
-    if (node.tag === 'EntryNode') return { node, output: exactInput };
-    const nodeInput = inputFor(node, ports);
+  for (const [nodeId, durable] of Object.entries(options.completedNodes ?? {})) {
+    const node = plan.nodeById[nodeId] ?? plan.nodes.find((candidate) => candidate.id === nodeId);
+    if (!node || durable.nodeId !== nodeId) {
+      throw new Error(`EagerDataFlow ${plan.fqn} durable node ${nodeId} does not match the materialized plan`);
+    }
     if (node.tag === 'ReturnNode') {
-      return { node, returned: requireExactRecord(nodeInput, plan.contract.outputPorts, `${node.id} output`) };
+      if (!durable.returned) throw new Error(`EagerDataFlow ${plan.fqn} durable ReturnNode ${nodeId} has no returned output`);
+      returned = requireExactRecord(durable.returned, plan.contract.outputPorts, `${nodeId} durable output`);
+    } else if (node.tag === 'EntryNode' || node.tag === 'TransformNode' || node.tag === 'SubFlowNode') {
+      if (!durable.output) throw new Error(`EagerDataFlow ${plan.fqn} durable node ${nodeId} has no output`);
+      const output = requireExactRecord(durable.output, node.outputs, `${nodeId} durable output`);
+      for (const port of node.outputs) ports.set(`${node.id}/${port}`, output[port]);
+    } else if (durable.output !== undefined || durable.returned !== undefined) {
+      throw new Error(`EagerDataFlow ${plan.fqn} durable SinkNode ${nodeId} cannot retain output`);
     }
-    if (node.tag === 'SubFlowNode') {
-      const target = subflows[subflowId(node)];
-      const output = await target.invoke(runtime, nodeInput, {
-        signal: controller.signal,
-        ...(options.bindSignal ? { bindSignal: options.bindSignal } : {}),
-      });
-      return { node, output: requireExactRecord(output, node.outputs, `${node.id} output`) };
+    status.set(nodeId, 'succeeded');
+  }
+
+  const runNode = async (node: EagerDataFlowNodePlan): Promise<NodeSuccess> => {
+    await options.onNodeStart?.(node.id);
+    let success: NodeSuccess;
+    try {
+      if (node.tag === 'EntryNode') {
+        success = { node, output: exactInput };
+      } else {
+        const nodeInput = inputFor(node, ports);
+        if (node.tag === 'ReturnNode') {
+          success = { node, returned: requireExactRecord(nodeInput, plan.contract.outputPorts, `${node.id} output`) };
+        } else if (node.tag === 'SubFlowNode') {
+          const target = subflows[subflowId(node)];
+          const output = await target.invoke(runtime, nodeInput, {
+            signal: controller.signal,
+            ...(options.bindSignal ? { bindSignal: options.bindSignal } : {}),
+          });
+          success = { node, output: requireExactRecord(output, node.outputs, `${node.id} output`) };
+        } else {
+          const fn = code.get(node.id)!;
+          const nodeRuntime = options.bindNode?.(effectiveRuntime, { nodeId: node.id }) ?? effectiveRuntime;
+          const result = await fn(nodeRuntime, nodeInput, Object.freeze({ ...node.config }));
+          if (node.tag === 'SinkNode') {
+            if (result !== undefined) throw new TypeError(`${node.id} SinkNode must return void`);
+            success = { node };
+          } else {
+            success = { node, output: requireExactRecord(result, node.outputs, `${node.id} output`) };
+          }
+        }
+      }
+    } catch (cause) {
+      await options.onNodeFailure?.({ nodeId: node.id, cause });
+      throw cause;
     }
-    const fn = code.get(node.id)!;
-    const result = await fn(effectiveRuntime, nodeInput, Object.freeze({ ...node.config }));
-    if (node.tag === 'SinkNode') {
-      if (result !== undefined) throw new TypeError(`${node.id} SinkNode must return void`);
-      return { node };
-    }
-    return { node, output: requireExactRecord(result, node.outputs, `${node.id} output`) };
+    const durable: EagerDataFlowDurableNodeState = {
+      nodeId: node.id,
+      ...(success.output ? { output: success.output } : {}),
+      ...(success.returned ? { returned: success.returned } : {}),
+    };
+    await options.onNodeSuccess?.(durable);
+    return success;
   };
 
   const startReady = () => {

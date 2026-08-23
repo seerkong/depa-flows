@@ -1,0 +1,94 @@
+<port #flow.ai_resource_registry_view apiVersion="codument.tech/v1alpha1" { kind = "port" } [
+  <desc ?01M0NJZ4P8W329QJ80GD3ZXKQ0>
+  Halfcode ResourceRegistry.byKind 的最小只读端口；不拥有 loader、layer、identity、provenance 或 snapshot。
+  </?01M0NJZ4P8W329QJ80GD3ZXKQ0>
+  <types ?t>
+  type AIWorkflowResourceRegistryView = Pick<ResourceRegistry, "byKind">
+  </?t>
+  <messages ?01M0NJZ4P8W329QJ80GD3ZXKQ1>
+  projectAIWorkflowAgentResources(registry)
+  </?01M0NJZ4P8W329QJ80GD3ZXKQ1>
+]>
+
+<component #flow.ai_agent_material_projector apiVersion="codument.tech/v1alpha1" { kind = "component" } [
+  <desc ?01M0NJZ4P8W329QJ80GD3ZXKQ2>
+  仅解释固定 AIAgentDefinition、MaterialPort、MaterialBinding 结构并发出 typed dependency edges 的纯组件。
+  </?01M0NJZ4P8W329QJ80GD3ZXKQ2>
+  <runtime ?r>
+  type Runtime = never
+  </?r>
+  <input ?i>
+  type Input = AIWorkflowResourceRegistryView
+  </?i>
+  <config ?c>
+  type Config = Readonly<{}>
+  </?c>
+  <output ?o>
+  type Output = AIWorkflowAgentResourceProjection
+  </?o>
+  <pseudo { kind = "dataflow" } ?p>
+  按固定 kind 读取 records → 校验显式 ref 与目标 kind → 保留 authored order → 返回冻结投影与 typed edges
+  </?p>
+  <invariants ?01M0NJZ4P8W329QJ80GD3ZXKQ3>
+  保持 authored order；exact ref/kind；无文件读取、任意字符串扫描、自然语言推断或第二资源 registry。
+  </?01M0NJZ4P8W329QJ80GD3ZXKQ3>
+]>
+
+<object #flow.ai_workflow_agent_resource_projection apiVersion="codument.tech/v1alpha1" { kind = "entity" fact_grade = "derived_projection_cache" single_writer = "modeling://domain/flow/ai_agent_material_projector" derived_from = "modeling://domain/flow/ai_resource_registry_view" } [
+  <types ?t>
+  interface AIWorkflowAgentResourceProjection {
+    agentDefinitions: readonly AIAgentDefinitionProjection[]
+    materialPorts: readonly MaterialPortProjection[]
+    materialBindings: readonly MaterialBindingProjection[]
+    dependencyEdges: readonly ResourceDependencyEdge[]
+  }
+  </?t>
+  <invariants ?01M0NJZ4P8W329QJ80GD3ZXKQ4>
+  所有数组与嵌套节点深度冻结；不包含 byId/byKind、actor、provider、session、root 或 generation。
+  </?01M0NJZ4P8W329QJ80GD3ZXKQ4>
+  <fact-source ?01M0NJZ4P8W329QJ80GD3ZXKQ5>
+  Halfcode effective registry 是事实源；本节点仅生成可重建的 AI Workflow 领域投影且不反写。
+  </?01M0NJZ4P8W329QJ80GD3ZXKQ5>
+]>
+
+<component #flow.ai_workflow_run_resource_freezer apiVersion="codument.tech/v1alpha1" { kind = "component" } [
+  <desc ?01M0NJZ4P8W329QJ80GD3ZXKQ6>
+  验证一个显式 Agent task 与其 Material bindings，然后调用 Halfcode buildResourceDependencySnapshot。
+  </?01M0NJZ4P8W329QJ80GD3ZXKQ6>
+  <runtime ?r>
+  type Runtime = HalfcodeResourceCoreRuntime
+  </?r>
+  <input ?i>
+  type Input = { registry: EffectiveResourceRegistry; projection: AIWorkflowAgentResourceProjection; task: AIWorkflowAgentTaskRef; contentIdentities: ReadonlyMap<string, ResourceContentIdentity> }
+  </?i>
+  <config ?c>
+  type Config = Readonly<{}>
+  </?c>
+  <output ?o>
+  type Output = AIWorkflowRunResourceFreezeReceipt
+  </?o>
+  <pseudo { kind = "ctrl" } ?p>
+  规范化固定 task tuple → 校验 material binding → 调用 Halfcode dependency snapshot → 计算领域 fingerprint → 返回冻结 receipt
+  </?p>
+  <not-owned-here ?01M0NJZ4P8W329QJ80GD3ZXKQ7>
+  global/workspace roots、layer order、运行持久化、actor/provider/session 由 Eidolon host 持有。
+  </?01M0NJZ4P8W329QJ80GD3ZXKQ7>
+]>
+
+<object #flow.ai_workflow_run_resource_freeze_receipt apiVersion="codument.tech/v1alpha1" { kind = "entity" fact_grade = "derived_projection_cache" single_writer = "modeling://domain/flow/ai_workflow_run_resource_freezer" derived_from = "modeling://domain/flow/ai_workflow_agent_resource_projection" } [
+  <types ?t>
+  interface AIWorkflowRunResourceFreezeReceipt {
+    schemaVersion: "ai-workflow.run-resource-freeze/v1"
+    task: AIWorkflowAgentTaskRef
+    bindingResourceIds: readonly string[]
+    dependencySnapshot: ResourceDependencySnapshot
+    semanticFingerprint: `sha256:${string}`
+  }
+  </?t>
+  <invariants ?01M0NJZ4P8W329QJ80GD3ZXKQ8>
+  Halfcode snapshot 是完整 proof/recovery authority；semanticFingerprint 仅绑定所选领域事实与 reachable content；receipt 深度冻结。
+  </?01M0NJZ4P8W329QJ80GD3ZXKQ8>
+  <fact-source ?01M0NJZ4P8W329QJ80GD3ZXKQ9>
+  Halfcode registry、content identities 与领域投影是只读来源；本节点不成为新的资源事实源。
+  </?01M0NJZ4P8W329QJ80GD3ZXKQ9>
+]>

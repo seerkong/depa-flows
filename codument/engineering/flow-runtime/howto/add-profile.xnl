@@ -1,15 +1,19 @@
-<howto #flow-runtime.howto.add-profile.add_profile {
-  kind = "howto"
-} [
-  <when-to-use ?>新增 InstantCtrlFlow、WorkCtrlFlow、BPCtrlFlow 或 EagerDataFlow 的公开 profile、节点或 contract 能力时。</?>
-  <steps ?>
+<howto #flow-runtime.howto.add-profile.add_profile apiVersion="codument.tech/v1alpha1" { kind = "howto" } [
+  <when-to-use ?01M0NJZ4NNDJGS1SEWXAX5BDV9>
+  新增 InstantCtrlFlow、WorkCtrlFlow、BPCtrlFlow 或 EagerDataFlow 的公开 profile、节点或 contract 能力时。
+  </?01M0NJZ4NNDJGS1SEWXAX5BDV9>
+  <steps ?01M0NJZ4NNDJGS1SEWXAX5BDVA>
   1. 在 docs/flow-dsl/spec 中更新公共 grammar、profile capability matrix、FlowContract 和 rejection rules。
   2. 在对应 `*-contract` 中先定义静态类型边界，再在 `*-logic` 中实现 loader/compiler/runtime。
   3. 添加 canonical examples/xnl-bundles 与正负 loader/runtime tests。
   4. 在对应 `*-logic` 包中接入 runtime port；snapshot、task store、clock 等运行事实只能由明确 owner 写入。
   5. 在 `examples/xnl-bundles` 增加正例与拒绝例，覆盖 loader、validator、compiler 和恢复语义。
   6. 运行相关 package 的 `bun test`、typecheck 和全仓库 conformance 检查。
-  </?>
-  <verification ?>验证 canonical XNL 可以加载；运行时按 profile 正确接受/拒绝；代码引用解析到当前 bundle 的 VFS；runtime facts 可恢复且不回写 definition。</?>
-  <rollback ?>若验证失败，保留前一份 canonical definition 和 VFS/VCS revision，撤销未接受 mutation；不要通过 legacy parser 或第二份 runtime 语义绕过失败。</?>
+  </?01M0NJZ4NNDJGS1SEWXAX5BDVA>
+  <verification ?01M0NJZ4NNDJGS1SEWXAX5BDVB>
+  验证 canonical XNL 可以加载；运行时按 profile 正确接受/拒绝；代码引用解析到当前 bundle 的 VFS；runtime facts 可恢复且不回写 definition。
+  </?01M0NJZ4NNDJGS1SEWXAX5BDVB>
+  <rollback ?01M0NJZ4NNDJGS1SEWXAX5BDVC>
+  若验证失败，保留前一份 canonical definition 和 VFS/VCS revision，撤销未接受 mutation；不要通过 legacy parser 或第二份 runtime 语义绕过失败。
+  </?01M0NJZ4NNDJGS1SEWXAX5BDVC>
 ]>

@@ -1,0 +1,50 @@
+<BehaviorPatch #track.r_2_0_2_6_-_0_8_-_0_7_-_1_8_4_9_-_a_d_d_-_a_i_-_w_o_r_k_f_l_o_w_-_p_r_o_f_i_l_e_-_s_o_u_r_c_e_-_l_o_a_d_e_r_s.behavior_patch.ai-workflow-foundation apiVersion="codument.tech/v1alpha1" version="1" { capability = "ai-workflow-foundation" } (
+  <Mutations [
+    <Upsert { selector = "behavior://ai-workflow-foundation/requirements/profile-source-loading" } (
+      <Requirement #profile-source-loading (
+        <Statement ?01M0NJZ4SV367GJM6KQ7PJYVBC>
+        The system SHALL provide canonical source loaders for AICtrlWorkflow and AIDataWorkflow roots that reuse substrate parsing and validation and return typed AI workflow definition bindings with structured diagnostics.
+        </?01M0NJZ4SV367GJM6KQ7PJYVBC>
+        <Suites [
+          <Suite #canonical-profile-loading { name = "Canonical profile loading" } (
+            <Cases [
+              <Case #load-ai-ctrl-workflow (
+                <Given ?01M0NJZ4SV367GJM6KQ7PJYVBD>
+                Named XNL sources contain a canonical AICtrlWorkflow root
+                </?01M0NJZ4SV367GJM6KQ7PJYVBD>
+                <When ?01M0NJZ4SV367GJM6KQ7PJYVBE>
+                The AICtrlWorkflow source loader loads the sources
+                </?01M0NJZ4SV367GJM6KQ7PJYVBE>
+                <Then ?01M0NJZ4SV367GJM6KQ7PJYVBF>
+                The system SHALL return a WorkCtrlFlow-backed AICtrlWorkflow definition binding without diagnostics
+                </?01M0NJZ4SV367GJM6KQ7PJYVBF>
+              )>
+              <Case #load-ai-data-workflow (
+                <Given ?01M0NJZ4SV367GJM6KQ7PJYVBG>
+                Named XNL sources contain a canonical AIDataWorkflow root
+                </?01M0NJZ4SV367GJM6KQ7PJYVBG>
+                <When ?01M0NJZ4SV367GJM6KQ7PJYVBH>
+                The AIDataWorkflow source loader loads the sources
+                </?01M0NJZ4SV367GJM6KQ7PJYVBH>
+                <Then ?01M0NJZ4SV367GJM6KQ7PJYVBJ>
+                The system SHALL return an EagerDataFlow-backed AIDataWorkflow definition binding without diagnostics
+                </?01M0NJZ4SV367GJM6KQ7PJYVBJ>
+              )>
+              <Case #reject-invalid-profile-source (
+                <Given ?01M0NJZ4SV367GJM6KQ7PJYVBK>
+                AI workflow sources contain a wrong root or invalid substrate body
+                </?01M0NJZ4SV367GJM6KQ7PJYVBK>
+                <When ?01M0NJZ4SV367GJM6KQ7PJYVBM>
+                The corresponding profile loader validates the sources
+                </?01M0NJZ4SV367GJM6KQ7PJYVBM>
+                <Then ?01M0NJZ4SV367GJM6KQ7PJYVBN>
+                The system SHALL return stable structured diagnostics and SHALL NOT fabricate an executable binding
+                </?01M0NJZ4SV367GJM6KQ7PJYVBN>
+              )>
+            ]>
+          )>
+        ]>
+      )>
+    )>
+  ]>
+)>

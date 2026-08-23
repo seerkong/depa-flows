@@ -6,6 +6,9 @@ import {
   AI_WORKFLOW_MANUAL_NODE_DEFAULT_REUSE_POLICY,
   type AICtrlWorkflowDefinitionBinding,
   type AIDataWorkflowDefinitionBinding,
+  type AIWorkflowAppBundleProjection,
+  type AIWorkflowBindingProjection,
+  type AIWorkflowDefinitionResourceKind,
   type AIWorkflowEffectiveReusePolicy,
   type AIWorkflowEmbeddedEffectProvider,
   type AIWorkflowEffectProvider,
@@ -17,21 +20,70 @@ import {
   type AIWorkflowKind,
   type AIWorkflowNodeType,
   type AIWorkflowProfileDescriptor,
+  type AIWorkflowResourceProjectionDiagnostic,
+  type AIWorkflowResourceRegistryView,
   type AIWorkflowResourceRef,
   type AIWorkflowResourceRefScheme,
   type AIWorkflowReusePolicy,
   type AIWorkflowRuntimeRoots,
   type AIWorkflowRuntimeContext,
-  type AIWorkflowStateStore,
+  type AIWorkflowStateProjection,
   type AIWorkflowSubstrate,
+  type ProjectAIWorkflowAppBundlesOptions,
 } from 'ai-workflow-contract';
+import type { ResourceNode, ResourceRecord, ResourceValue } from 'halfcode-compiler.xnl/resource-core';
+import { AIWorkflowFoundationError, AIWorkflowResourceProjectionError } from './errors.js';
 
-export class AIWorkflowFoundationError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'AIWorkflowFoundationError';
-  }
-}
+export { AIWorkflowFoundationError, AIWorkflowResourceProjectionError } from './errors.js';
+export { projectAIWorkflowAgentResources } from './agent-resources.js';
+export {
+  FlowRunContractValidationError,
+  normalizeAIWorkflowProfileDurableState,
+  normalizeFlowClosedObject,
+  normalizeFlowClosedValue,
+  normalizeFlowInstanceDescriptor,
+  normalizeFlowRunCheckpoint,
+} from './run-checkpoint.js';
+export {
+  AIAgentInvocationError,
+  bindAIAgentProcessors,
+  normalizeAIAgentEffectConfig,
+  normalizeAIAgentInvocation,
+  normalizeAIAgentSelector,
+  runAgent,
+  runTargetedAgent,
+} from './agent-invocation.js';
+export { assertAIAgentNodeTaskBinding, upgradeLegacyAIWorkflowProfileDurableState } from './agent-state.js';
+export type { AIAgentNodeBindingIdentity } from './agent-state.js';
+export {
+  FlowRunCheckpointTransitionError,
+  FlowRunCheckpointVersionConflictError,
+  InMemoryFlowRunCheckpointStore,
+  createWorkCtrlFlowCheckpointStore,
+  projectWorkCtrlSnapshotToCheckpointData,
+  commitFlowRunCheckpoint,
+  loadFlowRunCheckpoint,
+  projectFlowRunCheckpoint,
+} from './checkpoint-store.js';
+export type { WorkCtrlFlowCheckpointStoreOptions } from './checkpoint-store.js';
+export {
+  createInitialRunStepExtensions,
+  validateCheckpointAgainstFrozenProfile,
+} from './checkpoint-profile.js';
+export type {
+  FlowRunCheckpointAdmissionRuntime,
+  FlowRunProfileAuthorityPort,
+  FlowRunProfileAuthorityRequest,
+  FrozenFlowRunProfileAuthority,
+  FrozenRunStepExtensionDefinition,
+} from './checkpoint-profile.js';
+export { mutateRunStepExtension } from './step-extension.js';
+export type {
+  RunStepExtensionMutationConfig,
+  RunStepExtensionMutationInvocation,
+  RunStepExtensionSelector,
+} from 'ai-workflow-contract';
+export type { RunStepExtensionMutationRuntime } from './step-extension.js';
 
 export class AIWorkflowEffectHandlerNotFoundError extends AIWorkflowFoundationError {
   constructor(
@@ -91,6 +143,214 @@ export function defineAIDataWorkflow(
   });
 }
 
+export function projectAIWorkflowAppBundles(
+  registry: AIWorkflowResourceRegistryView,
+  options: ProjectAIWorkflowAppBundlesOptions = {},
+): readonly AIWorkflowAppBundleProjection[] {
+  const diagnostics: AIWorkflowResourceProjectionDiagnostic[] = [];
+  const workflowRecords = new Map<string, ResourceRecord>();
+  for (const kind of AI_WORKFLOW_DEFINITION_RESOURCE_KINDS) {
+    for (const resource of registry.byKind.get(kind) ?? []) {
+      workflowRecords.set(resource.resourceId, resource);
+    }
+  }
+
+  const appBundles = [...(registry.byKind.get('AIWorkflowAppBundle') ?? [])]
+    .sort((left, right) => compareCodeUnits(left.resourceId, right.resourceId))
+    .map((resource) => projectAppBundle(resource, workflowRecords, options, diagnostics));
+
+  if (diagnostics.length > 0) {
+    throw new AIWorkflowResourceProjectionError(Object.freeze(
+      diagnostics.sort((left, right) => compareCodeUnits(left.location, right.location)
+        || compareCodeUnits(left.code, right.code)),
+    ));
+  }
+
+  return Object.freeze(appBundles.filter((bundle): bundle is AIWorkflowAppBundleProjection => bundle !== undefined));
+}
+
+const AI_WORKFLOW_DEFINITION_RESOURCE_KINDS = Object.freeze([
+  'AICtrlWorkflow',
+  'AIDataWorkflow',
+] as const satisfies readonly AIWorkflowDefinitionResourceKind[]);
+
+function projectAppBundle(
+  resource: ResourceRecord,
+  workflowRecords: ReadonlyMap<string, ResourceRecord>,
+  options: ProjectAIWorkflowAppBundlesOptions,
+  diagnostics: AIWorkflowResourceProjectionDiagnostic[],
+): AIWorkflowAppBundleProjection | undefined {
+  const bindingsNode = resource.node.subdomains.WorkflowBindings;
+  if (!bindingsNode) {
+    diagnostics.push(projectionDiagnostic(
+      'AI_WORKFLOW_BINDINGS_MISSING',
+      resource.documentUri,
+      `AIWorkflowAppBundle '${resource.resourceId}' must declare WorkflowBindings.`,
+    ));
+    return undefined;
+  }
+
+  const bindingIds = new Set<string>();
+  const workflowBindings: AIWorkflowBindingProjection[] = [];
+  for (const [index, value] of bindingsNode.body.entries()) {
+    const location = `${resource.documentUri}#WorkflowBindings:${index}`;
+    if (!isResourceNode(value) || value.tag !== 'WorkflowBinding') {
+      diagnostics.push(projectionDiagnostic(
+        'AI_WORKFLOW_BINDING_NODE_INVALID',
+        location,
+        'WorkflowBindings may contain only WorkflowBinding nodes.',
+      ));
+      continue;
+    }
+    const binding = projectWorkflowBinding(value, workflowRecords, location, diagnostics);
+    if (!binding) continue;
+    if (bindingIds.has(binding.id)) {
+      diagnostics.push(projectionDiagnostic(
+        'AI_WORKFLOW_BINDING_ID_DUPLICATE',
+        location,
+        `WorkflowBinding id '${binding.id}' is declared more than once.`,
+      ));
+      continue;
+    }
+    bindingIds.add(binding.id);
+    workflowBindings.push(binding);
+  }
+
+  const entrypoints = workflowBindings.filter((binding) => binding.entrypoint);
+  if (entrypoints.length === 0) {
+    diagnostics.push(projectionDiagnostic(
+      'AI_WORKFLOW_APP_ENTRYPOINT_MISSING',
+      resource.documentUri,
+      `AIWorkflowAppBundle '${resource.resourceId}' must declare at least one workflow entrypoint.`,
+    ));
+  }
+
+  const frozenBindings = Object.freeze(workflowBindings);
+  return Object.freeze({
+    kind: 'AIWorkflowAppBundle',
+    fqn: resource.fqn ?? resource.resourceId,
+    ...(options.packageResourceId === undefined ? {} : { packageResourceId: options.packageResourceId }),
+    resource,
+    workflowBindings: frozenBindings,
+    entrypoints: Object.freeze(entrypoints),
+  });
+}
+
+function projectWorkflowBinding(
+  node: ResourceNode,
+  workflowRecords: ReadonlyMap<string, ResourceRecord>,
+  location: string,
+  diagnostics: AIWorkflowResourceProjectionDiagnostic[],
+): AIWorkflowBindingProjection | undefined {
+  const id = node.resourceId;
+  const kind = asString(node.properties.kind);
+  const ref = asString(node.properties.ref);
+  const entrypoint = node.properties.entrypoint;
+  let valid = true;
+
+  if (!id) {
+    diagnostics.push(projectionDiagnostic(
+      'AI_WORKFLOW_BINDING_ID_MISSING',
+      location,
+      'WorkflowBinding must declare an explicit #id.',
+    ));
+    valid = false;
+  }
+  if (!isWorkflowDefinitionResourceKind(kind)) {
+    diagnostics.push(projectionDiagnostic(
+      'AI_WORKFLOW_BINDING_KIND_INVALID',
+      location,
+      'WorkflowBinding kind must be AICtrlWorkflow or AIDataWorkflow.',
+    ));
+    valid = false;
+  }
+  const resourceId = resourceIdFromRef(ref);
+  if (!resourceId) {
+    diagnostics.push(projectionDiagnostic(
+      'AI_WORKFLOW_BINDING_REF_INVALID',
+      location,
+      'WorkflowBinding ref must be a non-empty resource:// identity.',
+    ));
+    valid = false;
+  }
+  if (typeof entrypoint !== 'boolean') {
+    diagnostics.push(projectionDiagnostic(
+      'AI_WORKFLOW_BINDING_ENTRYPOINT_INVALID',
+      location,
+      'WorkflowBinding entrypoint must be an explicit boolean.',
+    ));
+    valid = false;
+  }
+  if (
+    !valid
+    || !id
+    || !isWorkflowDefinitionResourceKind(kind)
+    || !resourceId
+    || typeof entrypoint !== 'boolean'
+  ) return undefined;
+
+  const target = workflowRecords.get(resourceId);
+  if (!target) {
+    diagnostics.push(projectionDiagnostic(
+      'AI_WORKFLOW_BINDING_TARGET_MISSING',
+      location,
+      `WorkflowBinding target '${resourceId}' does not exist in the effective resource registry.`,
+    ));
+    return undefined;
+  }
+  if (target.kind !== kind) {
+    diagnostics.push(projectionDiagnostic(
+      'AI_WORKFLOW_BINDING_TARGET_KIND_MISMATCH',
+      location,
+      `WorkflowBinding declares kind '${kind}', but target '${resourceId}' has kind '${target.kind}'.`,
+    ));
+    return undefined;
+  }
+
+  return Object.freeze({
+    id,
+    kind,
+    ref: ref as `resource://${string}`,
+    entrypoint,
+    resource: target,
+  });
+}
+
+function isWorkflowDefinitionResourceKind(value: string | undefined): value is AIWorkflowDefinitionResourceKind {
+  return value === 'AICtrlWorkflow' || value === 'AIDataWorkflow';
+}
+
+function resourceIdFromRef(value: string | undefined): string | undefined {
+  const prefix = 'resource://';
+  if (!value?.startsWith(prefix)) return undefined;
+  const resourceId = value.slice(prefix.length);
+  return resourceId.length > 0 && !resourceId.includes('://') ? resourceId : undefined;
+}
+
+function asString(value: ResourceValue | undefined): string | undefined {
+  return typeof value === 'string' && value.length > 0 ? value : undefined;
+}
+
+function isResourceNode(value: ResourceValue): value is ResourceNode {
+  return typeof value === 'object'
+    && value !== null
+    && !Array.isArray(value)
+    && typeof (value as ResourceNode).tag === 'string'
+    && Array.isArray((value as ResourceNode).body);
+}
+
+function projectionDiagnostic(
+  code: string,
+  location: string,
+  message: string,
+): AIWorkflowResourceProjectionDiagnostic {
+  return Object.freeze({ code, location, message });
+}
+
+function compareCodeUnits(left: string, right: string): number {
+  return left < right ? -1 : left > right ? 1 : 0;
+}
+
 export interface ResolveAIWorkflowReusePolicyInput {
   readonly nodeType: AIWorkflowNodeType;
   readonly explicitPolicy?: AIWorkflowReusePolicy;
@@ -141,8 +401,8 @@ export function resolveAIWorkflowReusePolicy(
 }
 
 export function createAIWorkflowRuntimeContext<
-  Effects extends AIWorkflowEffectProvider,
-  Store extends AIWorkflowStateStore,
+  Effects extends AIWorkflowEffectProvider | import('ai-workflow-contract').AIWorkflowAuthoredEffects,
+  Store extends AIWorkflowStateProjection,
 >(
   context: AIWorkflowRuntimeContext<Effects, Store>,
 ): AIWorkflowRuntimeContext<Effects, Store> {
@@ -192,7 +452,7 @@ export function createAIWorkflowEffectHandlerRegistry(
       };
     },
     listOperations() {
-      return [...handlers.keys()].sort();
+      return [...handlers.keys()].sort(compareCodeUnits);
     },
     registerHandler(operation, handler) {
       if (!operation) {
@@ -273,6 +533,7 @@ function hasContainmentEscape(target: string): boolean {
   return decoded.split(/[/?#]+/).some((segment) => segment === '..');
 }
 
+/** @deprecated Compatibility helper; Halfcode owns canonical resource-reference validation. */
 export function parseAIWorkflowResourceRef(value: string): ParsedAIWorkflowResourceRef | undefined {
   const match = RESOURCE_REF_PATTERN.exec(value);
   if (!match) return undefined;
@@ -286,10 +547,12 @@ export function parseAIWorkflowResourceRef(value: string): ParsedAIWorkflowResou
   };
 }
 
+/** @deprecated Compatibility helper; use typed refs projected from Halfcode ResourceRecord facts. */
 export function isAIWorkflowResourceRef(value: string): value is AIWorkflowResourceRef {
   return parseAIWorkflowResourceRef(value) !== undefined;
 }
 
+/** @deprecated Compatibility helper; use typed refs projected from Halfcode ResourceRecord facts. */
 export function assertAIWorkflowResourceRef(value: string): AIWorkflowResourceRef {
   const parsed = parseAIWorkflowResourceRef(value);
   if (!parsed) {

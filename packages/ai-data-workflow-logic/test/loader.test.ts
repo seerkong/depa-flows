@@ -1,17 +1,39 @@
 import { describe, expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
-import { createAIDataWorkflowRunGraph, loadAIDataWorkflowSources } from 'ai-data-workflow-logic';
+import { createAIDataWorkflowRunGraph, loadAIDataWorkflow } from 'ai-data-workflow-logic';
 
 const root = path.resolve(import.meta.dir, '../../..');
-const canonicalManifest = readFileSync(
-  path.join(root, 'examples/xnl-bundles/ai-data-workflow/manifest.xnl'),
-  'utf8',
-);
+const exampleRoot = path.join(root, 'examples/xnl-bundles/ai-data-workflow');
+const canonicalSources = Object.fromEntries([
+  'manifest.xnl',
+  'step-space.xnl',
+  'steps/entry/step.xnl',
+  'steps/retrieve/step.xnl',
+  'steps/summarize/step.xnl',
+  'steps/summarize/review-policy.xnl',
+  'steps/return/step.xnl',
+].map((ref) => [ref, readFileSync(path.join(exampleRoot, ...ref.split('/')), 'utf8')]));
+
+const loaderRuntime = {
+  extensionCodecs: {
+    resolve: (kind: string) => kind === 'depa.example.review-policy' ? {
+      schemaRef: 'schema://depa.example.review-policy/v1',
+      codec: {
+        normalize(value: any) {
+          if (!value || typeof value !== 'object' || value.reviewDepth !== 2 || value.audience !== 'support') {
+            throw new Error('review policy is invalid');
+          }
+          return { audience: value.audience, reviewDepth: value.reviewDepth };
+        },
+      },
+    } : undefined,
+  },
+} as const;
 
 describe('AIDataWorkflow source loader', () => {
   test('loads the canonical profile example into an EagerDataFlow-backed binding', () => {
-    const result = loadAIDataWorkflowSources({ 'manifest.xnl': canonicalManifest });
+    const result = loadAIDataWorkflow(loaderRuntime, { sources: canonicalSources }, {});
 
     expect(result.diagnostics).toEqual([]);
     expect(result.binding).toMatchObject({
@@ -23,6 +45,13 @@ describe('AIDataWorkflow source loader', () => {
         declarationOrder: ['entry', 'retrieve', 'summarize', 'return'],
       },
     });
+    expect(result.binding!.definition.definitionStepForest!.steps.summarize.extensions)
+      .toMatchObject({
+        'depa.example.review-policy': {
+          schemaRef: 'schema://depa.example.review-policy/v1',
+          value: { audience: 'support', reviewDepth: 2 },
+        },
+      });
     const graph = createAIDataWorkflowRunGraph({ binding: result.binding!, runId: 'manual-policy' });
     expect(graph.nodes.summarize).toMatchObject({
       nodeType: 'manual',
@@ -35,12 +64,15 @@ describe('AIDataWorkflow source loader', () => {
   });
 
   test('returns stable diagnostics and no binding for a wrong root or invalid node', () => {
-    const wrongRoot = loadAIDataWorkflowSources({
-      'manifest.xnl': canonicalManifest.replace('<AIDataWorkflow ', '<EagerDataFlow '),
-    });
-    const invalidNode = loadAIDataWorkflowSources({
-      'manifest.xnl': canonicalManifest.replace('<TransformNode #retrieve', '<ComputedNode #retrieve'),
-    });
+    const wrongRoot = loadAIDataWorkflow(loaderRuntime, { sources: {
+      ...canonicalSources,
+      'manifest.xnl': canonicalSources['manifest.xnl'].replace('<AIDataWorkflow ', '<EagerDataFlow '),
+    } }, {});
+    const invalidNode = loadAIDataWorkflow(loaderRuntime, { sources: {
+      ...canonicalSources,
+      'steps/retrieve/step.xnl': canonicalSources['steps/retrieve/step.xnl']
+        .replace('<TransformNode #retrieve', '<ComputedNode #retrieve'),
+    } }, {});
 
     expect(wrongRoot.binding).toBeUndefined();
     expect(wrongRoot.diagnostics.map(({ code }) => code)).toContain('profile-root-count');

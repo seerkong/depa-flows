@@ -1,6 +1,6 @@
 {
   "name": "ai-ctrl-workflow-contract",
-  "version": "0.1.0",
+  "version": "0.1.4",
   "private": false,
   "description": "AI Ctrl Workflow contracts backed by WorkCtrlFlow runtime state",
   "type": "module",
@@ -9,14 +9,13 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "ai-workflow-contract": "workspace:*",
-    "work-ctrl-flow-contract": "workspace:*"
+    "ai-workflow-contract": "0.1.7",
+    "work-ctrl-flow-contract": "0.1.3"
   },
   "files": [
     "src"
   ],
   "publishConfig": {
-    "access": "public",
-    "registry": "https://registry.npmjs.com"
+    "access": "public"
   }
 }

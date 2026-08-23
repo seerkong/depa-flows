@@ -1,0 +1,92 @@
+<Behavior #flow-dsl-runtime apiVersion="codument.tech/v1alpha1" version="1" (
+  <Requirements [
+    <Requirement #canonical-bundle-loading (
+      <Statement ?01M0NJZ4M9RJW0EGMTA88BQSF8>
+      The loader SHALL parse InstantCtrlFlow, WorkCtrlFlow and BPCtrlFlow root lists as canonical CtrlFlow statements and MUST reject Tree, action.types, standalone CtrlFlow and public behavior-tree authoring nodes.
+      </?01M0NJZ4M9RJW0EGMTA88BQSF8>
+      <Suites [
+        <Suite #loading { name = "canonical loading" } (
+          <Cases [
+            <Case #direct-root (
+              <Given ?01M0NJZ4M9RJW0EGMTA88BQSF9>
+              a new product bundle
+              </?01M0NJZ4M9RJW0EGMTA88BQSF9>
+              <When ?01M0NJZ4M9RJW0EGMTA88BQSFA>
+              it is loaded
+              </?01M0NJZ4M9RJW0EGMTA88BQSFA>
+              <Then ?01M0NJZ4M9RJW0EGMTA88BQSFB>
+              root statements SHALL be preserved in declaration order
+              </?01M0NJZ4M9RJW0EGMTA88BQSFB>
+            )>
+            <Case #legacy-rejected (
+              <Given ?01M0NJZ4M9RJW0EGMTA88BQSFC>
+              a legacy Tree/action.types bundle
+              </?01M0NJZ4M9RJW0EGMTA88BQSFC>
+              <When ?01M0NJZ4M9RJW0EGMTA88BQSFD>
+              it is loaded
+              </?01M0NJZ4M9RJW0EGMTA88BQSFD>
+              <Then ?01M0NJZ4M9RJW0EGMTA88BQSFE>
+              loading SHALL fail with stable diagnostics
+              </?01M0NJZ4M9RJW0EGMTA88BQSFE>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+    <Requirement #canonical-compile-projection (
+      <Statement ?01M0NJZ4M9RJW0EGMTA88BQSFF>
+      The compiler SHALL lower CtrlFlow statements to a rebuildable internal plan and SHALL invoke all referenced code using output = fn(runtime, input, config).
+      </?01M0NJZ4M9RJW0EGMTA88BQSFF>
+      <Suites [
+        <Suite #compile { name = "compile projection" } (
+          <Cases [
+            <Case #if-lowering (
+              <Given ?01M0NJZ4M9RJW0EGMTA88BQSFG>
+              If with ordered Branches and Otherwise
+              </?01M0NJZ4M9RJW0EGMTA88BQSFG>
+              <When ?01M0NJZ4M9RJW0EGMTA88BQSFH>
+              compiled
+              </?01M0NJZ4M9RJW0EGMTA88BQSFH>
+              <Then ?01M0NJZ4M9RJW0EGMTA88BQSFJ>
+              the internal plan SHALL preserve first-match and no-op semantics
+              </?01M0NJZ4M9RJW0EGMTA88BQSFJ>
+            )>
+            <Case #function-code (
+              <Given ?01M0NJZ4M9RJW0EGMTA88BQSFK>
+              Run, Return or predicate code ref
+              </?01M0NJZ4M9RJW0EGMTA88BQSFK>
+              <When ?01M0NJZ4M9RJW0EGMTA88BQSFM>
+              materialized
+              </?01M0NJZ4M9RJW0EGMTA88BQSFM>
+              <Then ?01M0NJZ4M9RJW0EGMTA88BQSFN>
+              the runtime SHALL call the exported function with runtime, input and config
+              </?01M0NJZ4M9RJW0EGMTA88BQSFN>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+    <Requirement #migrated-demos (
+      <Statement ?01M0NJZ4M9RJW0EGMTA88BQSFP>
+      All depa-flows control-flow demos SHALL use only the new public DSL and SHALL pass parser, validator, typecheck and applicable execution tests.
+      </?01M0NJZ4M9RJW0EGMTA88BQSFP>
+      <Suites [
+        <Suite #demos { name = "demo migration" } (
+          <Cases [
+            <Case #no-legacy (
+              <Given ?01M0NJZ4M9RJW0EGMTA88BQSFQ>
+              examples/xnl-bundles
+              </?01M0NJZ4M9RJW0EGMTA88BQSFQ>
+              <When ?01M0NJZ4M9RJW0EGMTA88BQSFR>
+              searched for legacy authoring
+              </?01M0NJZ4M9RJW0EGMTA88BQSFR>
+              <Then ?01M0NJZ4M9RJW0EGMTA88BQSFS>
+              no Tree/action.types/Sequence/Selector/Condition authoring SHALL remain
+              </?01M0NJZ4M9RJW0EGMTA88BQSFS>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+  ]>
+)>

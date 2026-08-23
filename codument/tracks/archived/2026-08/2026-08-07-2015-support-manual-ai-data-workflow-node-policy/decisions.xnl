@@ -1,9 +1,16 @@
-<decision #track.support-manual-ai-data-workflow-node-policy.authoring-field { status = "accepted" priority = "P0" }
-(
-  <question ?>How should canonical XNL distinguish manual policy from legacy implementation type?</?>
-  <answer { } (
-    <raw-answer ?>Use config.node_type for AI profile semantics.</?>
-    <decision-text ?>Preserve EagerDataFlow type compatibility and recognize config.node_type="manual" in RunGraph lowering.</?>
-    <rationale ?>This is additive and already matches patch-node config semantics.</?>
+<decision #track.support-manual-ai-data-workflow-node-policy.authoring-field apiVersion="codument.tech/v1alpha1" { status = "accepted" priority = "P0" } (
+  <question ?01M0NJZ4TDCED2S6PG7PS6E445>
+  How should canonical XNL distinguish manual policy from legacy implementation type?
+  </?01M0NJZ4TDCED2S6PG7PS6E445>
+  <answer {  } (
+    <raw-answer ?01M0NJZ4TDCED2S6PG7PS6E446>
+    Use config.node_type for AI profile semantics.
+    </?01M0NJZ4TDCED2S6PG7PS6E446>
+    <decision-text ?01M0NJZ4TDCED2S6PG7PS6E447>
+    Preserve EagerDataFlow type compatibility and recognize config.node_type="manual" in RunGraph lowering.
+    </?01M0NJZ4TDCED2S6PG7PS6E447>
+    <rationale ?01M0NJZ4TDCED2S6PG7PS6E448>
+    This is additive and already matches patch-node config semantics.
+    </?01M0NJZ4TDCED2S6PG7PS6E448>
   )>
 )>

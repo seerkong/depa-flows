@@ -1,0 +1,125 @@
+<Behavior #ai-data-workflow apiVersion="codument.tech/v1alpha1" version="1" (
+  <Requirements [
+    <Requirement #eager-data-flow-substrate (
+      <Statement ?01M0QP09M7QPJZVJ5YY375CHDS>
+      The system SHALL implement AI Data Workflow as an EagerDataFlow-backed RunGraph layer.
+      </?01M0QP09M7QPJZVJ5YY375CHDS>
+      <Suites [
+        <Suite #run-graph { name = "RunGraph" } (
+          <Cases [
+            <Case #derive-from-eager-plan (
+              <Given ?01M0QP09M7QPJZVJ5YY375CHDT>
+              An EagerDataFlowAuthoringPlan exists
+              </?01M0QP09M7QPJZVJ5YY375CHDT>
+              <When ?01M0QP09M7QPJZVJ5YY375CHDV>
+              An AI Data Workflow run graph is created
+              </?01M0QP09M7QPJZVJ5YY375CHDV>
+              <Then ?01M0QP09M7QPJZVJ5YY375CHDW>
+              The graph SHALL preserve nodes, input/output config and dependency edges from the EagerDataFlow plan
+              </?01M0QP09M7QPJZVJ5YY375CHDW>
+            )>
+            <Case #invalidate-downstream (
+              <Given ?01M0QP09M7QPJZVJ5YY375CHDX>
+              A completed node is modified by a graph patch
+              </?01M0QP09M7QPJZVJ5YY375CHDX>
+              <When ?01M0QP09M7QPJZVJ5YY375CHDY>
+              The patch is applied
+              </?01M0QP09M7QPJZVJ5YY375CHDY>
+              <Then ?01M0QP09M7QPJZVJ5YY375CHDZ>
+              The system SHALL create a new generation and invalidate downstream nodes without deleting prior records
+              </?01M0QP09M7QPJZVJ5YY375CHDZ>
+            )>
+            <Case #run-local-reuse (
+              <Given ?01M0QP09M7QPJZVJ5YY375CHE0>
+              A new generation has an invalidated node with an unchanged semantic fingerprint
+              </?01M0QP09M7QPJZVJ5YY375CHE0>
+              <When ?01M0QP09M7QPJZVJ5YY375CHE1>
+              The node reuse policy is semantic-hash
+              </?01M0QP09M7QPJZVJ5YY375CHE1>
+              <Then ?01M0QP09M7QPJZVJ5YY375CHE2>
+              The system SHALL allow run-local reuse of the previous result
+              </?01M0QP09M7QPJZVJ5YY375CHE2>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+    <Requirement #step-space-sidecar-runtime (
+      <Statement ?01M0QP09M7QPJZVJ5YY375CHE3>
+      AIDataWorkflow SHALL assemble StepSpace steps into its existing dependency graph and SHALL persist each node/result/fingerprint/invalidation projection through the canonical step record codec while retaining binding, generation and patch authority in the accepted checkpoint root.
+      </?01M0QP09M7QPJZVJ5YY375CHE3>
+      <Suites [
+        <Suite #data-step-recovery { name = "Data step-local recovery" } (
+          <Cases [
+            <Case #accepted-node-not-replayed (
+              <Given ?01M0QP09M7QPJZVJ5YY375CHE4>
+              one effectful Data step result is accepted and a later step is waiting
+              </?01M0QP09M7QPJZVJ5YY375CHE4>
+              <When ?01M0QP09M7QPJZVJ5YY375CHE5>
+              a fresh process reconstructs the run from checkpoint head and step records
+              </?01M0QP09M7QPJZVJ5YY375CHE5>
+              <Then ?01M0QP09M7QPJZVJ5YY375CHE6>
+              the accepted step SHALL not execute again and the later step SHALL continue with the exact reconstructed output
+              </?01M0QP09M7QPJZVJ5YY375CHE6>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+    <Requirement #typed-agent-task-binding (
+      <Statement ?01M0QP09M7QPJZVJ5YY375CHE7>
+      AIDataWorkflow SHALL execute typed Agent tasks through ordinary EagerDataFlow processor nodes, with selectors supplied by static config or typed predecessor data.
+      </?01M0QP09M7QPJZVJ5YY375CHE7>
+      <Suites [
+        <Suite #data-agent-reuse { name = "Data Agent instance reuse" } (
+          <Cases [
+            <Case #create-and-reuse-through-port (
+              <Given ?01M0QP09M7QPJZVJ5YY375CHE8>
+              an Agent processor node returns output plus a stable instance identity on declared ports
+              </?01M0QP09M7QPJZVJ5YY375CHE8>
+              <When ?01M0QP09M7QPJZVJ5YY375CHE9>
+              a dependent processor builds `{byInstanceId}` from that port and calls `runTargetedAgent`
+              </?01M0QP09M7QPJZVJ5YY375CHE9>
+              <Then ?01M0QP09M7QPJZVJ5YY375CHEA>
+              the dependent node SHALL use the same Agent instance and preserve RunGraph data dependencies
+              </?01M0QP09M7QPJZVJ5YY375CHEA>
+            )>
+            <Case #reuse-authored-name (
+              <Given ?01M0QP09M7QPJZVJ5YY375CHEB>
+              an earlier Agent node created a unique authored instance name in the same Flow run
+              </?01M0QP09M7QPJZVJ5YY375CHEB>
+              <When ?01M0QP09M7QPJZVJ5YY375CHEC>
+              a later processor uses the exact constant `{byInstanceName}` selector
+              </?01M0QP09M7QPJZVJ5YY375CHEC>
+              <Then ?01M0QP09M7QPJZVJ5YY375CHED>
+              the selector SHALL resolve through checkpoint AI profile state and SHALL NOT create another instance
+              </?01M0QP09M7QPJZVJ5YY375CHED>
+            )>
+            <Case #fresh-run-graph-recovery (
+              <Given ?01M0QP09M7QPJZVJ5YY375CHEE>
+              a Data node's Agent completion and output are accepted in the canonical checkpoint
+              </?01M0QP09M7QPJZVJ5YY375CHEE>
+              <When ?01M0QP09M7QPJZVJ5YY375CHEF>
+              a fresh scheduler reconstructs the RunGraph
+              </?01M0QP09M7QPJZVJ5YY375CHEF>
+              <Then ?01M0QP09M7QPJZVJ5YY375CHEG>
+              it SHALL restore the output and instance identity as durable ports and SHALL NOT replay the completed Agent invocation
+              </?01M0QP09M7QPJZVJ5YY375CHEG>
+            )>
+            <Case #ordinary-node-grammar (
+              <Given ?01M0QP09M7QPJZVJ5YY375CHEH>
+              an AIData definition declares Agent task config on a standard processor node
+              </?01M0QP09M7QPJZVJ5YY375CHEH>
+              <When ?01M0QP09M7QPJZVJ5YY375CHEJ>
+              the loader proves the workflow/node/Agent resource tuple
+              </?01M0QP09M7QPJZVJ5YY375CHEJ>
+              <Then ?01M0QP09M7QPJZVJ5YY375CHEK>
+              it SHALL bind typed Agent semantics without introducing an `AgentTask` node or guessing from prose
+              </?01M0QP09M7QPJZVJ5YY375CHEK>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+  ]>
+)>

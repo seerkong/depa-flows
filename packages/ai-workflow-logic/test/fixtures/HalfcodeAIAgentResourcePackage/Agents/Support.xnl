@@ -1,0 +1,29 @@
+<AIAgentDefinition #depa.flows.test.Agent.Support apiVersion="depa.flows/v1" version="1.0.0" {
+  lifecycle = "Active"
+  description = "Support Agent definition"
+} (
+  <Messages [
+    <Message #system {
+      role = "system"
+      promptKind = "Prompt"
+      promptRef = "resource://depa.flows.test.Prompt.System"
+    }>
+    <Message #user {
+      role = "user"
+      promptKind = "Prompt"
+      promptRef = "resource://depa.flows.test.Prompt.User"
+    } (
+      <SchemaRef { kind = "MessageSchema" ref = "resource://depa.flows.test.Schema.Response" }>
+    )>
+  ]>
+  <InputSchemaRef { kind = "MessageSchema" ref = "resource://depa.flows.test.Schema.Request" }>
+  <OutputSchemaRef { kind = "MessageSchema" ref = "resource://depa.flows.test.Schema.Response" }>
+  <ToolRefs [
+    <ToolRef #lookup { kind = "Tool" ref = "resource://depa.flows.test.Tool.Lookup" }>
+  ]>
+  <EffectPolicyRef { kind = "EffectPolicy" ref = "resource://depa.flows.test.Policy.Safe" }>
+  <MaterialPortRefs [
+    <MaterialPortRef #request { kind = "MaterialPort" ref = "resource://depa.flows.test.Port.Request" }>
+    <MaterialPortRef #context { kind = "MaterialPort" ref = "resource://depa.flows.test.Port.Context" }>
+  ]>
+)>

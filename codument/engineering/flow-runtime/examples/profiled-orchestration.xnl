@@ -1,10 +1,14 @@
-<example #flow-runtime.examples.profiled-orchestration.profiled_orchestration {
-  kind = "example"
-} [
-  <scenario ?>一个 canonical bundle 同时暴露 InstantCtrlFlow、WorkCtrlFlow、BPCtrlFlow 与 EagerDataFlow；loader 按 product profile 建立 definition、contract 和可执行 plan。</?>
-  <walkthrough ?>
+<example #flow-runtime.examples.profiled-orchestration.profiled_orchestration apiVersion="codument.tech/v1alpha1" { kind = "example" } [
+  <scenario ?01M0NJZ4NMQHZ6VXRVCDJ0YP9G>
+  一个 canonical bundle 同时暴露 InstantCtrlFlow、WorkCtrlFlow、BPCtrlFlow 与 EagerDataFlow；loader 按 product profile 建立 definition、contract 和可执行 plan。
+  </?01M0NJZ4NMQHZ6VXRVCDJ0YP9G>
+  <walkthrough ?01M0NJZ4NMQHZ6VXRVCDJ0YP9H>
   loader 先建立 bundle 内的 FQN 索引，再解析 FlowContract、代码引用和 profile capability。InstantCtrlFlow 在一次调用内完成；WorkCtrlFlow/BPCtrlFlow 通过注入的 store、clock、task store 和 child resolver 持久化等待与恢复；EagerDataFlow 根据 data edge 和 waitFor edge 调度 ready nodes。所有动态代码都遵守 output = fn(runtime, input, config)，definition、execution plan 和 runtime snapshot 保持独立。
-  </?>
-  <expected-output ?>代码引用解析正确；持久 flow 可 start/resume/refresh；EagerDataFlow 保留 data edge 与 completion edge 的区别；所有运行事实不污染 canonical XNL。</?>
-  <notes ?>分支、lane/candidate、FlowContract 属于 definition；snapshot、WaitHandle、task outcome 属于 runtime facts；loader/compiler 生成的 plan 是可重建投影。</?>
+  </?01M0NJZ4NMQHZ6VXRVCDJ0YP9H>
+  <expected-output ?01M0NJZ4NMQHZ6VXRVCDJ0YP9J>
+  代码引用解析正确；持久 flow 可 start/resume/refresh；EagerDataFlow 保留 data edge 与 completion edge 的区别；所有运行事实不污染 canonical XNL。
+  </?01M0NJZ4NMQHZ6VXRVCDJ0YP9J>
+  <notes ?01M0NJZ4NMQHZ6VXRVCDJ0YP9K>
+  分支、lane/candidate、FlowContract 属于 definition；snapshot、WaitHandle、task outcome 属于 runtime facts；loader/compiler 生成的 plan 是可重建投影。
+  </?01M0NJZ4NMQHZ6VXRVCDJ0YP9K>
 ]>

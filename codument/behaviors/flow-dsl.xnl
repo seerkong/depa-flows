@@ -1,0 +1,202 @@
+<Behavior #flow-dsl apiVersion="codument.tech/v1alpha1" version="1" (
+  <Requirements [
+    <Requirement #unified-ctrl-flow-authoring (
+      <Statement ?01M0QNW540Z513XK3CQJZH13N2>
+      系统 SHALL 为 InstantCtrlFlow、WorkCtrlFlow、BPCtrlFlow 提供同一套 CtrlFlow authoring grammar；产品根的列表段 SHALL 直接保存有序 statements，不得要求 Tree、根 Sequence 或嵌套 CtrlFlow 包装。
+      </?01M0QNW540Z513XK3CQJZH13N2>
+      <Suites [
+        <Suite #root-grammar { name = "统一根语法" } (
+          <Cases [
+            <Case #direct-statements (
+              <Given ?01M0QNW540Z513XK3CQJZH13N3>
+              任一三种控制流产品定义
+              </?01M0QNW540Z513XK3CQJZH13N3>
+              <When ?01M0QNW540Z513XK3CQJZH13N4>
+              作者声明流程主体
+              </?01M0QNW540Z513XK3CQJZH13N4>
+              <Then ?01M0QNW540Z513XK3CQJZH13N5>
+              流程 statements SHALL 直接出现在产品根的列表段
+              </?01M0QNW540Z513XK3CQJZH13N5>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+    <Requirement #explicit-condition-semantics (
+      <Statement ?01M0QNW540Z513XK3CQJZH13N6>
+      系统 SHALL 使用 If、Branches、Branch、Otherwise 表达业务条件分支，predicate SHALL 指向遵守 runtime/input/config 协议的代码；Sequence、Selector、Condition SHALL 仅存在于派生执行计划。
+      </?01M0QNW540Z513XK3CQJZH13N6>
+      <Suites [
+        <Suite #condition-routing { name = "条件路由" } (
+          <Cases [
+            <Case #first-matching-branch (
+              <Given ?01M0QNW540Z513XK3CQJZH13N7>
+              多个按序声明的 Branch 和一个末尾 Otherwise
+              </?01M0QNW540Z513XK3CQJZH13N7>
+              <When ?01M0QNW540Z513XK3CQJZH13N8>
+              流程执行 If
+              </?01M0QNW540Z513XK3CQJZH13N8>
+              <Then ?01M0QNW540Z513XK3CQJZH13N9>
+              系统 SHALL 选择第一个 predicate 为 true 的 Branch，否则选择 Otherwise
+              </?01M0QNW540Z513XK3CQJZH13N9>
+            )>
+            <Case #business-result-is-data (
+              <Given ?01M0QNW540Z513XK3CQJZH13NA>
+              BPCtrlFlow TaskStep 产生 refused 业务结果
+              </?01M0QNW540Z513XK3CQJZH13NA>
+              <When ?01M0QNW540Z513XK3CQJZH13NB>
+              流程决定后续路径
+              </?01M0QNW540Z513XK3CQJZH13NB>
+              <Then ?01M0QNW540Z513XK3CQJZH13NC>
+              系统 SHALL 把 refused 作为 predicate 可读取的数据而不是技术 Failure
+              </?01M0QNW540Z513XK3CQJZH13NC>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+    <Requirement #profile-lifecycle (
+      <Statement ?01M0QNW540Z513XK3CQJZH13ND>
+      规范 SHALL 在共享 CtrlFlow grammar 上分别定义 InstantCtrlFlow、WorkCtrlFlow、BPCtrlFlow 的 capability 和生命周期约束，并区分业务结果、技术失败与挂起。
+      </?01M0QNW540Z513XK3CQJZH13ND>
+      <Suites [
+        <Suite #profile-capabilities { name = "产品 profile" } (
+          <Cases [
+            <Case #work-ctrl-flow-resume (
+              <Given ?01M0QNW540Z513XK3CQJZH13NE>
+              WorkCtrlFlow 已执行条件并在后续节点挂起
+              </?01M0QNW540Z513XK3CQJZH13NE>
+              <When ?01M0QNW540Z513XK3CQJZH13NF>
+              实例恢复
+              </?01M0QNW540Z513XK3CQJZH13NF>
+              <Then ?01M0QNW540Z513XK3CQJZH13NG>
+              系统 SHALL 复用已记录分支决策而不是重新改变已发生路径
+              </?01M0QNW540Z513XK3CQJZH13NG>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+    <Requirement #eager-data-flow (
+      <Statement ?01M0QNW540Z513XK3CQJZH13NH>
+      系统 SHALL 把端口和 waitFor 驱动的 DAG 产品命名为 EagerDataFlow，并 SHALL 明确它与前端 signal/lazy DataGraph 的执行语义不同。
+      </?01M0QNW540Z513XK3CQJZH13NH>
+      <Suites [
+        <Suite #eager-dag { name = "EagerDataFlow DAG" } (
+          <Cases [
+            <Case #data-and-completion-edges (
+              <Given ?01M0QNW540Z513XK3CQJZH13NJ>
+              EagerDataFlow 同时声明 flow-port data edge 和 flow-node waitFor edge
+              </?01M0QNW540Z513XK3CQJZH13NJ>
+              <When ?01M0QNW540Z513XK3CQJZH13NK>
+              规范描述依赖关系
+              </?01M0QNW540Z513XK3CQJZH13NK>
+              <Then ?01M0QNW540Z513XK3CQJZH13NM>
+              两类边 SHALL 被分别保留并共同参与无环校验
+              </?01M0QNW540Z513XK3CQJZH13NM>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+    <Requirement #no-legacy-dialect (
+      <Statement ?01M0QNW540Z513XK3CQJZH13NN>
+      目标规范 MUST NOT 保留旧公开 Tree、Sequence、Selector、Condition、action.types、CtrlFlow 根或 DataFlow 根的兼容入口。
+      </?01M0QNW540Z513XK3CQJZH13NN>
+      <Suites [
+        <Suite #legacy-rejection { name = "旧方言拒绝" } (
+          <Cases [
+            <Case #legacy-is-not-documented-as-supported (
+              <Given ?01M0QNW540Z513XK3CQJZH13NP>
+              读者浏览 docs/flow-dsl
+              </?01M0QNW540Z513XK3CQJZH13NP>
+              <When ?01M0QNW540Z513XK3CQJZH13NQ>
+              查找旧 authoring 方言
+              </?01M0QNW540Z513XK3CQJZH13NQ>
+              <Then ?01M0QNW540Z513XK3CQJZH13NR>
+              旧方言 SHALL 只出现在明确的 removed/rejected 清单中
+              </?01M0QNW540Z513XK3CQJZH13NR>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+    <Requirement #versioned-authoring-reference-module (
+      <Statement ?01M0QNW540Z513XK3CQJZH13NS>
+      The system SHALL publish canonical Flow DSL documentation as a deterministic package-contained Halfcode authoring module for downstream Skill composition.
+      </?01M0QNW540Z513XK3CQJZH13NS>
+      <Suites [
+        <Suite #canonical-reference-projection { name = "Canonical reference projection" } (
+          <Cases [
+            <Case #preserve-canonical-tree (
+              <Given ?01M0QNW540Z513XK3CQJZH13NT>
+              The canonical docs/flow-dsl Markdown tree and a fixed package version
+              </?01M0QNW540Z513XK3CQJZH13NT>
+              <When ?01M0QNW540Z513XK3CQJZH13NV>
+              The reference module is generated
+              </?01M0QNW540Z513XK3CQJZH13NV>
+              <Then ?01M0QNW540Z513XK3CQJZH13NW>
+              The system SHALL preserve selected relative paths and source bytes and SHALL record an ordered sha256 provenance manifest
+              </?01M0QNW540Z513XK3CQJZH13NW>
+            )>
+            <Case #load-through-halfcode (
+              <Given ?01M0QNW540Z513XK3CQJZH13NX>
+              The generated module is loaded from an installed package
+              </?01M0QNW540Z513XK3CQJZH13NX>
+              <When ?01M0QNW540Z513XK3CQJZH13NY>
+              A consumer opens its ResourcePackage
+              </?01M0QNW540Z513XK3CQJZH13NY>
+              <Then ?01M0QNW540Z513XK3CQJZH13NZ>
+              The system SHALL delegate parsing, validation and normalized resource projection to Halfcode without a second loader
+              </?01M0QNW540Z513XK3CQJZH13NZ>
+            )>
+            <Case #compose-explicit-skill-references (
+              <Given ?01M0QNW540Z513XK3CQJZH13P0>
+              A downstream Skill explicitly selects Flow DSL module content through ResourceMappings
+              </?01M0QNW540Z513XK3CQJZH13P0>
+              <When ?01M0QNW540Z513XK3CQJZH13P1>
+              The Skill distribution plan is compiled
+              </?01M0QNW540Z513XK3CQJZH13P1>
+              <Then ?01M0QNW540Z513XK3CQJZH13P2>
+              The system SHALL preserve the canonical subtree under references/flow-dsl and bind the module version and provenance
+              </?01M0QNW540Z513XK3CQJZH13P2>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+    <Requirement #reference-module-package-boundary (
+      <Statement ?01M0QNW540Z513XK3CQJZH13P3>
+      The Flow DSL reference module SHALL be an isolated authoring package and MUST NOT introduce workflow runtime, host policy, a fifth installed system Skill or registry-selection policy.
+      </?01M0QNW540Z513XK3CQJZH13P3>
+      <Suites [
+        <Suite #public-package-boundary { name = "Public package boundary" } (
+          <Cases [
+            <Case #preserve-runtime-packages (
+              <Given ?01M0QNW540Z513XK3CQJZH13P4>
+              Existing consumers import ai-workflow-contract or ai-workflow-logic
+              </?01M0QNW540Z513XK3CQJZH13P4>
+              <When ?01M0QNW540Z513XK3CQJZH13P5>
+              The dedicated Flow DSL reference package is published
+              </?01M0QNW540Z513XK3CQJZH13P5>
+              <Then ?01M0QNW540Z513XK3CQJZH13P6>
+              The existing runtime package versions and dependency graphs MUST remain unchanged
+              </?01M0QNW540Z513XK3CQJZH13P6>
+            )>
+            <Case #publish-smallest-patch (
+              <Given ?01M0QNW540Z513XK3CQJZH13P7>
+              The reference module candidate passes package and compatibility checks
+              </?01M0QNW540Z513XK3CQJZH13P7>
+              <When ?01M0QNW540Z513XK3CQJZH13P8>
+              The package is published
+              </?01M0QNW540Z513XK3CQJZH13P8>
+              <Then ?01M0QNW540Z513XK3CQJZH13P9>
+              The new package SHALL publish at 0.1.0 with exact Halfcode 0.2.3 and no registry override
+              </?01M0QNW540Z513XK3CQJZH13P9>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+  ]>
+)>

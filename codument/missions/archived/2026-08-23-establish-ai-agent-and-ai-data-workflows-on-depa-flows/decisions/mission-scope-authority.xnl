@@ -1,0 +1,35 @@
+<decision #mission.scope.foundation apiVersion="codument.tech/v1alpha1" {
+    status = "accepted"
+    priority = "P0"
+  }
+  (
+    <question ?>两个新 AI workflow 类型应建立在哪个底座上？</?>
+    <answer { } (<raw-answer ?>AI Ctrl Workflow 基于 WorkCtrlFlow；AI Data Workflow 基于 EagerDataFlow。</?> <decision-text ?>两个 AI Workflow profile 分别复用 WorkCtrlFlow 与 EagerDataFlow substrate。</?> <rationale ?>避免引入替代 flow engine。</?> <evidence ?>Mission implementation and E2E tests.</?>)>
+  )>
+
+<decision #mission.scope.resource_format apiVersion="codument.tech/v1alpha1" {
+    status = "accepted"
+    priority = "P0"
+  }
+  (
+    <question ?>应用 bundle workspace authoring 使用什么资源格式？</?>
+    <answer { } (<raw-answer ?>使用本仓库 XNL bundle/resource 标准；不引入 XML authoring。</?> <decision-text ?>应用 bundle authoring 只使用 canonical XNL resource standard。</?> <rationale ?>与 Flow DSL 示例和校验方向一致。</?> <evidence ?>Canonical bundle examples and Flow DSL checks.</?>)>
+  )>
+
+<decision #mission.scope.effect_provider apiVersion="codument.tech/v1alpha1" {
+    status = "accepted"
+    priority = "P0"
+  }
+  (
+    <question ?>AI effect provider 如何执行？</?>
+    <answer { } (<raw-answer ?>作为库内可编程嵌入能力，通过 runtime/config 注入。</?> <decision-text ?>AI effect provider is embedded through explicit runtime/config and does not depend on an external CLI.</?> <rationale ?>符合 DEPA 显式 effect contract。</?> <evidence ?>Runtime-first processors and integration tests.</?>)>
+  )>
+
+<decision #mission.scope.path_hygiene apiVersion="codument.tech/v1alpha1" {
+    status = "accepted"
+    priority = "P0"
+  }
+  (
+    <question ?>绝对路径和外部参考信息如何持久化？</?>
+    <answer { } (<raw-answer ?>绝对路径只能放入 ignored analysis 或 reports。</?> <decision-text ?>Versioned product resources record logical roles and protocols, never host-specific absolute paths.</?> <rationale ?>避免宿主信息污染可分发资源。</?> <evidence ?>Static path-hygiene gates.</?>)>
+  )>

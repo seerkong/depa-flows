@@ -1,0 +1,30 @@
+<BehaviorPatch #track.add-typed-agent-invocation-and-instance-selection.behavior_patch.ai-ctrl-workflow apiVersion="codument.tech/v1alpha1" version="1" { capability = "ai-ctrl-workflow" } (
+  <Mutations [
+    <Upsert { selector = "behavior://ai-ctrl-workflow/requirements/typed-agent-task-binding" } (
+      <Requirement #typed-agent-task-binding (
+        <Statement ?>AICtrlWorkflow SHALL execute typed Agent tasks through ordinary WorkCtrlFlow nodes and the named Agent facade without adding a role-specific substrate statement.</?>
+        <Suites [
+          <Suite #ctrl-agent-reuse { name = "Ctrl Agent instance reuse" } (
+            <Cases [
+              <Case #create-named-and-reuse-by-name (
+                <Given ?>a runtime-first `Run` node is exactly bound to an Agent definition and authors an instance name</?>
+                <When ?>a later `Run` selects that name through `runTargetedAgent`</?>
+                <Then ?>both nodes SHALL use the same Agent instance and persist their receipts with the WorkCtrl snapshot</?>
+              )>
+              <Case #reuse-returned-id-after-resume (
+                <Given ?>a Ctrl node output contains a stable Agent instance id and the flow later waits</?>
+                <When ?>a fresh controller resumes and a later node selects the returned id</?>
+                <Then ?>the later invocation SHALL resolve from checkpoint AI profile state without reading child conversation history or creating another instance</?>
+              )>
+              <Case #exact-task-binding (
+                <Given ?>a `Run` node has missing, mismatched or ambiguous Agent task/config binding</?>
+                <When ?>the AICtrl loader or runtime prepares Agent invocation</?>
+                <Then ?>it SHALL report an exact diagnostic and SHALL NOT infer Agent semantics from node names, source names or topology</?>
+              )>
+            ]>
+          )>
+        ]>
+      )>
+    )>
+  ]>
+)>

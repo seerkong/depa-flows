@@ -1,28 +1,29 @@
 {
   "name": "ai-ctrl-workflow-logic",
-  "version": "0.1.2",
+  "version": "0.1.7",
   "private": false,
   "description": "WorkCtrlFlow-backed AI Ctrl Workflow adapter logic",
   "type": "module",
   "main": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./browser": "./src/browser.ts"
+    "./browser": "./src/browser.ts",
+    "./filesystem": "./src/filesystem.ts"
   },
   "dependencies": {
-    "ai-ctrl-workflow-contract": "workspace:*",
-    "ai-workflow-contract": "workspace:*",
-    "ai-workflow-logic": "workspace:*",
-    "instant-ctrl-flow-contract": "workspace:*",
-    "instant-ctrl-flow-logic": "^0.1.1",
-    "work-ctrl-flow-contract": "workspace:*",
-    "work-ctrl-flow-logic": "workspace:*"
+    "ai-ctrl-workflow-contract": "0.1.4",
+    "ai-workflow-contract": "0.1.7",
+    "ai-workflow-logic": "0.1.8",
+    "flow-step-space-logic": "0.1.1",
+    "instant-ctrl-flow-contract": "0.1.2",
+    "instant-ctrl-flow-logic": "0.1.5",
+    "work-ctrl-flow-contract": "0.1.3",
+    "work-ctrl-flow-logic": "0.1.4"
   },
   "files": [
     "src"
   ],
   "publishConfig": {
-    "access": "public",
-    "registry": "https://registry.npmjs.com"
+    "access": "public"
   }
 }

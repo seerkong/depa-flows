@@ -1,0 +1,53 @@
+<Track #define-eidolon-native-workflow-boundaries version="1" apiVersion="codument.tech/v1alpha1" { status = "completed" goal = "Define Eidolon-native workflow integration boundaries for tools, effects, facts and recovery." description = "Solidify the agreed package placement, native authoring tools, internal effect adapters, workflow facts authority and actor/session recovery reuse before implementation." question_mode = "decision-tree" question_severity = "light" commit_mode = "manual" created_at = "2026-08-03T05:30:45Z" updated_at = "2026-08-03T06:38:02Z" } (
+  <Ports { scope = "track" } [
+    <MaterialBundle { role = "input" name = "behavior-deltas" domain = "behavior" path = "vfs://./behavior_deltas/" }>
+    <MaterialBundle { role = "state" name = "analysis" domain = "codument" path = "vfs://./analysis/" }>
+    <MaterialBundle { role = "output" name = "design" domain = "doc" path = "vfs://./" }>
+    <MaterialBundle { role = "output" name = "behavior" domain = "codument" path = "vfs://@/codument/behaviors/" }>
+  ]>
+  <TaskSpace #space_define-eidolon-native-workflow-boundaries { name = "define-eidolon-native-workflow-boundaries" } (
+    <Description ?01M0NJZ4SQZP109V0K55D0QTQB>
+    Define the Eidolon-native boundaries for workflow tool exposure, effect handling, fact ownership and recovery reuse.
+    </?01M0NJZ4SQZP109V0K55D0QTQB>
+    <SubNodes [
+      <TaskGroup #P1 { name = "Evidence and boundary consolidation" status = "DONE" order = 0 } (
+        <Description ?01M0NJZ4SQZP109V0K55D0QTQC>
+        Consolidate the read-only Eidolon observations and user-approved placement decisions into a single target architecture.
+        </?01M0NJZ4SQZP109V0K55D0QTQC>
+        <SubNodes [
+          <Task { id = "T1.1" name = "Consolidate package placement for contracts, tools, effects and profile enablement" status = "DONE" order = 0 }>
+          <Task { id = "T1.2" name = "Consolidate workflow fact authority and Eidolon recovery reuse boundary" status = "DONE" order = 1 }>
+          <Task { id = "T1.3" name = "Consolidate native authoring workspace tool scope" status = "DONE" order = 2 }>
+        ]>
+      )>
+      <TaskGroup #P2 { name = "Behavior and design artifacts" status = "DONE" order = 1 } (
+        <Description ?01M0NJZ4SQZP109V0K55D0QTQD>
+        Record requirements, durable decisions and implementation-ready design.
+        </?01M0NJZ4SQZP109V0K55D0QTQD>
+        <SubNodes [
+          <Task { id = "T2.1" name = "Finalize eidolon-workflow-integration behavior delta" status = "DONE" order = 0 }>
+          <Task { id = "T2.2" name = "Finalize package/tool/effect/fact authority decisions" status = "DONE" order = 1 }>
+          <Task { id = "T2.3" name = "Finalize design for runtime tools, authoring tools, effect adapters and recovery" status = "DONE" order = 2 }>
+        ]>
+      )>
+      <TaskGroup #P3 { name = "Implementation readiness review" status = "DONE" order = 2 } (
+        <Description ?01M0NJZ4SQZP109V0K55D0QTQE>
+        Prepare this architecture track for implementation handoff without changing Eidolon source in this track.
+        </?01M0NJZ4SQZP109V0K55D0QTQE>
+        <SubNodes [
+          <Task { id = "T3.1" name = "Identify follow-up implementation tracks and entrypoints" status = "DONE" order = 0 }>
+          <Task { id = "T3.2" name = "Validate Codument artifacts and path hygiene" status = "DONE" order = 1 }>
+        ]>
+        <Hooks [
+          <Hook { on = "phase:after" } (
+            <AttractorCheck { use = "coding" }>
+          )>
+        ]>
+      )>
+    ]>
+  )>
+  <Schedule [
+    <Parallel { max_concurrent = 1 spot_check = true }>
+  ]>
+  <Hooks>
+)>

@@ -1,0 +1,192 @@
+<Track #add-ai-agent-definition-material-and-run-freeze-resources version="1" apiVersion="codument.tech/v1alpha1" { status = "completed" goal = "Project AI Agent and Material resources from Halfcode facts and freeze each workflow run against an immutable dependency snapshot." description = "Add browser-safe domain projections plus a Node-only Halfcode run-freeze adapter without introducing a second resource authority or workflow runtime." question_mode = "decision-tree" question_severity = "auto" commit_mode = "manual" created_at = "2026-08-16T04:18:00Z" updated_at = "2026-08-16T06:45:00Z" } (
+  <Ports { scope = "track" } [
+    <MaterialBundle { role = "input" name = "behavior-deltas" domain = "behavior" path = "vfs://./behavior_deltas/" }>
+    <MaterialBundle { role = "input" name = "modeling-deltas" domain = "modeling" path = "vfs://./modeling_deltas/" }>
+    <MaterialBundle { role = "input" name = "analysis" domain = "engineering" path = "vfs://./analysis/" }>
+    <MaterialBundle { role = "output" name = "packages" domain = "code" path = "vfs://@/packages/" }>
+    <MaterialBundle { role = "output" name = "docs" domain = "docs" path = "vfs://@/docs/flow-dsl/" }>
+    <MaterialBundle { role = "output" name = "behavior" domain = "behavior" path = "vfs://@/codument/behaviors/" }>
+    <MaterialBundle { role = "output" name = "modeling" domain = "modeling" path = "vfs://@/codument/modeling/" }>
+  ]>
+  <TaskSpace #space_add-ai-agent-definition-material-and-run-freeze-resources { name = "add-ai-agent-definition-material-and-run-freeze-resources" } (
+    <Description ?01M0NJZ4PCHHR8CKA0T165V5DV>
+    Define exact AI resource relations, project them without host policy, and freeze run dependencies through Halfcode 0.2.2.
+    </?01M0NJZ4PCHHR8CKA0T165V5DV>
+    <SubNodes [
+      <TaskGroup #P1 { name = "Freeze public resource contracts and upstream seam" status = "DONE" order = 0 } (
+        <Description ?01M0NJZ4PCHHR8CKA0T165V5DW>
+        Capture RED evidence, bind the immutable Halfcode release and define additive domain contracts.
+        </?01M0NJZ4PCHHR8CKA0T165V5DW>
+        <SubNodes [
+          <Task { id = "T1.1" name = "Add RED agent material and freeze characterization" status = "DONE" order = 0 priority = "P0" } (
+            <Acceptance [
+              <Criterion { id = "T1.1-AC1" checked = true } ?01M0NJZ4PCHHR8CKA0T165V5DX>
+              Focused tests demonstrate missing agent/material projection and run-freeze APIs before implementation
+              </?01M0NJZ4PCHHR8CKA0T165V5DX>
+              <Criterion { id = "T1.1-AC2" checked = true } ?01M0NJZ4PCHHR8CKA0T165V5DY>
+              Boundary cases cover exact refs, authored order, required bindings, immutable receipts and browser separation
+              </?01M0NJZ4PCHHR8CKA0T165V5DY>
+            ]>
+          )>
+          <Task { id = "T1.2" name = "Pin Halfcode 0.2.2 and expose additive domain types" status = "DONE" order = 1 priority = "P0" } (
+            <Acceptance [
+              <Criterion { id = "T1.2-AC1" checked = true } ?01M0NJZ4PCHHR8CKA0T165V5DZ>
+              Contract and logic packages resolve the exact published halfcode-compiler.xnl 0.2.2 release
+              </?01M0NJZ4PCHHR8CKA0T165V5DZ>
+              <Criterion { id = "T1.2-AC2" checked = true } ?01M0NJZ4PCHHR8CKA0T165V5E0>
+              Public types do not copy EffectiveResourceRegistry, dependency snapshot or content identity contracts
+              </?01M0NJZ4PCHHR8CKA0T165V5E0>
+              <Criterion { id = "T1.2-AC3" checked = true } ?01M0NJZ4PCHHR8CKA0T165V5E1>
+              Existing 0.1.x app and legacy compatibility imports remain available
+              </?01M0NJZ4PCHHR8CKA0T165V5E1>
+            ]>
+          )>
+        ]>
+        <Gate [
+          <Criterion { checked = true } ?01M0NJZ4PCHHR8CKA0T165V5E2>
+          RED evidence exists and the published Halfcode 0.2.2 seam is reproducibly installed
+          </?01M0NJZ4PCHHR8CKA0T165V5E2>
+        ]>
+      )>
+      <TaskGroup #P2 { name = "Pure Agent and Material projection" status = "DONE" order = 1 } (
+        <Description ?01M0NJZ4PCHHR8CKA0T165V5E3>
+        Project only fixed typed XNL relations into deeply immutable workflow-domain views.
+        </?01M0NJZ4PCHHR8CKA0T165V5E3>
+        <SubNodes [
+          <Task { id = "T2.1" name = "Implement exact AIAgentDefinition projection" status = "DONE" order = 0 priority = "P0" } (
+            <Acceptance [
+              <Criterion { id = "T2.1-AC1" checked = true } ?01M0NJZ4PCHHR8CKA0T165V5E4>
+              Messages preserve authored order and roles use a closed vocabulary
+              </?01M0NJZ4PCHHR8CKA0T165V5E4>
+              <Criterion { id = "T2.1-AC2" checked = true } ?01M0NJZ4PCHHR8CKA0T165V5E5>
+              Prompt, schema, tool, effect-policy and material-port refs resolve by exact resource identity and kind
+              </?01M0NJZ4PCHHR8CKA0T165V5E5>
+              <Criterion { id = "T2.1-AC3" checked = true } ?01M0NJZ4PCHHR8CKA0T165V5E6>
+              Malformed or duplicate structure fails with stable diagnostics and no partial projection
+              </?01M0NJZ4PCHHR8CKA0T165V5E6>
+            ]>
+          )>
+          <Task { id = "T2.2" name = "Implement MaterialPort and MaterialBinding projection" status = "DONE" order = 1 priority = "P0" } (
+            <Acceptance [
+              <Criterion { id = "T2.2-AC1" checked = true } ?01M0NJZ4PCHHR8CKA0T165V5E7>
+              Port kind, required and cardinality facts are explicit and immutable
+              </?01M0NJZ4PCHHR8CKA0T165V5E7>
+              <Criterion { id = "T2.2-AC2" checked = true } ?01M0NJZ4PCHHR8CKA0T165V5E8>
+              Bindings carry exact workflow task, agent, port and material identities without name inference
+              </?01M0NJZ4PCHHR8CKA0T165V5E8>
+              <Criterion { id = "T2.2-AC3" checked = true } ?01M0NJZ4PCHHR8CKA0T165V5E9>
+              Projection emits only the closed set of typed Halfcode dependency edges
+              </?01M0NJZ4PCHHR8CKA0T165V5E9>
+            ]>
+          )>
+          <Task { id = "T2.3" name = "Prove pure and browser-safe projection boundary" status = "DONE" order = 2 priority = "P0" } (
+            <Acceptance [
+              <Criterion { id = "T2.3-AC1" checked = true } ?01M0NJZ4PCHHR8CKA0T165V5EA>
+              Projection neither reads files nor scans arbitrary text for refs or semantics
+              </?01M0NJZ4PCHHR8CKA0T165V5EA>
+              <Criterion { id = "T2.3-AC2" checked = true } ?01M0NJZ4PCHHR8CKA0T165V5EB>
+              Root and browser exports contain no Node-only run-freeze dependency
+              </?01M0NJZ4PCHHR8CKA0T165V5EB>
+              <Criterion { id = "T2.3-AC3" checked = true } ?01M0NJZ4PCHHR8CKA0T165V5EC>
+              Similar ids and ordinary natural-language content cannot create unintended relations
+              </?01M0NJZ4PCHHR8CKA0T165V5EC>
+            ]>
+          )>
+        ]>
+        <Gate [
+          <Criterion { checked = true } ?01M0NJZ4PCHHR8CKA0T165V5ED>
+          Focused pure projection and browser tests pass
+          </?01M0NJZ4PCHHR8CKA0T165V5ED>
+        ]>
+      )>
+      <TaskGroup #P3 { name = "Run resource freeze and semantic receipt" status = "DONE" order = 2 } (
+        <Description ?01M0NJZ4PCHHR8CKA0T165V5EE>
+        Select one explicit agent task, validate its material bindings, and delegate closure proof to Halfcode.
+        </?01M0NJZ4PCHHR8CKA0T165V5EE>
+        <SubNodes [
+          <Task { id = "T3.1" name = "Add Node-only run-freeze entry" status = "DONE" order = 0 priority = "P0" } (
+            <Acceptance [
+              <Criterion { id = "T3.1-AC1" checked = true } ?01M0NJZ4PCHHR8CKA0T165V5EF>
+              The entry accepts an authentic Halfcode EffectiveResourceRegistry and loader-owned content identities
+              </?01M0NJZ4PCHHR8CKA0T165V5EF>
+              <Criterion { id = "T3.1-AC2" checked = true } ?01M0NJZ4PCHHR8CKA0T165V5EG>
+              It calls buildResourceDependencySnapshot rather than reimplementing dependency closure
+              </?01M0NJZ4PCHHR8CKA0T165V5EG>
+              <Criterion { id = "T3.1-AC3" checked = true } ?01M0NJZ4PCHHR8CKA0T165V5EH>
+              Missing agent, foreign port, required/cardinality and material-kind violations fail before a receipt is returned
+              </?01M0NJZ4PCHHR8CKA0T165V5EH>
+            ]>
+          )>
+          <Task { id = "T3.2" name = "Create deterministic immutable freeze receipt" status = "DONE" order = 1 priority = "P0" } (
+            <Acceptance [
+              <Criterion { id = "T3.2-AC1" checked = true } ?01M0NJZ4PCHHR8CKA0T165V5EJ>
+              Binding ids follow authored port order and fixed code-unit order within many-valued ports
+              </?01M0NJZ4PCHHR8CKA0T165V5EJ>
+              <Criterion { id = "T3.2-AC2" checked = true } ?01M0NJZ4PCHHR8CKA0T165V5EK>
+              Semantic fingerprint binds selected domain facts and reachable content while excluding unrelated registry resources and host run facts
+              </?01M0NJZ4PCHHR8CKA0T165V5EK>
+              <Criterion { id = "T3.2-AC3" checked = true } ?01M0NJZ4PCHHR8CKA0T165V5EM>
+              Receipt, task, bindings and dependency snapshot are deeply immutable
+              </?01M0NJZ4PCHHR8CKA0T165V5EM>
+            ]>
+          )>
+        ]>
+        <Gate [
+          <Criterion { checked = true } ?01M0NJZ4PCHHR8CKA0T165V5EN>
+          Real Halfcode loader-to-snapshot tests and deterministic receipt tests pass
+          </?01M0NJZ4PCHHR8CKA0T165V5EN>
+        ]>
+      )>
+      <TaskGroup #P4 { name = "Docs package and authority acceptance" status = "DONE" order = 3 } (
+        <Description ?01M0NJZ4PCHHR8CKA0T165V5EP>
+        Publish the domain boundary in Flow DSL docs and run complete compatibility and authority checks.
+        </?01M0NJZ4PCHHR8CKA0T165V5EP>
+        <SubNodes [
+          <Task { id = "T4.1" name = "Document XNL shapes and authority ownership" status = "DONE" order = 0 priority = "P0" } (
+            <Acceptance [
+              <Criterion { id = "T4.1-AC1" checked = true } ?01M0NJZ4PCHHR8CKA0T165V5EQ>
+              Flow DSL docs define fixed Agent, Message, MaterialPort, MaterialBinding and AgentTaskRef shapes
+              </?01M0NJZ4PCHHR8CKA0T165V5EQ>
+              <Criterion { id = "T4.1-AC2" checked = true } ?01M0NJZ4PCHHR8CKA0T165V5ER>
+              Docs keep resource loading, layering, content identity and closure in Halfcode and runtime roots in Eidolon
+              </?01M0NJZ4PCHHR8CKA0T165V5ER>
+              <Criterion { id = "T4.1-AC3" checked = true } ?01M0NJZ4PCHHR8CKA0T165V5ES>
+              Modeling and behavior deltas match the public implementation
+              </?01M0NJZ4PCHHR8CKA0T165V5ES>
+            ]>
+          )>
+          <Task { id = "T4.2" name = "Run full compatibility and static gates" status = "DONE" order = 1 priority = "P0" } (
+            <Acceptance [
+              <Criterion { id = "T4.2-AC1" checked = true } ?01M0NJZ4PCHHR8CKA0T165V5ET>
+              Focused and full tests, typecheck and all Flow DSL examples pass
+              </?01M0NJZ4PCHHR8CKA0T165V5ET>
+              <Criterion { id = "T4.2-AC2" checked = true } ?01M0NJZ4PCHHR8CKA0T165V5EV>
+              Packed and registry-only consumers install exact non-workspace dependencies, expose the new subpaths and resolve Halfcode 0.2.2
+              </?01M0NJZ4PCHHR8CKA0T165V5EV>
+              <Criterion { id = "T4.2-AC3" checked = true } ?01M0NJZ4PCHHR8CKA0T165V5EW>
+              Static scans find no second resource manager, host runtime facts or text-based semantic routing
+              </?01M0NJZ4PCHHR8CKA0T165V5EW>
+              <Criterion { id = "T4.2-AC4" checked = true } ?01M0NJZ4PCHHR8CKA0T165V5EX>
+              Implementation report records versions, commands, receipts and remaining review
+              </?01M0NJZ4PCHHR8CKA0T165V5EX>
+            ]>
+          )>
+        ]>
+        <Gate [
+          <Criterion { checked = true } ?01M0NJZ4PCHHR8CKA0T165V5EY>
+          All automated evidence is green before independent terminal review
+          </?01M0NJZ4PCHHR8CKA0T165V5EY>
+        ]>
+        <Hooks [
+          <Hook { on = "phase:after" } (
+            <AttractorCheck { use = "coding" }>
+          )>
+        ]>
+      )>
+    ]>
+  )>
+  <Schedule [
+    <Parallel { max_concurrent = 1 spot_check = true }>
+  ]>
+  <Hooks>
+)>

@@ -1,0 +1,25 @@
+<BehaviorPatch #track.add-flow-step-space-and-state-sidecars.behavior_patch.flow-profile-runtime apiVersion="codument.tech/v1alpha1" version="1" { capability = "flow-profile-runtime" } (
+  <Mutations [
+    <Upsert { selector = "behavior://flow-profile-runtime/requirements/step-sidecar-checkpoint-projection" } (
+      <Requirement #step-sidecar-checkpoint-projection (
+        <Statement ?>Step-local physical records SHALL reconstruct the same closed logical FlowRunCheckpoint and SHALL pass all profile, Agent, version, terminal and reciprocal transition validators before a new head is admitted; unknown extension kinds or direct physical writes SHALL fail closed.</?>
+        <Suites [
+          <Suite #logical-equivalence { name = "Logical checkpoint equivalence" } (
+            <Cases [
+              <Case #memory-filesystem-equivalence (
+                <Given ?>the same accepted logical transition is committed through memory and sidecar filesystem stores</?>
+                <When ?>both checkpoints are loaded</?>
+                <Then ?>their normalized logical values and derived projections SHALL be exactly equal</?>
+              )>
+              <Case #legacy-one-way-import (
+                <Given ?>a valid direct logical checkpoint from the prior storage schema</?>
+                <When ?>the sidecar store performs the next transition</?>
+                <Then ?>it SHALL import once, preserve the logical value and thereafter write only the new head/record form without dual-writing</?>
+              )>
+            ]>
+          )>
+        ]>
+      )>
+    )>
+  ]>
+)>

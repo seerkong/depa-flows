@@ -26,6 +26,8 @@ The workflow definition must not derive these roots from process cwd, environmen
 
 AI/tool effects are invoked through the embedded provider in runtime context. A statement may call code with `vfs://./...#Export`; that code may use `runtime.ai.effects` or the shared invocation helper. The definition does not name a CLI.
 
-## State projection
+## Canonical checkpoint profile
 
-WorkCtrlFlow snapshots remain the durable execution substrate. AI Ctrl Workflow run records are projections over snapshots plus AI node/material metadata. Adding or changing projection fields must not rewrite historical WorkCtrlFlow snapshots.
+Each run has one canonical checkpoint owner. Its `AICtrlWorkflow` profile contains the WorkCtrl snapshot and closed AI durable state, while the common envelope owns input/config/state/output and controller/node sidecars. These facts advance in one versioned transition; there is no parallel AI run-record store.
+
+Events, indexes and views are readonly projections. External runtime state is retained only through opaque identities and receipts. A fresh process resumes from the frozen instance plus checkpoint, without reading the live definition.

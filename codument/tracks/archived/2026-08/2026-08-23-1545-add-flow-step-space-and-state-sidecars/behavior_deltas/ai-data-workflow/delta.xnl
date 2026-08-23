@@ -1,0 +1,20 @@
+<BehaviorPatch #track.add-flow-step-space-and-state-sidecars.behavior_patch.ai-data-workflow apiVersion="codument.tech/v1alpha1" version="1" { capability = "ai-data-workflow" } (
+  <Mutations [
+    <Upsert { selector = "behavior://ai-data-workflow/requirements/step-space-sidecar-runtime" } (
+      <Requirement #step-space-sidecar-runtime (
+        <Statement ?>AIDataWorkflow SHALL assemble StepSpace steps into its existing dependency graph and SHALL persist each node/result/fingerprint/invalidation projection through the canonical step record codec while retaining binding, generation and patch authority in the accepted checkpoint root.</?>
+        <Suites [
+          <Suite #data-step-recovery { name = "Data step-local recovery" } (
+            <Cases [
+              <Case #accepted-node-not-replayed (
+                <Given ?>one effectful Data step result is accepted and a later step is waiting</?>
+                <When ?>a fresh process reconstructs the run from checkpoint head and step records</?>
+                <Then ?>the accepted step SHALL not execute again and the later step SHALL continue with the exact reconstructed output</?>
+              )>
+            ]>
+          )>
+        ]>
+      )>
+    )>
+  ]>
+)>

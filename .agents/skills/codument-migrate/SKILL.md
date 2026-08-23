@@ -1,16 +1,18 @@
 ---
 name: codument-migrate
-description: 迁移旧 Codument 资产到当前标准，包括旧 archive/track 布局、Markdown specs、历史 decision.md 与旧 Decision XNL。升级旧工作区，或需要执行 archive、specs、decisions、all 任一迁移时使用。
+description: 自主升级 Codument workspace 或单资源。无参数时完成整个 workspace 的 CLI 迁移、当前 Agent 语义 review 与全量验证；传入路径时只升级该资源。
 ---
 
 # Codument · migrate
 
-打开并严格遵循工作区权威 action：
+打开并严格遵循工作区权威 operation：
 
-`@/codument/std/actions/migrate.md`
+`@/codument/std/operations/migrate.md`
 
 - **前置**：项目已通过 `codument init` 初始化。
-- **用法**：迁移 `[archive | specs | decisions | all]`。
-- **路由**：`archive` / `specs` 按 action 对应分支执行；`decisions` / `all` 在 inventory 或写入前，必须再打开并严格遵循 [references/decision-migration.md](references/decision-migration.md)。
+- **无参数**：直接完整升级当前 workspace，不要求用户补充步骤。
+- **一个路径参数**：只升级该资源及其必要验证上下文。
+- **单资源 CLI**：`codument upgrade-resource <path> --json`。
+- **Decision review**：命令对旧 Decision 返回 `review-required` 时，再打开并遵循 [references/decision-migration.md](references/decision-migration.md)。
 
-保持本文件只承担路由。Decision 的 recovery、conversion、conflict、staging、verification 与 rollback 细则只在 bundled reference 中维护。
+保持本文件只承担路由。workspace/resource 控制循环以 operation 为准；Decision 的 recovery、conversion、conflict、staging、verification 与旧 authority 退役细则只在 bundled reference 中维护。

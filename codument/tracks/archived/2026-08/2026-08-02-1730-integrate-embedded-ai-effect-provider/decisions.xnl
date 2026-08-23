@@ -1,14 +1,13 @@
-<decisions #integrate-embedded-ai-effect-provider {
-  version = "1"
-}
-(
-  <decision #track.effects.dispatch_boundary {
-    status = "accepted"
-    priority = "P0"
-  }
-  (
-    <question ?>Where should AI workflow effects execute?</?>
-    <answer ?>Effects execute through a programmable embedded provider injected into runtime context, not through an external CLI bridge.</?>
-    <rationale ?>This keeps the flow library usable as a library and preserves explicit runtime boundaries.</?>
+<decisions #integrate-embedded-ai-effect-provider apiVersion="codument.tech/v1alpha1" { version = "1" } (
+  <decision #track.effects.dispatch_boundary { status = "accepted" priority = "P0" } (
+    <question ?01M0NJZ4RS2480NMSEN7VBV7BW>
+    Where should AI workflow effects execute?
+    </?01M0NJZ4RS2480NMSEN7VBV7BW>
+    <answer ?01M0NJZ4RS2480NMSEN7VBV7BX>
+    Effects execute through a programmable embedded provider injected into runtime context, not through an external CLI bridge.
+    </?01M0NJZ4RS2480NMSEN7VBV7BX>
+    <rationale ?01M0NJZ4RS2480NMSEN7VBV7BY>
+    This keeps the flow library usable as a library and preserves explicit runtime boundaries.
+    </?01M0NJZ4RS2480NMSEN7VBV7BY>
   )>
 )>

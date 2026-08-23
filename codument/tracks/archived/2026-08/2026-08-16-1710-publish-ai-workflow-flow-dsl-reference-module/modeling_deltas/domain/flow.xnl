@@ -1,0 +1,53 @@
+<component #flow.flow_dsl_reference_module_generator apiVersion="codument.tech/v1alpha1" { kind = "component" } [
+  <desc ?01M0NJZ4PWPBWWSJT9YYG57TWM>
+  从 canonical docs/flow-dsl Markdown tree 生成 package-contained Halfcode ResourcePackage authoring module。
+  </?01M0NJZ4PWPBWWSJT9YYG57TWM>
+  <runtime ?r>
+  type Runtime = NodeFileSystemAndHalfcodeResourceCore
+  </?r>
+  <input ?i>
+  type Input = { sourceRootDir: string; outputRootDir: string; packageVersion: string }
+  </?i>
+  <config ?c>
+  type Config = Readonly<{ sourceIdentity: "depa-flows/docs/flow-dsl" }>
+  </?c>
+  <output ?o>
+  type Output = void
+  </?o>
+  <pseudo { kind = "ctrl" } ?p>
+  枚举固定 Markdown root → UTF-16 排序 → 读取源 bytes 与 sha256 → 在 staging 生成 content、provenance 和 XNL resources → Halfcode validate → 原子替换 output
+  </?p>
+  <invariants ?01M0NJZ4PWPBWWSJT9YYG57TWN>
+  canonical docs 是唯一内容 authority；无 host path policy、自然语言路由或第二 ResourcePackage parser。
+  </?01M0NJZ4PWPBWWSJT9YYG57TWN>
+]>
+
+<object #flow.flow_dsl_reference_provenance apiVersion="codument.tech/v1alpha1" { kind = "entity" fact_grade = "derived_projection_cache" single_writer = "modeling://domain/flow/flow_dsl_reference_module_generator" derived_from = "modeling://domain/flow/flow_dsl_reference_module_generator" } [
+  <types ?t>
+  interface FlowDslReferenceProvenance {
+    schemaVersion: "depa.flow-dsl-reference/v1"
+    moduleId: "DepaFlowsFlowDslReference"
+    packageName: "ai-workflow-flow-dsl-reference"
+    packageVersion: string
+    resourcePackageVersion: "1.0.0"
+    source: "depa-flows/docs/flow-dsl"
+    sourceTreeDigest: `sha256:${string}`
+    files: readonly { path: string; contentDigest: `sha256:${string}` }[]
+  }
+  </?t>
+  <invariants ?01M0NJZ4PWPBWWSJT9YYG57TWP>
+  这是 package-contained JSON provenance projection，不是 build 函数返回值；files 按固定 UTF-16 code-unit 顺序，sourceTreeDigest 绑定有序 path/contentDigest facts，每个 contentDigest 绑定 canonical source bytes。
+  </?01M0NJZ4PWPBWWSJT9YYG57TWP>
+]>
+
+<port #flow.flow_dsl_reference_module_port apiVersion="codument.tech/v1alpha1" { kind = "port" } [
+  <desc ?01M0NJZ4PWPBWWSJT9YYG57TWQ>
+  独立 reference package 面向 authoring consumer 的 package-contained module descriptor 端口。
+  </?01M0NJZ4PWPBWWSJT9YYG57TWQ>
+  <types ?t>
+  type FlowDslReferenceModulePort = () => AuthoringModuleDescriptor
+  </?t>
+  <messages ?01M0NJZ4PWPBWWSJT9YYG57TWR>
+  loadAIWorkflowFlowDslReferenceModule()
+  </?01M0NJZ4PWPBWWSJT9YYG57TWR>
+]>

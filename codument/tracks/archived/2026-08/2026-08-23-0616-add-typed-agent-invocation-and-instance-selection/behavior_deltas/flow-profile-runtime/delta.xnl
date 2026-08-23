@@ -1,0 +1,44 @@
+<BehaviorPatch #track.add-typed-agent-invocation-and-instance-selection.behavior_patch.flow-profile-runtime apiVersion="codument.tech/v1alpha1" version="1" { capability = "flow-profile-runtime" } (
+  <Mutations [
+    <Upsert { selector = "behavior://flow-profile-runtime/requirements/agent-instance-checkpoint-authority" } (
+      <Requirement #agent-instance-checkpoint-authority (
+        <Statement ?>A Flow run's canonical checkpoint AI profile SHALL be the single workflow owner of Agent instance indexes, stable external references and invocation receipts.</?>
+        <Suites [
+          <Suite #run-local-index { name = "Run-local Agent index" } (
+            <Cases [
+              <Case #unique-instance-name (
+                <Given ?>two nodes in one Flow run reserve the same authored Agent instance name</?>
+                <When ?>checkpoint compare-and-swap chooses the accepted reservation</?>
+                <Then ?>exactly one name-to-id binding SHALL exist and the other invocation SHALL fail before creating a host instance</?>
+              )>
+              <Case #stable-reference-only (
+                <Given ?>a host Agent instance has actor, session and provider-owned runtime state</?>
+                <When ?>the Flow checkpoint records its reusable binding</?>
+                <Then ?>the checkpoint SHALL store only closed opaque stable references and receipts and SHALL reject conversation, history, compaction or actor state</?>
+              )>
+            ]>
+          )>
+          <Suite #invocation-recovery { name = "Invocation recovery" } (
+            <Cases [
+              <Case #resume-pending-invocation (
+                <Given ?>an Agent invocation reservation is accepted but its completion is not yet in the checkpoint</?>
+                <When ?>a fresh process continues the same node invocation</?>
+                <Then ?>it SHALL reuse the same invocation key and host instance rather than create a second child</?>
+              )>
+              <Case #return-completed-invocation (
+                <Given ?>a completed Agent invocation result and receipt are accepted in the checkpoint</?>
+                <When ?>the same node execution is reconstructed</?>
+                <Then ?>it SHALL return the durable result and stable instance identity without redispatch</?>
+              )>
+              <Case #single-checkpoint-transition (
+                <Given ?>Ctrl snapshot or Data RunGraph state advances with an Agent receipt</?>
+                <When ?>the transition is committed</?>
+                <Then ?>profile state and controller state SHALL advance under one checkpoint version and SHALL NOT be dual-written to another Agent state store</?>
+              )>
+            ]>
+          )>
+        ]>
+      )>
+    )>
+  ]>
+)>

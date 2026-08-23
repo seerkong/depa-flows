@@ -1,0 +1,31 @@
+<behavior-patch capability="flow-profile-runtime" version="1">
+  <upsert selector="behavior://flow-profile-runtime/requirements/canonical-run-checkpoint">
+    <requirement id="canonical-run-checkpoint">
+      <statement>一个 run 的 input、config、state、output、controller/node sidecars 与 profile-owned durable state SHALL 由同一个 CAS-versioned checkpoint拥有；profile runtime不得建立并列可写store。</statement>
+      <suite id="typed-profile-state" name="typed profile state">
+        <case id="ctrl-profile" name="Ctrl profile">
+          <given>AICtrlWorkflow 使用 WorkCtrlFlow snapshot</given>
+          <when>wait、resume、branch decision或AI profile state改变</when>
+          <then>变化 SHALL 作为一个checkpoint transition提交并从同一version恢复</then>
+        </case>
+        <case id="data-profile" name="Data profile">
+          <given>AIDataWorkflow 使用 RunGraph</given>
+          <when>generation、invalidation或AI profile state改变</when>
+          <then>变化 SHALL 作为一个checkpoint transition提交，不得另写并列data-graph authority</then>
+        </case>
+      </suite>
+    </requirement>
+  </upsert>
+  <upsert selector="behavior://flow-profile-runtime/requirements/external-runtime-reference-boundary">
+    <requirement id="external-runtime-reference-boundary">
+      <statement>AI Workflow profile state MAY 保存外部 Agent actor/session/instance的opaque stable references与receipts，但 MUST NOT 复制conversation、history、compaction或external actor state；外部runtime继续拥有其execution authority。</statement>
+      <suite id="external-reference" name="外部runtime引用">
+        <case id="reference-only-recovery" name="仅引用恢复">
+          <given>checkpoint保存一个external runtime stable reference</given>
+          <when>fresh host恢复workflow run</when>
+          <then>profile SHALL 通过host adapter解析该reference，不得从checkpoint伪造或复制external actor state</then>
+        </case>
+      </suite>
+    </requirement>
+  </upsert>
+</behavior-patch>

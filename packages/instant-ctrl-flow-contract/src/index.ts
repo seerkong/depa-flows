@@ -2,6 +2,10 @@
  * instant-ctrl-flow-contract —— InstantCtrlFlow 契约（纯类型，零依赖）。
  * 概念对应 docs/flow-dsl：flow bundle（spec/flow-core）、IF-* 公理。
  */
+import type {
+  DefinitionStepForest,
+  DefinitionStepProfileLoadOptions,
+} from 'flow-step-space-contract';
 
 export type FlowForm = 'InstantCtrlFlow' | 'WorkCtrlFlow' | 'BPCtrlFlow';
 
@@ -23,6 +27,8 @@ export type FlowSourceCollection =
 export interface LoadFlowSourcesOptions {
   /** Resolution base carried into code-resolution requests; it need not be a filesystem path. */
   baseUri?: string;
+  /** Optional exact StepSpace composition policy; no host path is accepted here. */
+  stepSpace?: DefinitionStepProfileLoadOptions;
 }
 
 /** XNL 节点的纯结构投影（与物理段对应：attrs={}, children=[], sections=()） */
@@ -67,6 +73,8 @@ export interface FlowBundleSpec {
   dir: string;
   /** 产品根 [] 中按声明顺序保存的 canonical CtrlFlow statements */
   statements: FlowNodeSpec[];
+  /** Frozen modular definition authority; absent for inline authoring. */
+  definitionStepForest?: DefinitionStepForest;
   /** Unique FlowContract child domain; it describes the static callable boundary. */
   flowContract: CtrlFlowContract;
   /** config 域：ConfigEntry id → 字段表 */

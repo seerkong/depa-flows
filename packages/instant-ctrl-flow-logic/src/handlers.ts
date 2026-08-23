@@ -93,6 +93,7 @@ export interface FlowDecisionContext {
 export interface FlowDecisionHooks {
   begin(ifPath: string): FlowDecisionContext;
   record(decision: FlowBranchDecision): Promise<void> | void;
+  runtimeForNode?(nodeId: string, runtime: InstantCtrlFlowRuntime): InstantCtrlFlowRuntime;
 }
 
 class FlowFunctionLoader {
@@ -100,7 +101,12 @@ class FlowFunctionLoader {
   constructor(
     private spec: FlowBundleSpec,
     private resolveCode: FlowCodeResolver,
+    private runtimeHooks?: FlowDecisionHooks,
   ) {}
+
+  runtimeForNode(nodeId: string, runtime: InstantCtrlFlowRuntime): InstantCtrlFlowRuntime {
+    return this.runtimeHooks?.runtimeForNode?.(nodeId, runtime) ?? runtime;
+  }
 
   load(src: string, nodeId: string): Promise<FlowCodeFunction> {
     let loaded = this.cache.get(src);
@@ -128,7 +134,8 @@ function configOf(ctx: Ctx): NodeConfig {
 async function callCode(ctx: Ctx, loader: FlowFunctionLoader, src: string): Promise<unknown> {
   const state = flowStateOf(ctx);
   const fn = await loader.load(src, ctx.node.Key);
-  return fn((ctx.runtime ?? {}) as InstantCtrlFlowRuntime, state.current, configOf(ctx).config ?? {});
+  const runtime = (ctx.runtime ?? {}) as InstantCtrlFlowRuntime;
+  return fn(loader.runtimeForNode(ctx.node.Key, runtime), state.current, configOf(ctx).config ?? {});
 }
 
 function fail(state: FlowExecutionState, error: unknown): BehaviorResult {
@@ -277,7 +284,7 @@ class StrategyStartHandler implements ActionHandler<CtrlFlowNodeType, INodeConfi
     if (state.returned) return BehaviorResult.Success;
     const key = String(configOf(ctx).fallbackKey);
     state.current = state.fallbackInputs[key];
-    state.fault = undefined;
+    delete state.fault;
     return BehaviorResult.Success;
   }
 }
@@ -288,7 +295,7 @@ class FallbackStartHandler implements ActionHandler<CtrlFlowNodeType, INodeConfi
     if (state.returned) return BehaviorResult.Success;
     const key = String(configOf(ctx).fallbackKey);
     state.fallbackInputs[key] = state.current;
-    state.fault = undefined;
+    delete state.fault;
     return BehaviorResult.Success;
   }
 }
@@ -440,7 +447,7 @@ export function createFlowHandlers(
   executeBody?: FlowBodyExecutor,
   executeTarget?: FlowTargetExecutor,
 ): Record<string, ActionHandler<CtrlFlowNodeType, INodeConfig>> {
-  const loader = new FlowFunctionLoader(spec, resolveCode);
+  const loader = new FlowFunctionLoader(spec, resolveCode, decisionHooks);
   const activeDecisions = new Map<string, FlowDecisionContext>();
   return {
     'flow.Run': new RunHandler(loader),

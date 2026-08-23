@@ -1,0 +1,22 @@
+{
+  "name": "flow-step-space-logic",
+  "version": "0.1.1",
+  "private": false,
+  "description": "Exact explicit-ref StepSpace loading, normalization, and profile assembly",
+  "type": "module",
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./filesystem": "./src/filesystem.ts"
+  },
+  "dependencies": {
+    "flow-step-space-contract": "0.1.1",
+    "xnl-core": "^0.1.8"
+  },
+  "files": [
+    "src"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}

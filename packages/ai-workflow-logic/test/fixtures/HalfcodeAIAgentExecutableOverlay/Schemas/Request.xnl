@@ -1,0 +1,10 @@
+<MessageSchema #depa.flows.test.Schema.Request apiVersion="depa.flows/v1" version="1.0.0" {
+  lifecycle = "Stable"
+  description = "Changed request schema"
+  schema = {
+    type = "object"
+    properties = { request = { type = "string" minLength = 2 } }
+    required = ["request"]
+    additionalProperties = false
+  }
+}>

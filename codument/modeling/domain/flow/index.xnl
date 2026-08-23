@@ -1,64 +1,88 @@
-<object #flow.definition {
-    kind = "entity"
-    fact_grade = "authoritative_fact"
-    single_writer = "modeling://domain/flow/definition_owner"
-  } [
-    <desc ?>Flow definition 是可版本化的 canonical XNL 事实，包含产品根、唯一 FlowContract、声明顺序和结构子域；运行实例、布局和渲染结果不属于 definition。</?>
-    <types ?t>
-    interface FlowDefinition {
-      fqn: string
-      form: FlowProductForm
-      contract: FlowContract
-      statements: readonly FlowStatement[]
-    }
-    </?t>
-    <invariants ?>根产品决定可用 profile；FlowContract 的 id 必须等于根 FQN；定义事实不得携带运行期 snapshot、画布布局或 surface view。</?>
-  ]>
-<enum #flow.product_profile {
-    kind = "enum"
-  } [
-    <types ?t>type FlowProductForm = "InstantCtrlFlow" | "WorkCtrlFlow" | "BPCtrlFlow" | "EagerDataFlow"</?t>
-  ]>
-<component #flow.ctrl_flow_statement {
-    kind = "component"
-  } [
-    <desc ?>CtrlFlow statement 以统一的输入/输出数据链表达编排；不同产品只通过 capability profile 选择可用节点和生命周期。</?>
-    <runtime ?r>type Runtime = ScopeRuntime</?r>
-    <input ?i>type Input = unknown</?i>
-    <config ?c>type Config = Readonly<Record<string, unknown>></?c>
-    <output ?o>type Output = unknown</?o>
-    <pseudo { kind = "ctrl" } ?p>statement → output = fn(runtime, input, config) → next statement / branch / completion</?p>
-  ]>
-<port #flow.definition_owner {
-    kind = "port"
-  } [
-    <desc ?>definition owner 负责把经验证的 XNL mutation 批次写入 canonical definition；它不写 runtime facts 或 editor layout。</?>
-    <types ?t>interface DefinitionWriter { dryRun(batch: XnlMutation[]): Candidate; commit(batch: XnlMutation[]): AcceptedDefinition }</?t>
-    <command ?>definition.configure、node.insert、node.move、node.delete、structure.configure</?>
-  ]>
-<state-machine #flow.runtime_lifecycle {
-    kind = "state-machine"
-  } [
-    <mermaid ?m>
-    stateDiagram-v2
-      [*] --> Running
-      Running --> Waiting: ExternalJob / Timer / TaskStep
-      Waiting --> Running: ResumeSignal / task operation
-      Running --> Completed: Return
-      Running --> Failed: technical fault
-      Waiting --> Failed: deadline / cancellation
-      Completed --> [*]
-      Failed --> [*]
-    </?m>
-    <invariants ?>InstantCtrlFlow 不进入 Waiting；WorkCtrlFlow 持久化等待、attempt、deadline、lane 和 winner；BPCtrlFlow 额外持久化 TaskSpace 任务事实。</?>
-  ]>
-<object #flow.eager_data_graph {
-    kind = "entity"
-    fact_grade = "authoritative_fact"
-    single_writer = "modeling://domain/flow/definition_owner"
-  } [
-    <desc ?>EagerDataFlow 是基于 data edge 和 waitFor completion edge 的 eager DAG；它与 CtrlFlow 的顺序控制语义正交。</?>
-    <types ?t>interface EagerDataFlowNode { id: string; inputs?: Record<string, string>; outputs?: readonly string[]; waitFor?: readonly string[] }</?t>
-    <invariants ?>flow-port:// 引用端口输出；flow-node:// 引用节点完成事实；节点输出和 completion 不得被渲染器重新解释。</?>
-  ]>
-  <not-owned-here ?>WorkCtrlFlow/BPCtrlFlow 的 snapshot、WaitHandle、TaskSpace 和 scheduler 是 runtime-control fact；编辑器位置、viewport、pin layout 是 surface_view，均不在此 context 写入。</?>
+<object #flow.definition apiVersion="codument.tech/v1alpha1" { kind = "entity" fact_grade = "authoritative_fact" single_writer = "modeling://domain/flow/definition_owner" } [
+  <desc ?01M0NJZ4P2A6MSFG1GQCMRKC60>
+  Flow definition 是可版本化的 canonical XNL 事实，包含产品根、唯一 FlowContract、声明顺序和结构子域；运行实例、布局和渲染结果不属于 definition。
+  </?01M0NJZ4P2A6MSFG1GQCMRKC60>
+  <types ?t>
+  interface FlowDefinition {
+    fqn: string
+    form: FlowProductForm
+    contract: FlowContract
+    statements: readonly FlowStatement[]
+  }
+  </?t>
+  <invariants ?01M0NJZ4P2A6MSFG1GQCMRKC61>
+  根产品决定可用 profile；FlowContract 的 id 必须等于根 FQN；定义事实不得携带运行期 snapshot、画布布局或 surface view。
+  </?01M0NJZ4P2A6MSFG1GQCMRKC61>
+]>
+
+<enum #flow.product_profile apiVersion="codument.tech/v1alpha1" { kind = "enum" } [
+  <types ?t>
+  type FlowProductForm = "InstantCtrlFlow" | "WorkCtrlFlow" | "BPCtrlFlow" | "EagerDataFlow"
+  </?t>
+]>
+
+<component #flow.ctrl_flow_statement apiVersion="codument.tech/v1alpha1" { kind = "component" } [
+  <desc ?01M0NJZ4P2A6MSFG1GQCMRKC62>
+  CtrlFlow statement 以统一的输入/输出数据链表达编排；不同产品只通过 capability profile 选择可用节点和生命周期。
+  </?01M0NJZ4P2A6MSFG1GQCMRKC62>
+  <runtime ?r>
+  type Runtime = ScopeRuntime
+  </?r>
+  <input ?i>
+  type Input = unknown
+  </?i>
+  <config ?c>
+  type Config = Readonly<Record<string, unknown>>
+  </?c>
+  <output ?o>
+  type Output = unknown
+  </?o>
+  <pseudo { kind = "ctrl" } ?p>
+  statement → output = fn(runtime, input, config) → next statement / branch / completion
+  </?p>
+]>
+
+<port #flow.definition_owner apiVersion="codument.tech/v1alpha1" { kind = "port" } [
+  <desc ?01M0NJZ4P2A6MSFG1GQCMRKC63>
+  definition owner 负责把经验证的 XNL mutation 批次写入 canonical definition；它不写 runtime facts 或 editor layout。
+  </?01M0NJZ4P2A6MSFG1GQCMRKC63>
+  <types ?t>
+  interface DefinitionWriter { dryRun(batch: XnlMutation[]): Candidate; commit(batch: XnlMutation[]): AcceptedDefinition }
+  </?t>
+  <command ?01M0NJZ4P2A6MSFG1GQCMRKC64>
+  definition.configure、node.insert、node.move、node.delete、structure.configure
+  </?01M0NJZ4P2A6MSFG1GQCMRKC64>
+]>
+
+<state-machine #flow.runtime_lifecycle apiVersion="codument.tech/v1alpha1" { kind = "state-machine" } [
+  <mermaid ?m>
+  stateDiagram-v2
+    [*] --> Running
+    Running --> Waiting: ExternalJob / Timer / TaskStep
+    Waiting --> Running: ResumeSignal / task operation
+    Running --> Completed: Return
+    Running --> Failed: technical fault
+    Waiting --> Failed: deadline / cancellation
+    Completed --> [*]
+    Failed --> [*]
+  </?m>
+  <invariants ?01M0NJZ4P2A6MSFG1GQCMRKC65>
+  InstantCtrlFlow 不进入 Waiting；WorkCtrlFlow 持久化等待、attempt、deadline、lane 和 winner；BPCtrlFlow 额外持久化 TaskSpace 任务事实。
+  </?01M0NJZ4P2A6MSFG1GQCMRKC65>
+]>
+
+<object #flow.eager_data_graph apiVersion="codument.tech/v1alpha1" { kind = "entity" fact_grade = "authoritative_fact" single_writer = "modeling://domain/flow/definition_owner" } [
+  <desc ?01M0NJZ4P2A6MSFG1GQCMRKC66>
+  EagerDataFlow 是基于 data edge 和 waitFor completion edge 的 eager DAG；它与 CtrlFlow 的顺序控制语义正交。
+  </?01M0NJZ4P2A6MSFG1GQCMRKC66>
+  <types ?t>
+  interface EagerDataFlowNode { id: string; inputs?: Record<string, string>; outputs?: readonly string[]; waitFor?: readonly string[] }
+  </?t>
+  <invariants ?01M0NJZ4P2A6MSFG1GQCMRKC67>
+  flow-port:// 引用端口输出；flow-node:// 引用节点完成事实；节点输出和 completion 不得被渲染器重新解释。
+  </?01M0NJZ4P2A6MSFG1GQCMRKC67>
+]>
+
+<not-owned-here apiVersion="codument.tech/v1alpha1" ?01M0NJZ4P2A6MSFG1GQCMRKC68>
+WorkCtrlFlow/BPCtrlFlow 的 snapshot、WaitHandle、TaskSpace 和 scheduler 是 runtime-control fact；编辑器位置、viewport、pin layout 是 surface_view，均不在此 context 写入。
+</?01M0NJZ4P2A6MSFG1GQCMRKC68>

@@ -1,0 +1,16 @@
+<Step #complete-fulfillment (
+  <Core [
+    <Parallel #complete-fulfillment { join = "all" } (
+      <Lanes [
+        <Lane #notification [
+          <Retry #notify-customer { maxAttempts = 3 backoffMs = 10000 } [
+            <Run #notify { src = "vfs://./actions/fulfillment.actions.ts#notifyCustomer" }>
+          ]>
+        ]>
+        <Lane #audit [
+          <Run #prepare-audit { src = "vfs://./actions/fulfillment.actions.ts#prepareFulfillmentAudit" }>
+        ]>
+      ]>
+    )>
+  ]>
+)>

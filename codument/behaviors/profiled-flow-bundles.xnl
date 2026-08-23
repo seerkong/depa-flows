@@ -1,0 +1,63 @@
+<Behavior #profiled-flow-bundles apiVersion="codument.tech/v1alpha1" version="1" (
+  <Requirements [
+    <Requirement #canonical-examples (
+      <Statement ?01M0NJZ4NACR3AD9XNZCJ01DP9>
+      Canonical CtrlFlow example bundles SHALL demonstrate product-specific orchestration capabilities and SHALL execute through the declared product loader and engine.
+      </?01M0NJZ4NACR3AD9XNZCJ01DP9>
+      <Suites [
+        <Suite #profile-representatives { name = "按产品形态的代表示例" } (
+          <Cases [
+            <Case #instant-ctrl-flow (
+              <Given ?01M0NJZ4NACR3AD9XNZCJ01DPA>
+              the canonical InstantCtrlFlow bundle
+              </?01M0NJZ4NACR3AD9XNZCJ01DPA>
+              <When ?01M0NJZ4NACR3AD9XNZCJ01DPB>
+              it is loaded and executed
+              </?01M0NJZ4NACR3AD9XNZCJ01DPB>
+              <Then ?01M0NJZ4NACR3AD9XNZCJ01DPC>
+              it SHALL demonstrate non-durable script orchestration and complete without persistent waits
+              </?01M0NJZ4NACR3AD9XNZCJ01DPC>
+            )>
+            <Case #work-ctrl-flow (
+              <Given ?01M0NJZ4NACR3AD9XNZCJ01DPD>
+              the canonical WorkCtrlFlow bundle
+              </?01M0NJZ4NACR3AD9XNZCJ01DPD>
+              <When ?01M0NJZ4NACR3AD9XNZCJ01DPE>
+              it crosses a wait or composite boundary and resumes in a fresh engine instance
+              </?01M0NJZ4NACR3AD9XNZCJ01DPE>
+              <Then ?01M0NJZ4NACR3AD9XNZCJ01DPF>
+              it SHALL reuse durable orchestration facts without replaying completed effects
+              </?01M0NJZ4NACR3AD9XNZCJ01DPF>
+            )>
+            <Case #bp-ctrl-flow (
+              <Given ?01M0NJZ4NACR3AD9XNZCJ01DPG>
+              the canonical BPCtrlFlow bundle with TaskSpace
+              </?01M0NJZ4NACR3AD9XNZCJ01DPG>
+              <When ?01M0NJZ4NACR3AD9XNZCJ01DPH>
+              task results and durable composites advance the process
+              </?01M0NJZ4NACR3AD9XNZCJ01DPH>
+              <Then ?01M0NJZ4NACR3AD9XNZCJ01DPJ>
+              it SHALL preserve business result data and technical orchestration facts in their owning domains
+              </?01M0NJZ4NACR3AD9XNZCJ01DPJ>
+            )>
+          ]>
+        )>
+        <Suite #conformance { name = "一致性" } (
+          <Cases [
+            <Case #profile-rejection (
+              <Given ?01M0NJZ4NACR3AD9XNZCJ01DPK>
+              a bundle uses a statement outside its product profile
+              </?01M0NJZ4NACR3AD9XNZCJ01DPK>
+              <When ?01M0NJZ4NACR3AD9XNZCJ01DPM>
+              the canonical loader validates it
+              </?01M0NJZ4NACR3AD9XNZCJ01DPM>
+              <Then ?01M0NJZ4NACR3AD9XNZCJ01DPN>
+              the loader SHALL reject it with a stable diagnostic
+              </?01M0NJZ4NACR3AD9XNZCJ01DPN>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+  ]>
+)>

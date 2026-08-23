@@ -13,12 +13,14 @@ import type {
   EagerDataFlowNodePlan,
 } from 'eager-data-flow-contract';
 import {
+  AIDataWorkflowRunGraphError,
   applyAIDataWorkflowGraphPatch,
   createAIDataWorkflowRunGraph,
   createAIDataWorkflowRuntime,
   createAIDataWorkflowSemanticFingerprint,
   defineEagerBackedAIDataWorkflow,
   findReusableAIDataWorkflowNodeResult,
+  invalidateAIDataWorkflowNode,
   listReadyAIDataWorkflowNodes,
   projectAIDataWorkflowRunState,
   recordAIDataWorkflowNodeResult,
@@ -156,6 +158,93 @@ describe('AI Data Workflow RunGraph', () => {
     expect(listReadyAIDataWorkflowNodes(graph).map((node) => node.id)).toEqual(['entry']);
   });
 
+  test('persists the platform reuse policy authority in the generation-zero graph', () => {
+    const graph = createAIDataWorkflowRunGraph({
+      binding,
+      runId: 'platform-policy-run',
+      platformDefaultPolicy: 'never',
+    });
+    expect(graph.platformDefaultPolicy).toBe('never');
+    expect(graph.nodes.draft.reusePolicy).toEqual({
+      policy: 'never', source: 'platform-default', nodeType: 'data',
+    });
+    expect(graph.nodes['human-review'].reusePolicy).toEqual({
+      policy: 'never', source: 'node-type-default', nodeType: 'manual',
+    });
+  });
+
+  test('requires one patch operation per target and matching reuse policy identity', () => {
+    const graph = createAIDataWorkflowRunGraph({ binding, runId: 'patch-identity-run' });
+    expect(() => applyAIDataWorkflowGraphPatch(graph, {
+      patchId: 'duplicate-target',
+      operations: [
+        { op: 'update-node', nodeId: 'draft', changes: { config: { model: 'first' } } },
+        { op: 'remove-node', nodeId: 'draft' },
+      ],
+    })).toThrow('patch duplicate-target targets node draft more than once');
+    expect(() => applyAIDataWorkflowGraphPatch(graph, {
+      patchId: 'mismatched-policy',
+      operations: [{
+        op: 'update-node', nodeId: 'draft',
+        changes: { reusePolicy: { policy: 'never', source: 'node', nodeType: 'manual' } },
+      }],
+    })).toThrow('reuse policy nodeType must equal data');
+    expect(() => applyAIDataWorkflowGraphPatch(graph, {
+      patchId: 'undeclared-node-policy',
+      operations: [{
+        op: 'update-node', nodeId: 'draft',
+        changes: { reusePolicy: { policy: 'never', source: 'node', nodeType: 'data' } },
+      }],
+    })).toThrow('must match its declared config and platform authority');
+    expect(() => applyAIDataWorkflowGraphPatch(graph, {
+      patchId: 'undeclared-platform-policy',
+      operations: [{
+        op: 'update-node', nodeId: 'draft',
+        changes: { reusePolicy: { policy: 'never', source: 'platform-default', nodeType: 'data' } },
+      }],
+    })).toThrow('must match its declared config and platform authority');
+  });
+
+  test('projects active invalidation facts exactly and clears stale execution facts', () => {
+    let graph = createAIDataWorkflowRunGraph({ binding, runId: 'active-invalidation-run' });
+    graph = recordAIDataWorkflowNodeResult(graph, 'entry', {
+      nodeId: 'entry', generation: 0, status: 'Succeeded', output: { value: 'accepted' },
+      semanticFingerprint: { algorithm: 'semantic-hash/v1', value: 'entry-v0' },
+    });
+    const invalidated = invalidateAIDataWorkflowNode(graph, 'entry', 'refresh', { generation: 1 });
+    expect(invalidated.nodes.entry).toMatchObject({ status: 'Invalidated', generation: 1 });
+    expect(invalidated.nodes.entry.result).toBeUndefined();
+    expect(invalidated.nodes.entry.semanticFingerprint).toBeUndefined();
+    expect(invalidated.nodes.entry.invalidatedBy).toEqual(invalidated.invalidations.filter((fact) => fact.nodeId === 'entry'));
+
+    const running = recordAIDataWorkflowNodeResult(invalidated, 'entry', {
+      nodeId: 'entry', generation: 1, status: 'Running',
+    });
+    expect(running.nodes.entry.invalidatedBy).toBeUndefined();
+    expect(running.invalidations.some((fact) => fact.nodeId === 'entry')).toBe(false);
+  });
+
+  test('allows removal only after the same patch removes durable references', () => {
+    const graph = createAIDataWorkflowRunGraph({ binding, runId: 'removed-reference-run' });
+    expect(() => applyAIDataWorkflowGraphPatch(graph, {
+      patchId: 'referenced-removal',
+      operations: [{ op: 'remove-node', nodeId: 'draft' }],
+    })).toThrow(AIDataWorkflowRunGraphError);
+
+    const rewired = applyAIDataWorkflowGraphPatch(graph, {
+      patchId: 'rewire-then-remove',
+      operations: [
+        {
+          op: 'update-node', nodeId: 'human-review',
+          changes: { inputs: { draft: ref('entry', 'value') }, dependsOn: ['entry'] },
+        },
+        { op: 'remove-node', nodeId: 'draft' },
+      ],
+    });
+    expect(rewired.nodes.draft.status).toBe('Removed');
+    expect(rewired.nodes['human-review'].dependsOn).toEqual(['entry']);
+  });
+
   test('applies graph patches as new generations and invalidates downstream nodes', () => {
     let graph = createAIDataWorkflowRunGraph({ binding, runId: 'run-1' });
     graph = recordAIDataWorkflowNodeResult(graph, 'entry', {
@@ -210,6 +299,88 @@ describe('AI Data Workflow RunGraph', () => {
       'human-review',
       'return',
     ]);
+  });
+
+  test('rejects an explicit generation that precedes the graph or affected node', () => {
+    const generationOne = applyAIDataWorkflowGraphPatch(
+      createAIDataWorkflowRunGraph({ binding, runId: 'generation-boundary-run' }),
+      {
+        patchId: 'generation-one',
+        operations: [{ op: 'update-node', nodeId: 'draft', changes: { config: { model: 'careful' } } }],
+      },
+    );
+
+    expect(() => invalidateAIDataWorkflowNode(
+      generationOne,
+      'draft',
+      'refresh',
+      { generation: 0 },
+    )).toThrow(AIDataWorkflowRunGraphError);
+    expect(() => applyAIDataWorkflowGraphPatch(generationOne, {
+      patchId: 'earlier-generation',
+      generation: 0,
+      operations: [{ op: 'update-node', nodeId: 'draft', changes: { config: { model: 'earlier' } } }],
+    } as Parameters<typeof applyAIDataWorkflowGraphPatch>[1])).toThrow(AIDataWorkflowRunGraphError);
+  });
+
+  test('keeps an empty invalidation emission as a deterministic no-op', () => {
+    const graph = createAIDataWorkflowRunGraph({ binding, runId: 'invalidation-no-op-run' });
+    const leafNoOp = invalidateAIDataWorkflowNode(
+      graph,
+      'return',
+      'no-dependent-target',
+      { includeSource: false, generation: 4 },
+    );
+    expect(leafNoOp).toEqual(graph);
+    expect(leafNoOp).not.toBe(graph);
+
+    const removed = applyAIDataWorkflowGraphPatch(graph, {
+      patchId: 'remove-return',
+      operations: [{ op: 'remove-node', nodeId: 'return' }],
+    });
+    const removedNoOp = invalidateAIDataWorkflowNode(
+      removed,
+      'return',
+      'removed-source',
+      { generation: 5 },
+    );
+    expect(removedNoOp).toEqual(removed);
+    expect(removedNoOp.currentGeneration).toBe(removed.currentGeneration);
+  });
+
+  test('rejects input references without a declared endpoint, source port or dependency projection', () => {
+    const graph = createAIDataWorkflowRunGraph({ binding, runId: 'input-reference-run' });
+    for (const node of [
+      { id: 'missing-endpoint', inputs: { value: ref('missing', 'value') }, dependsOn: [] },
+      { id: 'missing-port', inputs: { value: ref('draft', 'missing') }, dependsOn: ['draft'] },
+      { id: 'missing-dependency', inputs: { value: ref('draft', 'draft') }, dependsOn: [] },
+    ]) {
+      expect(() => applyAIDataWorkflowGraphPatch(graph, {
+        patchId: `add-${node.id}`,
+        operations: [{ op: 'add-node', node: { ...node, outputs: ['result'] } }],
+      })).toThrow(AIDataWorkflowRunGraphError);
+    }
+  });
+
+  test('recomputes reuse policy for nodeType patches and rejects repeated removal', () => {
+    const graph = createAIDataWorkflowRunGraph({ binding, runId: 'node-type-patch-run' });
+    const manual = applyAIDataWorkflowGraphPatch(graph, {
+      patchId: 'manual-draft',
+      operations: [{ op: 'update-node', nodeId: 'draft', changes: { nodeType: 'manual' } }],
+    });
+    expect(manual.nodes.draft.reusePolicy).toEqual({
+      policy: 'never', source: 'node-type-default', nodeType: 'manual',
+    });
+
+    const removed = applyAIDataWorkflowGraphPatch(graph, {
+      patchId: 'remove-return-once',
+      operations: [{ op: 'remove-node', nodeId: 'return' }],
+    });
+    expect(() => applyAIDataWorkflowGraphPatch(removed, {
+      patchId: 'remove-return-again',
+      operations: [{ op: 'remove-node', nodeId: 'return' }],
+    })).toThrow(AIDataWorkflowRunGraphError);
+    expect(removed.currentGeneration).toBe(1);
   });
 
   test('keeps generation out of semantic fingerprints and supports run-local reuse', () => {
@@ -288,6 +459,25 @@ describe('AI Data Workflow RunGraph', () => {
     })).toBeUndefined();
   });
 
+  test('uses UTF-16 code-unit ordering for Unicode semantic input keys', () => {
+    const first = createAIDataWorkflowSemanticFingerprint({
+      nodeId: 'unicode',
+      nodeTag: 'TransformNode',
+      effectiveInput: { 中: 4, ä: 3, a: 2, Z: 1 },
+    });
+    const second = createAIDataWorkflowSemanticFingerprint({
+      nodeId: 'unicode',
+      nodeTag: 'TransformNode',
+      effectiveInput: { Z: 1, a: 2, ä: 3, 中: 4 },
+    });
+
+    expect(first.value).toBe(second.value);
+    const canonical = first.parts?.find((part) => part.name === 'canonical')?.value ?? '';
+    expect(canonical.indexOf('"Z"')).toBeLessThan(canonical.indexOf('"a"'));
+    expect(canonical.indexOf('"a"')).toBeLessThan(canonical.indexOf('"ä"'));
+    expect(canonical.indexOf('"ä"')).toBeLessThan(canonical.indexOf('"中"'));
+  });
+
   test('honors never reuse policy and projects serializable run state', () => {
     const graph = createAIDataWorkflowRunGraph({ binding, runId: 'run-1' });
     const fingerprint = createAIDataWorkflowSemanticFingerprint({
@@ -333,5 +523,15 @@ describe('AI Data Workflow RunGraph', () => {
     expect(state.ref).toEqual(runRef);
     expect(state.status).toBe('Pending');
     expect(Object.keys(state.nodes)).toEqual(['entry', 'draft', 'human-review', 'return']);
+  });
+
+  test('does not rewrite an accepted terminal result in the same node generation', () => {
+    let graph = createAIDataWorkflowRunGraph({ binding, runId: 'immutable-result-run' });
+    graph = recordAIDataWorkflowNodeResult(graph, 'entry', {
+      nodeId: 'entry', generation: 0, status: 'Succeeded', output: { value: 'first' },
+    });
+    expect(() => recordAIDataWorkflowNodeResult(graph, 'entry', {
+      nodeId: 'entry', generation: 0, status: 'Succeeded', output: { value: 'second' },
+    })).toThrow(AIDataWorkflowRunGraphError);
   });
 });

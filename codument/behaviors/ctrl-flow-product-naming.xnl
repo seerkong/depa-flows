@@ -1,0 +1,136 @@
+<Behavior #ctrl-flow-product-naming apiVersion="codument.tech/v1alpha1" version="1" (
+  <Requirements [
+    <Requirement #canonical-product-family (
+      <Statement ?01M0NJZ4KXFKCSTAD9BPWTY8ZH>
+      The system SHALL use the canonical ctrl-flow and AI workflow product naming families across packages, TypeScript APIs, XNL roots, docs, examples, behavior records and validation rules.
+      </?01M0NJZ4KXFKCSTAD9BPWTY8ZH>
+      <Suites [
+        <Suite #canonical-matrix { name = "Canonical naming matrix" } (
+          <Cases [
+            <Case #ctrl-flow-products (
+              <Given ?01M0NJZ4KXFKCSTAD9BPWTY8ZJ>
+              The public control-flow products are documented or loaded
+              </?01M0NJZ4KXFKCSTAD9BPWTY8ZJ>
+              <When ?01M0NJZ4KXFKCSTAD9BPWTY8ZK>
+              The product names, package names, root tags or URI schemes are inspected
+              </?01M0NJZ4KXFKCSTAD9BPWTY8ZK>
+              <Then ?01M0NJZ4KXFKCSTAD9BPWTY8ZM>
+              The system SHALL expose `InstantCtrlFlow` / `instant-ctrl-flow`, `WorkCtrlFlow` / `work-ctrl-flow` and `BPCtrlFlow` / `bp-ctrl-flow`
+              </?01M0NJZ4KXFKCSTAD9BPWTY8ZM>
+            )>
+            <Case #ai-workflow-products (
+              <Given ?01M0NJZ4KXFKCSTAD9BPWTY8ZN>
+              The public AI workflow products are documented or loaded
+              </?01M0NJZ4KXFKCSTAD9BPWTY8ZN>
+              <When ?01M0NJZ4KXFKCSTAD9BPWTY8ZP>
+              The product names, package names or root tags are inspected
+              </?01M0NJZ4KXFKCSTAD9BPWTY8ZP>
+              <Then ?01M0NJZ4KXFKCSTAD9BPWTY8ZQ>
+              The system SHALL expose `AICtrlWorkflow` / `ai-ctrl-workflow` and `AIDataWorkflow` / `ai-data-workflow`, with `AIWorkflow` / `ai-workflow` reserved for shared umbrella surfaces
+              </?01M0NJZ4KXFKCSTAD9BPWTY8ZQ>
+            )>
+            <Case #unchanged-data-flow-products (
+              <Given ?01M0NJZ4KXFKCSTAD9BPWTY8ZR>
+              The data-flow substrate products are documented or loaded
+              </?01M0NJZ4KXFKCSTAD9BPWTY8ZR>
+              <When ?01M0NJZ4KXFKCSTAD9BPWTY8ZS>
+              The product names, package names or root tags are inspected
+              </?01M0NJZ4KXFKCSTAD9BPWTY8ZS>
+              <Then ?01M0NJZ4KXFKCSTAD9BPWTY8ZT>
+              The system SHALL keep `EagerDataFlow` / `eager-data-flow` and `AIDataWorkflow` / `ai-data-workflow` unchanged
+              </?01M0NJZ4KXFKCSTAD9BPWTY8ZT>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+    <Requirement #no-legacy-public-names (
+      <Statement ?01M0NJZ4KXFKCSTAD9BPWTY8ZV>
+      The system SHALL remove old public control-flow and AI-agent workflow names from the current authoring surface instead of keeping them as long-term aliases.
+      </?01M0NJZ4KXFKCSTAD9BPWTY8ZV>
+      <Suites [
+        <Suite #legacy-rejection { name = "Legacy rejection" } (
+          <Cases [
+            <Case #old-xnl-roots-rejected (
+              <Given ?01M0NJZ4KXFKCSTAD9BPWTY8ZW>
+              A current authoring bundle uses an obsolete root such as `InstantFlow`, `WorkFlow`, `BizProcess` or `AIAgentWorkflow`
+              </?01M0NJZ4KXFKCSTAD9BPWTY8ZW>
+              <When ?01M0NJZ4KXFKCSTAD9BPWTY8ZX>
+              The flow DSL checker or loader validates the bundle
+              </?01M0NJZ4KXFKCSTAD9BPWTY8ZX>
+              <Then ?01M0NJZ4KXFKCSTAD9BPWTY8ZY>
+              The system SHALL reject it in current authoring mode and direct users to the canonical root names
+              </?01M0NJZ4KXFKCSTAD9BPWTY8ZY>
+            )>
+            <Case #old-package-names-absent (
+              <Given ?01M0NJZ4KXFKCSTAD9BPWTY8ZZ>
+              The workspace packages and imports are inspected after migration
+              </?01M0NJZ4KXFKCSTAD9BPWTY8ZZ>
+              <When ?01M0NJZ4KXFKCSTAD9BPWTY900>
+              Package names and dependency names are listed
+              </?01M0NJZ4KXFKCSTAD9BPWTY900>
+              <Then ?01M0NJZ4KXFKCSTAD9BPWTY901>
+              The old package names `instant-flow-*`, `work-flow-*`, `biz-process-*` and `ai-agent-workflow-*` SHALL NOT remain as public workspace packages
+              </?01M0NJZ4KXFKCSTAD9BPWTY901>
+            )>
+            <Case #temporary-shims-removed (
+              <Given ?01M0NJZ4KXFKCSTAD9BPWTY902>
+              Temporary rename shims were used during implementation
+              </?01M0NJZ4KXFKCSTAD9BPWTY902>
+              <When ?01M0NJZ4KXFKCSTAD9BPWTY903>
+              The track is ready to complete
+              </?01M0NJZ4KXFKCSTAD9BPWTY903>
+              <Then ?01M0NJZ4KXFKCSTAD9BPWTY904>
+              Those shims SHALL be removed or made non-public before the track is marked complete
+              </?01M0NJZ4KXFKCSTAD9BPWTY904>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+    <Requirement #current-truth-updated (
+      <Statement ?01M0NJZ4KXFKCSTAD9BPWTY905>
+      The system SHALL update current-truth documentation, examples, behavior records and active/pending Codument artifacts to the canonical naming family.
+      </?01M0NJZ4KXFKCSTAD9BPWTY905>
+      <Suites [
+        <Suite #truth-migration { name = "Current truth migration" } (
+          <Cases [
+            <Case #docs-and-examples (
+              <Given ?01M0NJZ4KXFKCSTAD9BPWTY906>
+              Users read flow-dsl docs or example bundles
+              </?01M0NJZ4KXFKCSTAD9BPWTY906>
+              <When ?01M0NJZ4KXFKCSTAD9BPWTY907>
+              They look for the product matrix, root tags or package names
+              </?01M0NJZ4KXFKCSTAD9BPWTY907>
+              <Then ?01M0NJZ4KXFKCSTAD9BPWTY908>
+              The docs and examples SHALL present only the canonical names for current products
+              </?01M0NJZ4KXFKCSTAD9BPWTY908>
+            )>
+            <Case #codument-current-assets (
+              <Given ?01M0NJZ4KXFKCSTAD9BPWTY909>
+              Future implementation reads active or pending Codument assets
+              </?01M0NJZ4KXFKCSTAD9BPWTY909>
+              <When ?01M0NJZ4KXFKCSTAD9BPWTY90A>
+              Those assets describe flow product names or AI workflow product names
+              </?01M0NJZ4KXFKCSTAD9BPWTY90A>
+              <Then ?01M0NJZ4KXFKCSTAD9BPWTY90B>
+              They SHALL use the canonical names unless explicitly describing historical migration context
+              </?01M0NJZ4KXFKCSTAD9BPWTY90B>
+            )>
+            <Case #eidolon-track-synchronized (
+              <Given ?01M0NJZ4KXFKCSTAD9BPWTY90C>
+              The Eidolon native workflow boundary track is used after this rename
+              </?01M0NJZ4KXFKCSTAD9BPWTY90C>
+              <When ?01M0NJZ4KXFKCSTAD9BPWTY90D>
+              It references the AI control workflow product
+              </?01M0NJZ4KXFKCSTAD9BPWTY90D>
+              <Then ?01M0NJZ4KXFKCSTAD9BPWTY90E>
+              It SHALL refer to `AICtrlWorkflow` / `ai-ctrl-workflow`, not `AIAgentWorkflow` / `ai-agent-workflow`
+              </?01M0NJZ4KXFKCSTAD9BPWTY90E>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+  ]>
+)>

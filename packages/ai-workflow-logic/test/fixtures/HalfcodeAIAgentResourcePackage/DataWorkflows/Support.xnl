@@ -1,0 +1,4 @@
+<AIDataWorkflow #depa.flows.test.DataWorkflow.Support apiVersion="depa.flows/v1" version="1.0.0" {
+  lifecycle = "Active"
+  description = "Data workflow Agent fixture"
+}>

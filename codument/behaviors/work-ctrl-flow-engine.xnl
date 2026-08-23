@@ -1,0 +1,114 @@
+<Behavior #work-ctrl-flow-engine apiVersion="codument.tech/v1alpha1" version="1" (
+  <Requirements [
+    <Requirement #suspend-resume (
+      <Statement ?01M0NJZ4NDS5N8WMZWKC3QCWT4>
+      WorkCtrlFlow 引擎 SHALL 在可中断节点（ExternalJob/Timer）处登记 WaitHandle、把状态按节点 invocationKey 保存到外部 Store 并返回 WAITING；经 ResumeSignal（含 resumeToken）恢复后从快照重放继续，已完成动作不重复执行副作用。
+      </?01M0NJZ4NDS5N8WMZWKC3QCWT4>
+      <Suites [
+        <Suite { name = "suspend-resume" } (
+          <Cases [
+            <Case { name = "挂起" } (
+              <Given ?01M0NJZ4NDS5N8WMZWKC3QCWT5>
+              order-fulfillment demo
+              </?01M0NJZ4NDS5N8WMZWKC3QCWT5>
+              <When ?01M0NJZ4NDS5N8WMZWKC3QCWT6>
+              start
+              </?01M0NJZ4NDS5N8WMZWKC3QCWT6>
+              <Then ?01M0NJZ4NDS5N8WMZWKC3QCWT7>
+              WAITING，open handle 指向 pack，state.seed 已生效
+              </?01M0NJZ4NDS5N8WMZWKC3QCWT7>
+            )>
+            <Case { name = "恢复到完成" } (
+              <Given ?01M0NJZ4NDS5N8WMZWKC3QCWT8>
+              已挂起实例
+              </?01M0NJZ4NDS5N8WMZWKC3QCWT8>
+              <When ?01M0NJZ4NDS5N8WMZWKC3QCWT9>
+              resume(pack) → fireDueTimers
+              </?01M0NJZ4NDS5N8WMZWKC3QCWT9>
+              <Then ?01M0NJZ4NDS5N8WMZWKC3QCWTA>
+              COMPLETED，payload 写入 assignTo，前序动作日志不重复
+              </?01M0NJZ4NDS5N8WMZWKC3QCWTA>
+            )>
+            <Case { name = "跨实例恢复" } (
+              <Given ?01M0NJZ4NDS5N8WMZWKC3QCWTB>
+              FileStore + 全新引擎实例
+              </?01M0NJZ4NDS5N8WMZWKC3QCWTB>
+              <When ?01M0NJZ4NDS5N8WMZWKC3QCWTC>
+              逐段恢复
+              </?01M0NJZ4NDS5N8WMZWKC3QCWTC>
+              <Then ?01M0NJZ4NDS5N8WMZWKC3QCWTD>
+              COMPLETED（进程重启等价）
+              </?01M0NJZ4NDS5N8WMZWKC3QCWTD>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+    <Requirement #idempotent-signals (
+      <Statement ?01M0NJZ4NDS5N8WMZWKC3QCWTE>
+      ResumeSignal SHALL 幂等：重复投递已应用信号返回当前状态且不触发新 tick；resumeToken 不匹配或无对应 open handle 的信号被拒绝且流程状态不变。
+      </?01M0NJZ4NDS5N8WMZWKC3QCWTE>
+      <Suites [
+        <Suite { name = "idempotent-signals" } (
+          <Cases [
+            <Case { name = "重复投递" } (
+              <Given ?01M0NJZ4NDS5N8WMZWKC3QCWTF>
+              已应用的信号
+              </?01M0NJZ4NDS5N8WMZWKC3QCWTF>
+              <When ?01M0NJZ4NDS5N8WMZWKC3QCWTG>
+              再次 resume
+              </?01M0NJZ4NDS5N8WMZWKC3QCWTG>
+              <Then ?01M0NJZ4NDS5N8WMZWKC3QCWTH>
+              状态与 tickNo 不变
+              </?01M0NJZ4NDS5N8WMZWKC3QCWTH>
+            )>
+            <Case { name = "token 错误" } (
+              <Given ?01M0NJZ4NDS5N8WMZWKC3QCWTJ>
+              正确 kind/key + 错误 token
+              </?01M0NJZ4NDS5N8WMZWKC3QCWTJ>
+              <When ?01M0NJZ4NDS5N8WMZWKC3QCWTK>
+              resume
+              </?01M0NJZ4NDS5N8WMZWKC3QCWTK>
+              <Then ?01M0NJZ4NDS5N8WMZWKC3QCWTM>
+              抛 resume-token-mismatch，handle 仍 open
+              </?01M0NJZ4NDS5N8WMZWKC3QCWTM>
+            )>
+            <Case { name = "无匹配" } (
+              <Given ?01M0NJZ4NDS5N8WMZWKC3QCWTN>
+              未知 signalKey
+              </?01M0NJZ4NDS5N8WMZWKC3QCWTN>
+              <When ?01M0NJZ4NDS5N8WMZWKC3QCWTP>
+              resume
+              </?01M0NJZ4NDS5N8WMZWKC3QCWTP>
+              <Then ?01M0NJZ4NDS5N8WMZWKC3QCWTQ>
+              抛 no-open-wait-handle
+              </?01M0NJZ4NDS5N8WMZWKC3QCWTQ>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+    <Requirement #interruption-equivalence (
+      <Statement ?01M0NJZ4NDS5N8WMZWKC3QCWTR>
+      从任意挂起点恢复后的最终 vars SHALL 与信号即时到达的执行等价（WF-6，副作用发生时刻除外）。
+      </?01M0NJZ4NDS5N8WMZWKC3QCWTR>
+      <Suites [
+        <Suite { name = "interruption-equivalence" } (
+          <Cases [
+            <Case { name = "分段 vs 连续" } (
+              <Given ?01M0NJZ4NDS5N8WMZWKC3QCWTS>
+              同一 bundle 两条投递路径
+              </?01M0NJZ4NDS5N8WMZWKC3QCWTS>
+              <When ?01M0NJZ4NDS5N8WMZWKC3QCWTT>
+              比较最终 vars
+              </?01M0NJZ4NDS5N8WMZWKC3QCWTT>
+              <Then ?01M0NJZ4NDS5N8WMZWKC3QCWTV>
+              深度相等
+              </?01M0NJZ4NDS5N8WMZWKC3QCWTV>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+  ]>
+)>

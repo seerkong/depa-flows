@@ -1,0 +1,13 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": "..",
+    "paths": {
+      "ai-workflow-contract": ["packages/ai-workflow-contract/src/index.ts"]
+    }
+  },
+  "include": [
+    "../examples/xnl-bundles/ai-ctrl-workflow/flow-code/agent.ts",
+    "../examples/xnl-bundles/ai-data-workflow/flow-code/evidence.ts"
+  ]
+}

@@ -1,0 +1,26 @@
+<Behavior #monorepo-scaffold apiVersion="codument.tech/v1alpha1" version="1" (
+  <Requirements [
+    <Requirement #workspace (
+      <Statement ?01M0NJZ4N131VX9D9JGP10BMKH>
+      仓库 SHALL 是 bun workspaces monorepo：packages/* 下的包可互相以包名引用、可依赖 npm depa-processor@0.1.1；根级 bun test 跑全仓测试、bunx tsc --noEmit 全仓类型检查通过。
+      </?01M0NJZ4N131VX9D9JGP10BMKH>
+      <Suites [
+        <Suite { name = "workspace" } (
+          <Cases [
+            <Case { name = "安装与测试" } (
+              <Given ?01M0NJZ4N131VX9D9JGP10BMKJ>
+              fresh checkout
+              </?01M0NJZ4N131VX9D9JGP10BMKJ>
+              <When ?01M0NJZ4N131VX9D9JGP10BMKK>
+              bun install &amp;amp;&amp;amp; bun test &amp;amp;&amp;amp; bunx tsc --noEmit
+              </?01M0NJZ4N131VX9D9JGP10BMKK>
+              <Then ?01M0NJZ4N131VX9D9JGP10BMKM>
+              全部成功退出
+              </?01M0NJZ4N131VX9D9JGP10BMKM>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+  ]>
+)>

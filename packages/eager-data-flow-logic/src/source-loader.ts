@@ -4,6 +4,11 @@ import {
   type DataElementNode,
   type XnlNode,
 } from 'xnl-core';
+import {
+  assembleDefinitionStepProfile,
+  createDefinitionStepSourceRuntime,
+} from 'flow-step-space-logic';
+import type { DefinitionStepAssemblyRuntime, DefinitionStepSourceCollection } from 'flow-step-space-logic';
 import type {
   EagerDataEdge,
   EagerDataFlowAuthoringPlan,
@@ -405,7 +410,25 @@ export function loadEagerDataFlowProfileSources(
       diagnostics: [{ code: 'invalid-profile-root', message: 'profile root must be a non-empty XNL tag' }],
     };
   }
-  return loadEagerDataSources(sources, options, options.profileRoot, true);
+  return loadEagerDataFlowProfileSourcesWithRuntime(
+    createDefinitionStepSourceRuntime(sources),
+    sources,
+    options,
+  );
+}
+
+/** Runtime-first profile loader; codec capabilities remain outside config data. */
+export function loadEagerDataFlowProfileSourcesWithRuntime(
+  runtime: DefinitionStepAssemblyRuntime,
+  sources: EagerDataFlowSourceCollection,
+  options: LoadEagerDataFlowProfileSourcesOptions,
+): EagerDataFlowLoadResult {
+  if (!options.profileRoot.trim()) {
+    return {
+      diagnostics: [{ code: 'invalid-profile-root', message: 'profile root must be a non-empty XNL tag' }],
+    };
+  }
+  return loadEagerDataSources(sources, options, options.profileRoot, true, runtime);
 }
 
 function loadEagerDataSources(
@@ -413,13 +436,39 @@ function loadEagerDataSources(
   options: LoadEagerDataFlowOptions,
   rootTag: string,
   profile = false,
+  profileRuntime?: DefinitionStepAssemblyRuntime,
 ): EagerDataFlowLoadResult {
   const diagnostics: EagerDataFlowDiagnostic[] = [];
   const sink: DiagnosticSink = {
     diagnostics,
     note: (code, message, context = {}) => diagnostics.push({ code, message, ...context }),
   };
-  const normalizedSources = normalizeSources(sources, sink);
+  const definitionSources: DefinitionStepSourceCollection = Array.isArray(sources)
+    ? sources.map((source) => ({ ref: source.name, content: source.content }))
+    : Object.entries(sources).map(([ref, content]) => ({ ref, content }));
+  const assembled = profile
+    ? assembleDefinitionStepProfile(
+        profileRuntime ?? createDefinitionStepSourceRuntime(definitionSources),
+        { sources: definitionSources },
+        { ...(options.stepSpace ?? {}), profileRoot: rootTag },
+      )
+    : { sources, diagnostics: [], forest: undefined };
+  if (assembled.diagnostics.length > 0) {
+    return {
+      diagnostics: assembled.diagnostics.map(({ code, message, sourceRef }) => ({
+        code,
+        message,
+        ...(sourceRef ? { source: sourceRef } : {}),
+      })),
+    };
+  }
+  const effectiveSources: EagerDataFlowSourceCollection = Array.isArray(assembled.sources)
+    ? (assembled.sources as readonly ({ readonly name: string; readonly content: string } | { readonly ref: string; readonly content: string })[]).map((source) => ({
+        name: 'name' in source ? source.name : source.ref,
+        content: source.content,
+      }))
+    : assembled.sources as Readonly<Record<string, string>>;
+  const normalizedSources = normalizeSources(effectiveSources, sink);
   if (normalizedSources.length === 0) {
     sink.note('empty-source-set', 'no named XNL sources were provided');
     return { diagnostics };
@@ -763,6 +812,7 @@ function loadEagerDataSources(
     ...(typeof rootAttrs.title === 'string' ? { title: rootAttrs.title } : {}),
     ...(options.baseUri ? { baseUri: options.baseUri } : {}),
     sourceNames: normalizedSources.map((source) => source.name),
+    ...(assembled.forest ? { definitionStepForest: assembled.forest } : {}),
     contract,
     nodes,
     nodeById,

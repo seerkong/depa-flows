@@ -1,0 +1,19 @@
+<ResourcePackage #depa.flows.test.agent_resource_package apiVersion="halfcode.resources/v1" version="1.0.0" {
+  lifecycle = "Active"
+  description = "AI Agent and Material resource fixture"
+} (
+  <Catalogs [
+    <Catalog #kind_definitions { kind = "KindDefinition" shape = "directory" root = "vfs://./KindDefinitions/" entry = "manifest.xnl" }>
+    <Catalog #workflows { kind = "AICtrlWorkflow" shape = "single-file" root = "vfs://./Workflows/" }>
+    <Catalog #data_workflows { kind = "AIDataWorkflow" shape = "single-file" root = "vfs://./DataWorkflows/" }>
+    <Catalog #agents { kind = "AIAgentDefinition" shape = "single-file" root = "vfs://./Agents/" }>
+    <Catalog #prompts { kind = "Prompt" shape = "single-file" root = "vfs://./Prompts/" }>
+    <Catalog #schemas { kind = "MessageSchema" shape = "single-file" root = "vfs://./Schemas/" }>
+    <Catalog #tools { kind = "Tool" shape = "single-file" root = "vfs://./Tools/" }>
+    <Catalog #policies { kind = "EffectPolicy" shape = "single-file" root = "vfs://./Policies/" }>
+    <Catalog #ports { kind = "MaterialPort" shape = "single-file" root = "vfs://./Ports/" }>
+    <Catalog #bindings { kind = "MaterialBinding" shape = "single-file" root = "vfs://./Bindings/" }>
+    <Catalog #request_materials { kind = "RequestMaterial" shape = "single-file" root = "vfs://./RequestMaterials/" }>
+    <Catalog #context_materials { kind = "ContextMaterial" shape = "single-file" root = "vfs://./ContextMaterials/" }>
+  ]>
+)>

@@ -1,0 +1,50 @@
+<BehaviorPatch #track.r_2_0_2_6_-_0_8_-_0_7_-_2_0_1_5_-_s_u_p_p_o_r_t_-_m_a_n_u_a_l_-_a_i_-_d_a_t_a_-_w_o_r_k_f_l_o_w_-_n_o_d_e_-_p_o_l_i_c_y.behavior_patch.ai-workflow-foundation apiVersion="codument.tech/v1alpha1" version="1" { capability = "ai-workflow-foundation" } (
+  <Mutations [
+    <Upsert { selector = "behavior://ai-workflow-foundation/requirements/reuse-policy-vocabulary" } (
+      <Requirement #reuse-policy-vocabulary (
+        <Statement ?01M0NJZ4TBP96EA0TF2SRMGCQ0>
+        The system SHALL define node-level reuse policy vocabulary with semantic-hash as the default machine node policy and never as the default manual node policy.
+        </?01M0NJZ4TBP96EA0TF2SRMGCQ0>
+        <Suites [
+          <Suite #reuse-policy { name = "Reuse policy" } (
+            <Cases [
+              <Case #machine-default (
+                <Given ?01M0NJZ4TBP96EA0TF2SRMGCQ1>
+                A non-manual AI workflow node has no explicit reuse policy
+                </?01M0NJZ4TBP96EA0TF2SRMGCQ1>
+                <When ?01M0NJZ4TBP96EA0TF2SRMGCQ2>
+                The platform resolves the effective policy
+                </?01M0NJZ4TBP96EA0TF2SRMGCQ2>
+                <Then ?01M0NJZ4TBP96EA0TF2SRMGCQ3>
+                The policy SHALL be semantic-hash
+                </?01M0NJZ4TBP96EA0TF2SRMGCQ3>
+              )>
+              <Case #manual-default (
+                <Given ?01M0NJZ4TBP96EA0TF2SRMGCQ4>
+                A manual AI workflow node has no explicit reuse policy
+                </?01M0NJZ4TBP96EA0TF2SRMGCQ4>
+                <When ?01M0NJZ4TBP96EA0TF2SRMGCQ5>
+                The platform resolves the effective policy
+                </?01M0NJZ4TBP96EA0TF2SRMGCQ5>
+                <Then ?01M0NJZ4TBP96EA0TF2SRMGCQ6>
+                The policy SHALL be never
+                </?01M0NJZ4TBP96EA0TF2SRMGCQ6>
+              )>
+              <Case #manual-authoring (
+                <Given ?01M0NJZ4TBP96EA0TF2SRMGCQ7>
+                An AIDataWorkflow XNL node declares config.node_type as manual
+                </?01M0NJZ4TBP96EA0TF2SRMGCQ7>
+                <When ?01M0NJZ4TBP96EA0TF2SRMGCQ8>
+                The canonical profile loader creates its RunGraph
+                </?01M0NJZ4TBP96EA0TF2SRMGCQ8>
+                <Then ?01M0NJZ4TBP96EA0TF2SRMGCQ9>
+                The node SHALL have nodeType manual and SHALL resolve the never node-type default without reinterpreting the EagerDataFlow implementation type field
+                </?01M0NJZ4TBP96EA0TF2SRMGCQ9>
+              )>
+            ]>
+          )>
+        ]>
+      )>
+    )>
+  ]>
+)>

@@ -7,13 +7,18 @@ import type {
   AIDataWorkflowNodeTag,
   AIDataWorkflowReuseCandidate,
   AIDataWorkflowRunGraph,
+  AIDataWorkflowRunCheckpoint,
   AIDataWorkflowRunNode,
   AIDataWorkflowRunNodeStatus,
   AIDataWorkflowSemanticInput,
 } from 'ai-data-workflow-contract';
 import type {
   AIDataWorkflowDefinitionBinding,
+  AIDataWorkflowRunProfileState,
   AIDataWorkflowRuntime,
+  AIAgentHostEffectPort,
+  FrozenAIAgentTaskBinding,
+  AIWorkflowAuthoredEffects,
   AIWorkflowDefinitionRef,
   AIWorkflowEffectProvider,
   AIWorkflowEffectiveReusePolicy,
@@ -24,8 +29,17 @@ import type {
   AIWorkflowRunState,
   AIWorkflowRunStatus,
   AIWorkflowRuntimeContext,
+  AIWorkflowProfileDurableState,
   AIWorkflowSemanticFingerprint,
-  AIWorkflowStateStore,
+  AIWorkflowStateProjection,
+  FlowClosedObject,
+  FlowClosedValue,
+  FlowDefinitionArtifactIdentity,
+  FlowRunCheckpointCommit,
+  FlowRunCheckpointKey,
+  FlowRunCheckpointRuntime,
+  FlowRunStepExtensions,
+  FlowRunProfileState,
 } from 'ai-workflow-contract';
 import type {
   EagerDataFlowAuthoringPlan,
@@ -35,12 +49,82 @@ import type {
   EagerDataFlowValue,
   LoadEagerDataFlowOptions,
 } from 'eager-data-flow-contract';
-import { loadEagerDataFlowProfileSources } from 'eager-data-flow-logic';
+import { loadEagerDataFlowProfileSources, loadEagerDataFlowProfileSourcesWithRuntime } from 'eager-data-flow-logic';
+import { createDefinitionStepSourceRuntime, type DefinitionStepAssemblyRuntime } from 'flow-step-space-logic';
 import {
   createAIWorkflowRuntimeContext,
+  commitFlowRunCheckpoint,
   defineAIDataWorkflow,
+  loadFlowRunCheckpoint,
   resolveAIWorkflowReusePolicy,
+  bindAIAgentProcessors,
 } from 'ai-workflow-logic';
+import { assertFrozenAIAgentTaskBinding } from 'ai-workflow-logic/run-freeze';
+
+export interface CreateAIDataWorkflowCheckpointInput {
+  readonly instanceId: string;
+  readonly definition: FlowDefinitionArtifactIdentity;
+  readonly graph: AIDataWorkflowRunGraph;
+  readonly input: FlowClosedValue;
+  readonly config: FlowClosedValue;
+  readonly state: FlowClosedValue;
+  readonly output: FlowClosedValue;
+  readonly controllerSidecars: FlowClosedObject;
+  readonly nodeSidecars: FlowClosedObject;
+  readonly ai: AIWorkflowProfileDurableState;
+  readonly stepExtensions?: FlowRunStepExtensions;
+}
+
+/** Creates the first complete Data checkpoint as one runtime-owned transition. */
+export function createAIDataWorkflowCheckpoint(
+  runtime: FlowRunCheckpointRuntime,
+  input: CreateAIDataWorkflowCheckpointInput,
+): Promise<AIDataWorkflowRunCheckpoint> {
+  return commitAIDataWorkflowCheckpoint(runtime, {
+    expectedVersion: null,
+    checkpoint: {
+      schemaVersion: 'depa.flow-run-checkpoint/v1',
+      instanceId: input.instanceId,
+      runId: input.graph.runId,
+      definition: input.definition,
+      version: 0,
+      input: input.input,
+      config: input.config,
+      state: input.state,
+      output: input.output,
+      controllerSidecars: input.controllerSidecars,
+      nodeSidecars: input.nodeSidecars,
+      ...(input.stepExtensions === undefined ? {} : { stepExtensions: input.stepExtensions }),
+      profile: { kind: 'AIDataWorkflow', runGraph: input.graph, ai: input.ai },
+    },
+  });
+}
+
+export async function commitAIDataWorkflowCheckpoint(
+  runtime: FlowRunCheckpointRuntime,
+  input: FlowRunCheckpointCommit<AIDataWorkflowRunProfileState<AIDataWorkflowRunGraph>>,
+): Promise<AIDataWorkflowRunCheckpoint> {
+  const checkpoint = await commitFlowRunCheckpoint(
+    runtime,
+    input as unknown as FlowRunCheckpointCommit<FlowRunProfileState>,
+  );
+  if (checkpoint.profile.kind !== 'AIDataWorkflow') {
+    throw new Error(`Flow run ${checkpoint.runId} is not an AI Data Workflow checkpoint.`);
+  }
+  return checkpoint as unknown as AIDataWorkflowRunCheckpoint;
+}
+
+export async function loadAIDataWorkflowCheckpoint(
+  runtime: FlowRunCheckpointRuntime,
+  input: FlowRunCheckpointKey,
+): Promise<AIDataWorkflowRunCheckpoint | undefined> {
+  const checkpoint = await loadFlowRunCheckpoint(runtime, input);
+  if (checkpoint === undefined) return undefined;
+  if (checkpoint.profile.kind !== 'AIDataWorkflow') {
+    throw new Error(`Flow run ${input.runId} is not an AI Data Workflow checkpoint.`);
+  }
+  return checkpoint as unknown as AIDataWorkflowRunCheckpoint;
+}
 
 export class AIDataWorkflowRunGraphError extends Error {
   constructor(message: string) {
@@ -51,19 +135,55 @@ export class AIDataWorkflowRunGraphError extends Error {
 
 export interface CreateAIDataWorkflowRuntimeOptions<
   Effects extends AIWorkflowEffectProvider,
-  Store extends AIWorkflowStateStore,
+  Store extends AIWorkflowStateProjection,
 > {
   readonly ai: AIWorkflowRuntimeContext<Effects, Store>;
 }
 
 export function createAIDataWorkflowRuntime<
   Effects extends AIWorkflowEffectProvider,
-  Store extends AIWorkflowStateStore,
+  Store extends AIWorkflowStateProjection,
 >(
   options: CreateAIDataWorkflowRuntimeOptions<Effects, Store>,
 ): AIDataWorkflowRuntime<Effects, Store> {
   return {
     ai: createAIWorkflowRuntimeContext(options.ai),
+  };
+}
+
+export interface CreateAIDataWorkflowAgentNodeRuntimeBinderOptions {
+  readonly flowInstanceId: string;
+  readonly runId: string;
+  readonly checkpointRuntime: FlowRunCheckpointRuntime;
+  readonly effects: AIAgentHostEffectPort;
+  readonly workflowRef: `resource://${string}`;
+  readonly taskProofs: Readonly<Record<string, FrozenAIAgentTaskBinding>>;
+  readonly generationForNode: (nodeId: string) => number;
+  readonly metadata?: FlowClosedObject;
+}
+
+/** Composition seam for ordinary TransformNode and SinkNode Processors. */
+export function createAIDataWorkflowAgentNodeRuntimeBinder(
+  options: CreateAIDataWorkflowAgentNodeRuntimeBinderOptions,
+): (runtime: AIDataWorkflowRuntime<any, AIWorkflowStateProjection>, identity: { readonly nodeId: string }) => AIDataWorkflowRuntime<AIWorkflowAuthoredEffects, AIWorkflowStateProjection> {
+  return (runtime, identity) => {
+    const generation = options.generationForNode(identity.nodeId);
+    const proof = options.taskProofs[identity.nodeId];
+    if (!proof) throw new Error(`AI_AGENT_TASK_PROOF_REQUIRED: no frozen proof for node ${identity.nodeId}.`);
+    const taskBinding = assertFrozenAIAgentTaskBinding(proof).task;
+    const effects = bindAIAgentProcessors({
+      checkpointRuntime: options.checkpointRuntime,
+      checkpointKey: { instanceId: options.flowInstanceId, runId: options.runId },
+      nodeId: identity.nodeId,
+      invocationKey: `${identity.nodeId}#${generation}`,
+      generation,
+      workflowKind: 'AIDataWorkflow',
+      workflowRef: options.workflowRef,
+      taskBinding,
+      effects: options.effects,
+      ...(options.metadata === undefined ? {} : { metadata: options.metadata }),
+    });
+    return Object.freeze({ ai: Object.freeze({ ...runtime.ai, effects }) });
   };
 }
 
@@ -76,6 +196,34 @@ export function defineEagerBackedAIDataWorkflow(
 export interface AIDataWorkflowSourceLoadResult {
   readonly binding?: AIDataWorkflowDefinitionBinding;
   readonly diagnostics: readonly EagerDataFlowDiagnostic[];
+}
+
+export interface AIDataWorkflowSourceLoadRuntime {
+  readonly extensionCodecs: DefinitionStepAssemblyRuntime['extensionCodecs'];
+}
+
+export interface AIDataWorkflowSourceLoadInput {
+  readonly sources: EagerDataFlowSourceCollection;
+}
+
+export type AIDataWorkflowSourceLoadConfig = LoadEagerDataFlowOptions;
+
+/** Processor form for profile admission with runtime-owned extension codecs. */
+export function loadAIDataWorkflow(
+  runtime: AIDataWorkflowSourceLoadRuntime,
+  input: AIDataWorkflowSourceLoadInput,
+  config: AIDataWorkflowSourceLoadConfig = {},
+): AIDataWorkflowSourceLoadResult {
+  const loaded = loadEagerDataFlowProfileSourcesWithRuntime(
+    createDefinitionStepSourceRuntime(input.sources, runtime.extensionCodecs),
+    input.sources,
+    { ...config, profileRoot: 'AIDataWorkflow' },
+  );
+  if (!loaded.plan || loaded.diagnostics.length > 0) return { diagnostics: loaded.diagnostics };
+  return {
+    binding: defineEagerBackedAIDataWorkflow(loaded.plan),
+    diagnostics: loaded.diagnostics,
+  };
 }
 
 export function loadAIDataWorkflowSources(
@@ -296,6 +444,73 @@ function assertKnownDependencies(
         `AI Data Workflow node ${nodeId} depends on unknown node ${dependency}`,
       );
     }
+    if (nodes[dependency]?.status === 'Removed') {
+      throw new AIDataWorkflowRunGraphError(
+        `AI Data Workflow node ${nodeId} cannot depend on removed node ${dependency}`,
+      );
+    }
+  }
+}
+
+function assertRunGraphInputReferences(
+  nodes: Readonly<Record<string, AIDataWorkflowRunNode>>,
+): void {
+  for (const node of Object.values(nodes)) {
+    for (const [inputName, input] of Object.entries(node.inputs)) {
+      if (inputName.length === 0 || inputName !== inputName.trim()) {
+        throw new AIDataWorkflowRunGraphError(`AI Data Workflow node ${node.id} has an invalid input identity`);
+      }
+      if (typeof input !== 'object' || input === null || Array.isArray(input)) continue;
+      if (!('ref' in input) && !('nodeId' in input) && !('port' in input)) continue;
+      const reference = input as { readonly ref?: unknown; readonly nodeId?: unknown; readonly port?: unknown };
+      if (typeof reference.nodeId !== 'string' || typeof reference.port !== 'string'
+        || reference.ref !== `flow-port://#${reference.nodeId}/${reference.port}`) {
+        throw new AIDataWorkflowRunGraphError(
+          `AI Data Workflow node ${node.id} input ${inputName} has an invalid flow-port reference`,
+        );
+      }
+      const source = nodes[reference.nodeId];
+      if (!source || source.status === 'Removed' || !source.outputs.includes(reference.port)) {
+        throw new AIDataWorkflowRunGraphError(
+          `AI Data Workflow node ${node.id} input ${inputName} references an undeclared source output`,
+        );
+      }
+      if (!node.dependsOn.includes(reference.nodeId)) {
+        throw new AIDataWorkflowRunGraphError(
+          `AI Data Workflow node ${node.id} input ${inputName} is not projected by dependsOn`,
+        );
+      }
+    }
+  }
+}
+
+function assertReusePolicyAuthority(
+  reusePolicy: AIWorkflowEffectiveReusePolicy,
+  nodeType: AIWorkflowEffectiveReusePolicy['nodeType'],
+  config: Readonly<Record<string, unknown>>,
+  platformDefaultPolicy: AIWorkflowReusePolicy | undefined,
+  nodeId: string,
+): void {
+  if (reusePolicy.nodeType !== nodeType) {
+    throw new AIDataWorkflowRunGraphError(
+      `AI Data Workflow node ${nodeId} reuse policy nodeType must equal ${nodeType}`,
+    );
+  }
+  const explicitValue = config.reuse_policy ?? config.reusePolicy;
+  const explicitPolicy = explicitValue === 'semantic-hash' || explicitValue === 'never'
+    ? explicitValue
+    : undefined;
+  const expected = explicitPolicy
+    ? { policy: explicitPolicy, source: 'node', nodeType }
+    : nodeType === 'manual'
+      ? { policy: 'never', source: 'node-type-default', nodeType }
+      : platformDefaultPolicy
+        ? { policy: platformDefaultPolicy, source: 'platform-default', nodeType }
+        : { policy: 'semantic-hash', source: 'node-type-default', nodeType };
+  if (reusePolicy.policy !== expected.policy || reusePolicy.source !== expected.source) {
+    throw new AIDataWorkflowRunGraphError(
+      `AI Data Workflow node ${nodeId} reuse policy must match its declared config and platform authority`,
+    );
   }
 }
 
@@ -319,6 +534,7 @@ export function createAIDataWorkflowRunGraph(
         explicitPolicy: configReusePolicy(config),
         platformDefaultPolicy,
       });
+      assertReusePolicyAuthority(reusePolicy, nodeType, config, platformDefaultPolicy, planNode.id);
       const runNode: AIDataWorkflowRunNode = {
         id: planNode.id,
         tag: planNode.tag,
@@ -341,15 +557,18 @@ export function createAIDataWorkflowRunGraph(
     assertKnownDependencies(nodes, node.id, node.dependsOn);
   }
 
-  return {
+  const graph = {
     runId,
     binding,
+    ...(platformDefaultPolicy === undefined ? {} : { platformDefaultPolicy }),
     currentGeneration: 0,
     nodes: recomputeDependents(nodes, declarationOrder),
     declarationOrder,
     patchHistory: [],
     invalidations: [],
   };
+  assertRunGraphInputReferences(graph.nodes);
+  return graph;
 }
 
 function makePatchNode(
@@ -360,6 +579,12 @@ function makePatchNode(
   const tag = spec.tag ?? GENERATED_NODE_TAG;
   const config = cloneRecord(spec.config);
   const nodeType = nodeTypeForPatchNode({ ...spec, tag, config });
+  const reusePolicy = spec.reusePolicy ?? resolveAIWorkflowReusePolicy({
+    nodeType,
+    explicitPolicy: configReusePolicy(config),
+    platformDefaultPolicy,
+  });
+  assertReusePolicyAuthority(reusePolicy, nodeType, config, platformDefaultPolicy, spec.id);
   return {
     id: spec.id,
     tag,
@@ -372,11 +597,7 @@ function makePatchNode(
     config,
     dependsOn: uniqueStrings(spec.dependsOn ?? []),
     dependents: [],
-    reusePolicy: spec.reusePolicy ?? resolveAIWorkflowReusePolicy({
-      nodeType,
-      explicitPolicy: configReusePolicy(config),
-      platformDefaultPolicy,
-    }),
+    reusePolicy,
   };
 }
 
@@ -412,13 +633,18 @@ function applyInvalidations(
   let nextNodes: Record<string, AIDataWorkflowRunNode> = Object.fromEntries(
     Object.entries(nodes).map(([nodeId, node]) => [nodeId, cloneNode(node)]),
   );
-  const invalidations = existingInvalidations.map(cloneInvalidation);
+  let invalidations = existingInvalidations.map(cloneInvalidation);
   const emitted = new Set<string>();
 
   for (const source of sources) {
     for (const nodeId of collectTransitive(nextNodes, source.nodeId, source.includeSource)) {
       const node = nextNodes[nodeId];
       if (!node || node.status === 'Removed') continue;
+      if (generation < node.generation) {
+        throw new AIDataWorkflowRunGraphError(
+          `AI Data Workflow invalidation generation ${generation} precedes node ${nodeId}@${node.generation}`,
+        );
+      }
       const key = `${source.nodeId}:${nodeId}:${generation}`;
       if (emitted.has(key)) continue;
       emitted.add(key);
@@ -429,14 +655,20 @@ function applyInvalidations(
         sourceNodeId: source.nodeId,
         ...(atMs === undefined ? {} : { atMs }),
       };
+      invalidations = invalidations.filter((fact) => fact.nodeId !== nodeId);
       invalidations.push(invalidation);
+      const {
+        result: _staleResult,
+        semanticFingerprint: _staleFingerprint,
+        ...currentFacts
+      } = node;
       nextNodes = {
         ...nextNodes,
         [nodeId]: {
-          ...node,
+          ...currentFacts,
           status: 'Invalidated',
           generation,
-          invalidatedBy: [...(node.invalidatedBy ?? []), invalidation],
+          invalidatedBy: [invalidation],
         },
       };
     }
@@ -454,6 +686,15 @@ export function invalidateAIDataWorkflowNode(
   requireNode(graph.nodes, nodeId);
   const generation = options.generation ?? graph.currentGeneration;
   const sourceNodeId = options.sourceNodeId ?? nodeId;
+  requireNode(graph.nodes, sourceNodeId);
+  if (!Number.isSafeInteger(generation) || generation < 0) {
+    throw new AIDataWorkflowRunGraphError('AI Data Workflow invalidation generation must be a non-negative safe integer');
+  }
+  if (generation < graph.currentGeneration) {
+    throw new AIDataWorkflowRunGraphError(
+      `AI Data Workflow invalidation generation ${generation} precedes current generation ${graph.currentGeneration}`,
+    );
+  }
   const cloned = cloneGraph(graph);
   const { nodes, invalidations } = applyInvalidations(
     cloned.nodes,
@@ -462,6 +703,7 @@ export function invalidateAIDataWorkflowNode(
     generation,
     options.atMs,
   );
+  if (invalidations.length === cloned.invalidations.length) return cloned;
   return {
     ...cloned,
     currentGeneration: Math.max(cloned.currentGeneration, generation),
@@ -477,8 +719,26 @@ export function applyAIDataWorkflowGraphPatch(
   if (graph.patchHistory.some((record) => record.patchId === patch.patchId)) {
     throw new AIDataWorkflowRunGraphError(`AI Data Workflow patch ${patch.patchId} already applied`);
   }
+  const patchTargets = new Set<string>();
+  for (const operation of patch.operations) {
+    const target = operation.op === 'add-node' ? operation.node.id : operation.nodeId;
+    if (patchTargets.has(target)) {
+      throw new AIDataWorkflowRunGraphError(
+        `AI Data Workflow patch ${patch.patchId} targets node ${target} more than once`,
+      );
+    }
+    patchTargets.add(target);
+  }
 
-  const generation = graph.currentGeneration + 1;
+  const generation = patch.generation ?? graph.currentGeneration + 1;
+  if (!Number.isSafeInteger(generation) || generation < 1) {
+    throw new AIDataWorkflowRunGraphError('AI Data Workflow patch generation must be a positive safe integer');
+  }
+  if (generation < graph.currentGeneration) {
+    throw new AIDataWorkflowRunGraphError(
+      `AI Data Workflow patch generation ${generation} precedes current generation ${graph.currentGeneration}`,
+    );
+  }
   const atMs = patch.atMs ?? Date.now();
   let declarationOrder = [...graph.declarationOrder];
   let nodes = Object.fromEntries(
@@ -499,6 +759,7 @@ export function applyAIDataWorkflowGraphPatch(
           declarationIndex: operation.node.declarationIndex ?? declarationOrder.length,
         },
         generation,
+        graph.platformDefaultPolicy,
       );
       assertKnownDependencies(nodes, node.id, node.dependsOn);
       nodes = { ...nodes, [node.id]: node };
@@ -508,6 +769,11 @@ export function applyAIDataWorkflowGraphPatch(
 
     if (operation.op === 'update-node') {
       const existing = requireNode(nodes, operation.nodeId);
+      if (generation < existing.generation) {
+        throw new AIDataWorkflowRunGraphError(
+          `AI Data Workflow patch generation ${generation} precedes node ${existing.id}@${existing.generation}`,
+        );
+      }
       if (existing.status === 'Removed') {
         throw new AIDataWorkflowRunGraphError(
           `AI Data Workflow node ${operation.nodeId} has been removed`,
@@ -520,13 +786,15 @@ export function applyAIDataWorkflowGraphPatch(
         : existing.dependsOn;
       assertKnownDependencies(nodes, existing.id, dependsOn);
       const reusePolicy = operation.changes.reusePolicy ?? (
-        operation.changes.config
+        operation.changes.config || operation.changes.nodeType
           ? resolveAIWorkflowReusePolicy({
             nodeType,
             explicitPolicy: configReusePolicy(config),
+            platformDefaultPolicy: graph.platformDefaultPolicy,
           })
           : existing.reusePolicy
       );
+      assertReusePolicyAuthority(reusePolicy, nodeType, config, graph.platformDefaultPolicy, existing.id);
       nodes = {
         ...nodes,
         [existing.id]: {
@@ -551,10 +819,24 @@ export function applyAIDataWorkflowGraphPatch(
     }
 
     const existing = requireNode(nodes, operation.nodeId);
+    if (existing.status === 'Removed') {
+      throw new AIDataWorkflowRunGraphError(`AI Data Workflow node ${operation.nodeId} has already been removed`);
+    }
+    if (generation < existing.generation) {
+      throw new AIDataWorkflowRunGraphError(
+        `AI Data Workflow patch generation ${generation} precedes node ${existing.id}@${existing.generation}`,
+      );
+    }
+    const {
+      result: _staleResult,
+      semanticFingerprint: _staleFingerprint,
+      invalidatedBy: _activeInvalidation,
+      ...currentFacts
+    } = existing;
     nodes = {
       ...nodes,
       [existing.id]: {
-        ...existing,
+        ...currentFacts,
         generation,
         status: 'Removed',
       },
@@ -569,13 +851,13 @@ export function applyAIDataWorkflowGraphPatch(
   nodes = recomputeDependents(nodes, declarationOrder);
   const invalidated = applyInvalidations(
     nodes,
-    graph.invalidations,
+    graph.invalidations.filter((fact) => nodes[fact.nodeId]?.status !== 'Removed'),
     invalidationSources,
     generation,
     atMs,
   );
 
-  return {
+  const nextGraph = {
     ...graph,
     currentGeneration: generation,
     nodes: invalidated.nodes,
@@ -592,6 +874,11 @@ export function applyAIDataWorkflowGraphPatch(
     ],
     invalidations: invalidated.invalidations,
   };
+  for (const node of Object.values(nextGraph.nodes)) {
+    if (node.status !== 'Removed') assertKnownDependencies(nextGraph.nodes, node.id, node.dependsOn);
+  }
+  assertRunGraphInputReferences(nextGraph.nodes);
+  return nextGraph;
 }
 
 function stableSemanticValue(value: unknown): string {
@@ -608,8 +895,12 @@ function stableSemanticValue(value: unknown): string {
 
   const entries = Object.entries(value as Record<string, unknown>)
     .filter(([, item]) => typeof item !== 'function' && typeof item !== 'symbol')
-    .sort(([left], [right]) => left.localeCompare(right));
+    .sort(([left], [right]) => compareCodeUnits(left, right));
   return `{${entries.map(([key, item]) => `${JSON.stringify(key)}:${stableSemanticValue(item)}`).join(',')}}`;
+}
+
+function compareCodeUnits(left: string, right: string): number {
+  return left < right ? -1 : left > right ? 1 : 0;
 }
 
 function fnv1a64(value: string): string {
@@ -695,10 +986,29 @@ export function recordAIDataWorkflowNodeResult(
   result: AIWorkflowNodeResult,
 ): AIDataWorkflowRunGraph {
   const node = requireNode(graph.nodes, nodeId);
+  if (result.nodeId !== nodeId) {
+    throw new AIDataWorkflowRunGraphError(`AI Data Workflow result identity ${result.nodeId} does not match node ${nodeId}`);
+  }
+  if (result.generation !== node.generation) {
+    throw new AIDataWorkflowRunGraphError(
+      `AI Data Workflow result generation ${result.generation} does not match node ${nodeId}@${node.generation}`,
+    );
+  }
+  if (node.result
+    && (node.result.status === 'Succeeded' || node.result.status === 'Failed' || node.result.status === 'Reused')) {
+    if (JSON.stringify(node.result) === JSON.stringify(result)) return cloneGraph(graph);
+    throw new AIDataWorkflowRunGraphError(
+      `AI Data Workflow terminal result ${nodeId}@${node.generation} is immutable`,
+    );
+  }
+  const {
+    invalidatedBy: _acceptedInvalidation,
+    ...nodeFacts
+  } = node;
   const nodes = {
     ...graph.nodes,
     [nodeId]: {
-      ...node,
+      ...nodeFacts,
       generation: result.generation,
       status: toRunNodeStatus(result.status),
       result: cloneNodeResult(result),
@@ -709,6 +1019,7 @@ export function recordAIDataWorkflowNodeResult(
     ...graph,
     currentGeneration: Math.max(graph.currentGeneration, result.generation),
     nodes: recomputeDependents(nodes, graph.declarationOrder),
+    invalidations: graph.invalidations.filter((fact) => fact.nodeId !== nodeId),
   };
 }
 

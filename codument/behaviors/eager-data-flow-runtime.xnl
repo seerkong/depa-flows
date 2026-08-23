@@ -1,0 +1,92 @@
+<Behavior #eager-data-flow-runtime apiVersion="codument.tech/v1alpha1" version="1" (
+  <Requirements [
+    <Requirement #canonical-loading (
+      <Statement ?01M0NJZ4M3XFTNE8KP7Q99ZD9E>
+      The system SHALL load and validate canonical EagerDataFlow definitions and MUST reject removed DataFlow and lazy DataGraph authoring shapes.
+      </?01M0NJZ4M3XFTNE8KP7Q99ZD9E>
+      <Suites [
+        <Suite #loader { name = "canonical loader" } (
+          <Cases [
+            <Case #edge-projection (
+              <Given ?01M0NJZ4M3XFTNE8KP7Q99ZD9F>
+              valid flow-port and flow-node references
+              </?01M0NJZ4M3XFTNE8KP7Q99ZD9F>
+              <When ?01M0NJZ4M3XFTNE8KP7Q99ZD9G>
+              the definition is loaded
+              </?01M0NJZ4M3XFTNE8KP7Q99ZD9G>
+              <Then ?01M0NJZ4M3XFTNE8KP7Q99ZD9H>
+              the derived plan SHALL retain distinct data and completion edges
+              </?01M0NJZ4M3XFTNE8KP7Q99ZD9H>
+            )>
+            <Case #legacy-rejected (
+              <Given ?01M0NJZ4M3XFTNE8KP7Q99ZD9J>
+              a DataFlow root or lazy graph node
+              </?01M0NJZ4M3XFTNE8KP7Q99ZD9J>
+              <When ?01M0NJZ4M3XFTNE8KP7Q99ZD9K>
+              it is loaded
+              </?01M0NJZ4M3XFTNE8KP7Q99ZD9K>
+              <Then ?01M0NJZ4M3XFTNE8KP7Q99ZD9M>
+              loading SHALL fail without a compatibility alias
+              </?01M0NJZ4M3XFTNE8KP7Q99ZD9M>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+    <Requirement #eager-scheduling (
+      <Statement ?01M0NJZ4M3XFTNE8KP7Q99ZD9N>
+      The engine SHALL execute each ready node at most once, SHALL start independent ready nodes concurrently, and SHALL atomically publish validated output records.
+      </?01M0NJZ4M3XFTNE8KP7Q99ZD9N>
+      <Suites [
+        <Suite #scheduler { name = "ready scheduler" } (
+          <Cases [
+            <Case #wait-for (
+              <Given ?01M0NJZ4M3XFTNE8KP7Q99ZD9P>
+              a node with data inputs and waitFor dependencies
+              </?01M0NJZ4M3XFTNE8KP7Q99ZD9P>
+              <When ?01M0NJZ4M3XFTNE8KP7Q99ZD9Q>
+              the flow runs
+              </?01M0NJZ4M3XFTNE8KP7Q99ZD9Q>
+              <Then ?01M0NJZ4M3XFTNE8KP7Q99ZD9R>
+              it SHALL start only after both dependency classes are satisfied
+              </?01M0NJZ4M3XFTNE8KP7Q99ZD9R>
+            )>
+            <Case #convergence (
+              <Given ?01M0NJZ4M3XFTNE8KP7Q99ZD9S>
+              a ReturnNode captures output before another independent sink finishes
+              </?01M0NJZ4M3XFTNE8KP7Q99ZD9S>
+              <When ?01M0NJZ4M3XFTNE8KP7Q99ZD9T>
+              the flow runs
+              </?01M0NJZ4M3XFTNE8KP7Q99ZD9T>
+              <Then ?01M0NJZ4M3XFTNE8KP7Q99ZD9V>
+              the invocation SHALL resolve only after all nodes converge
+              </?01M0NJZ4M3XFTNE8KP7Q99ZD9V>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+    <Requirement #subflow-execution (
+      <Statement ?01M0NJZ4M3XFTNE8KP7Q99ZD9W>
+      SubFlowNode SHALL invoke a registered EagerDataFlow through its FlowContract, isolate child invocation state, and reject recursive unit call graphs.
+      </?01M0NJZ4M3XFTNE8KP7Q99ZD9W>
+      <Suites [
+        <Suite #subflow { name = "subflow execution" } (
+          <Cases [
+            <Case #contract (
+              <Given ?01M0NJZ4M3XFTNE8KP7Q99ZD9X>
+              a registered child flow
+              </?01M0NJZ4M3XFTNE8KP7Q99ZD9X>
+              <When ?01M0NJZ4M3XFTNE8KP7Q99ZD9Y>
+              the parent links and invokes it
+              </?01M0NJZ4M3XFTNE8KP7Q99ZD9Y>
+              <Then ?01M0NJZ4M3XFTNE8KP7Q99ZD9Z>
+              input and output ports SHALL match the child contract exactly
+              </?01M0NJZ4M3XFTNE8KP7Q99ZD9Z>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+  ]>
+)>

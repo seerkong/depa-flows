@@ -1,0 +1,151 @@
+<Track #align-ai-workflow-resource-boundary-with-halfcode version="1" apiVersion="codument.tech/v1alpha1" { status = "completed" goal = "Make Halfcode the only generic resource authority while retaining AI workflow app projection semantics." description = "Consume Halfcode ResourceTree/ResourceRecord, retire depa generic catalog/loading authority, preserve compatibility and browser-safe exports." question_mode = "decision-tree" question_severity = "auto" commit_mode = "manual" created_at = "2026-08-15T18:18:32Z" updated_at = "2026-08-15T18:58:00Z" } (
+  <Ports { scope = "track" } [
+    <MaterialBundle { role = "input" name = "behavior-deltas" domain = "behavior" path = "vfs://./behavior_deltas/" }>
+    <MaterialBundle { role = "input" name = "modeling-deltas" domain = "modeling" path = "vfs://./modeling_deltas/" }>
+    <MaterialBundle { role = "input" name = "analysis" domain = "engineering" path = "vfs://./analysis/" }>
+    <MaterialBundle { role = "output" name = "packages" domain = "code" path = "vfs://@/packages/" }>
+    <MaterialBundle { role = "output" name = "docs" domain = "docs" path = "vfs://@/docs/flow-dsl/" }>
+    <MaterialBundle { role = "output" name = "behavior" domain = "behavior" path = "vfs://@/codument/behaviors/" }>
+    <MaterialBundle { role = "output" name = "modeling" domain = "modeling" path = "vfs://@/codument/modeling/" }>
+  ]>
+  <TaskSpace #space_align-ai-workflow-resource-boundary-with-halfcode { name = "align-ai-workflow-resource-boundary-with-halfcode" } (
+    <Description ?01M0NJZ4PM9PF89WC3MBJGHK75>
+    Move generic resource authority to Halfcode and keep only workflow-domain projections in depa-flows.
+    </?01M0NJZ4PM9PF89WC3MBJGHK75>
+    <SubNodes [
+      <TaskGroup #P1 { name = "Characterize and bind Halfcode seam" status = "DONE" order = 0 } (
+        <Description ?01M0NJZ4PM9PF89WC3MBJGHK76>
+        Freeze compatibility and prove the published Halfcode loader/record seam.
+        </?01M0NJZ4PM9PF89WC3MBJGHK76>
+        <SubNodes [
+          <Task { id = "T1.1" name = "Add RED package and projection characterization" status = "DONE" order = 0 priority = "P0" } (
+            <Description ?01M0NJZ4PM9PF89WC3MBJGHK77>
+            Add a real Halfcode ResourcePackage fixture and failing projection/filesystem/browser tests.
+            </?01M0NJZ4PM9PF89WC3MBJGHK77>
+            <Acceptance [
+              <Criterion { id = "T1.1-AC1" checked = true } ?01M0NJZ4PM9PF89WC3MBJGHK78>
+              RED evidence demonstrates missing Halfcode-backed projection APIs
+              </?01M0NJZ4PM9PF89WC3MBJGHK78>
+              <Criterion { id = "T1.1-AC2" checked = true } ?01M0NJZ4PM9PF89WC3MBJGHK79>
+              Legacy root and browser ref imports remain characterized
+              </?01M0NJZ4PM9PF89WC3MBJGHK79>
+            ]>
+          )>
+          <Task { id = "T1.2" name = "Declare published Halfcode dependency" status = "DONE" order = 1 priority = "P0" } (
+            <Description ?01M0NJZ4PM9PF89WC3MBJGHK7A>
+            Bind contract and logic packages to halfcode-compiler.xnl/resource-core without private paths.
+            </?01M0NJZ4PM9PF89WC3MBJGHK7A>
+            <Acceptance [
+              <Criterion { id = "T1.2-AC1" checked = true } ?01M0NJZ4PM9PF89WC3MBJGHK7B>
+              Dependency resolves from the public package and lockfile is reproducible
+              </?01M0NJZ4PM9PF89WC3MBJGHK7B>
+              <Criterion { id = "T1.2-AC2" checked = true } ?01M0NJZ4PM9PF89WC3MBJGHK7C>
+              No copied ResourceTree or EffectiveResourceRegistry contract is introduced
+              </?01M0NJZ4PM9PF89WC3MBJGHK7C>
+            ]>
+          )>
+        ]>
+        <Gate [
+          <Criterion { checked = true } ?01M0NJZ4PM9PF89WC3MBJGHK7D>
+          RED is recorded before GREEN and the public upstream seam is proven consumable
+          </?01M0NJZ4PM9PF89WC3MBJGHK7D>
+        ]>
+      )>
+      <TaskGroup #P2 { name = "Workflow-domain projection" status = "DONE" order = 1 } (
+        <Description ?01M0NJZ4PM9PF89WC3MBJGHK7E>
+        Implement pure structured projection and a filesystem adapter delegated to Halfcode.
+        </?01M0NJZ4PM9PF89WC3MBJGHK7E>
+        <SubNodes [
+          <Task { id = "T2.1" name = "Add workflow app projection contracts" status = "DONE" order = 0 priority = "P0" } (
+            <Acceptance [
+              <Criterion { id = "T2.1-AC1" checked = true } ?01M0NJZ4PM9PF89WC3MBJGHK7F>
+              Public types reference Halfcode ResourceRecord/ResourceRegistry
+              </?01M0NJZ4PM9PF89WC3MBJGHK7F>
+              <Criterion { id = "T2.1-AC2" checked = true } ?01M0NJZ4PM9PF89WC3MBJGHK7G>
+              AIWorkflowAppBundleProjection contains only workflow-domain bindings and provenance
+              </?01M0NJZ4PM9PF89WC3MBJGHK7G>
+            ]>
+          )>
+          <Task { id = "T2.2" name = "Implement fail-closed pure projector" status = "DONE" order = 1 priority = "P0" } (
+            <Acceptance [
+              <Criterion { id = "T2.2-AC1" checked = true } ?01M0NJZ4PM9PF89WC3MBJGHK7H>
+              Valid explicit bindings preserve order and resolve exact workflow kinds
+              </?01M0NJZ4PM9PF89WC3MBJGHK7H>
+              <Criterion { id = "T2.2-AC2" checked = true } ?01M0NJZ4PM9PF89WC3MBJGHK7J>
+              Malformed, missing, duplicate and wrong-kind bindings produce stable diagnostics with no partial result
+              </?01M0NJZ4PM9PF89WC3MBJGHK7J>
+              <Criterion { id = "T2.2-AC3" checked = true } ?01M0NJZ4PM9PF89WC3MBJGHK7K>
+              No arbitrary string scan, fuzzy routing or generic catalog parsing exists
+              </?01M0NJZ4PM9PF89WC3MBJGHK7K>
+            ]>
+          )>
+          <Task { id = "T2.3" name = "Add Halfcode filesystem adapter" status = "DONE" order = 2 priority = "P0" } (
+            <Acceptance [
+              <Criterion { id = "T2.3-AC1" checked = true } ?01M0NJZ4PM9PF89WC3MBJGHK7M>
+              Filesystem entry delegates loading and containment to Halfcode loadResourceTree
+              </?01M0NJZ4PM9PF89WC3MBJGHK7M>
+              <Criterion { id = "T2.3-AC2" checked = true } ?01M0NJZ4PM9PF89WC3MBJGHK7N>
+              Root/browser entries remain free of Node filesystem imports
+              </?01M0NJZ4PM9PF89WC3MBJGHK7N>
+            ]>
+          )>
+        ]>
+        <Gate [
+          <Criterion { checked = true } ?01M0NJZ4PM9PF89WC3MBJGHK7P>
+          Focused projection, filesystem and browser tests pass
+          </?01M0NJZ4PM9PF89WC3MBJGHK7P>
+        ]>
+      )>
+      <TaskGroup #P3 { name = "Authority docs and compatibility gate" status = "DONE" order = 2 } (
+        <Description ?01M0NJZ4PM9PF89WC3MBJGHK7Q>
+        Correct durable behavior/modeling/docs and prove package compatibility.
+        </?01M0NJZ4PM9PF89WC3MBJGHK7Q>
+        <SubNodes [
+          <Task { id = "T3.1" name = "Retire generic authority in docs and public annotations" status = "DONE" order = 0 priority = "P0" } (
+            <Acceptance [
+              <Criterion { id = "T3.1-AC1" checked = true } ?01M0NJZ4PM9PF89WC3MBJGHK7R>
+              Docs show ResourcePackage/Catalog/containment as Halfcode-owned
+              </?01M0NJZ4PM9PF89WC3MBJGHK7R>
+              <Criterion { id = "T3.1-AC2" checked = true } ?01M0NJZ4PM9PF89WC3MBJGHK7S>
+              Legacy catalog/ref APIs are deprecated and absent from canonical projection examples
+              </?01M0NJZ4PM9PF89WC3MBJGHK7S>
+              <Criterion { id = "T3.1-AC3" checked = true } ?01M0NJZ4PM9PF89WC3MBJGHK7T>
+              Modeling delta records the resource port and workflow projection boundary
+              </?01M0NJZ4PM9PF89WC3MBJGHK7T>
+            ]>
+          )>
+          <Task { id = "T3.2" name = "Run workspace and package compatibility gates" status = "DONE" order = 1 priority = "P0" } (
+            <Acceptance [
+              <Criterion { id = "T3.2-AC1" checked = true } ?01M0NJZ4PM9PF89WC3MBJGHK7V>
+              Focused and full tests, typecheck and Flow DSL check pass
+              </?01M0NJZ4PM9PF89WC3MBJGHK7V>
+              <Criterion { id = "T3.2-AC2" checked = true } ?01M0NJZ4PM9PF89WC3MBJGHK7W>
+              Package dry-runs include the new public entry and dependencies
+              </?01M0NJZ4PM9PF89WC3MBJGHK7W>
+              <Criterion { id = "T3.2-AC3" checked = true } ?01M0NJZ4PM9PF89WC3MBJGHK7X>
+              Static scan finds no second scanner/catalog loader, host paths or natural-language heuristic
+              </?01M0NJZ4PM9PF89WC3MBJGHK7X>
+              <Criterion { id = "T3.2-AC4" checked = true } ?01M0NJZ4PM9PF89WC3MBJGHK7Y>
+              Implementation report records commands, versions, compatibility and remaining terminal review
+              </?01M0NJZ4PM9PF89WC3MBJGHK7Y>
+            ]>
+          )>
+        ]>
+        <Gate [
+          <Criterion { checked = true } ?01M0NJZ4PM9PF89WC3MBJGHK7Z>
+          All automated acceptance evidence exists; terminal status remains for the mission executor
+          </?01M0NJZ4PM9PF89WC3MBJGHK7Z>
+        ]>
+        <Hooks [
+          <Hook { on = "phase:after" } (
+            <AttractorCheck { use = "coding" }>
+          )>
+        ]>
+      )>
+    ]>
+  )>
+  <Schedule [
+    <Parallel { max_concurrent = 1 spot_check = true }>
+  ]>
+  <Hooks>
+)>

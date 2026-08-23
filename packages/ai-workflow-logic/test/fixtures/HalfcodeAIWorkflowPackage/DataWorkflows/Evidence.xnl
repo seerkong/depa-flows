@@ -1,0 +1,4 @@
+<AIDataWorkflow #depa.flows.test.SupportAgent.Evidence apiVersion="depa.flows/v1" version="1.0.0" {
+  lifecycle = "Active"
+  description = "Evidence workflow fixture"
+}>

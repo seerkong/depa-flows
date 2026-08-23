@@ -1,29 +1,39 @@
-<decision #track.add-ai-workflow-profile-source-loaders.authority {
-  status = "accepted"
-  priority = "P0"
-}
-(
-  <question ?>AI workflow hosts should parse profile roots themselves or consume depa-flows loaders?</?>
-  <answer { }
-  (
-    <raw-answer ?>Consume depa-flows loaders.</?>
-    <decision-text ?>Profile root parsing, substrate lowering and diagnostics are canonical depa-flows responsibilities.</?>
-    <rationale ?>This prevents parallel workflow semantics in every host integration.</?>
-    <evidence ?>Existing public XNL examples use AI profile roots while substrate loaders reject those roots.</?>
+<decision #track.add-ai-workflow-profile-source-loaders.authority apiVersion="codument.tech/v1alpha1" { status = "accepted" priority = "P0" } (
+  <question ?01M0NJZ4SYRC12RXH68C6VKPEV>
+  AI workflow hosts should parse profile roots themselves or consume depa-flows loaders?
+  </?01M0NJZ4SYRC12RXH68C6VKPEV>
+  <answer {  } (
+    <raw-answer ?01M0NJZ4SYRC12RXH68C6VKPEW>
+    Consume depa-flows loaders.
+    </?01M0NJZ4SYRC12RXH68C6VKPEW>
+    <decision-text ?01M0NJZ4SYRC12RXH68C6VKPEX>
+    Profile root parsing, substrate lowering and diagnostics are canonical depa-flows responsibilities.
+    </?01M0NJZ4SYRC12RXH68C6VKPEX>
+    <rationale ?01M0NJZ4SYRC12RXH68C6VKPEY>
+    This prevents parallel workflow semantics in every host integration.
+    </?01M0NJZ4SYRC12RXH68C6VKPEY>
+    <evidence ?01M0NJZ4SYRC12RXH68C6VKPEZ>
+    Existing public XNL examples use AI profile roots while substrate loaders reject those roots.
+    </?01M0NJZ4SYRC12RXH68C6VKPEZ>
   )>
 )>
 
-<decision #track.add-ai-workflow-profile-source-loaders.compatibility {
-  status = "accepted"
-  priority = "P0"
-}
-(
-  <question ?>Should existing substrate loaders silently accept AI profile roots?</?>
-  <answer { }
-  (
-    <raw-answer ?>No.</?>
-    <decision-text ?>Add explicit profile-root loader primitives and AI facades; keep existing substrate root acceptance unchanged.</?>
-    <rationale ?>Explicit APIs preserve product identity and avoid turning current names into ambiguous aliases.</?>
-    <evidence ?>Canonical product naming behavior and no-legacy-alias policy.</?>
+<decision #track.add-ai-workflow-profile-source-loaders.compatibility apiVersion="codument.tech/v1alpha1" { status = "accepted" priority = "P0" } (
+  <question ?01M0NJZ4SYRC12RXH68C6VKPF0>
+  Should existing substrate loaders silently accept AI profile roots?
+  </?01M0NJZ4SYRC12RXH68C6VKPF0>
+  <answer {  } (
+    <raw-answer ?01M0NJZ4SYRC12RXH68C6VKPF1>
+    No.
+    </?01M0NJZ4SYRC12RXH68C6VKPF1>
+    <decision-text ?01M0NJZ4SYRC12RXH68C6VKPF2>
+    Add explicit profile-root loader primitives and AI facades; keep existing substrate root acceptance unchanged.
+    </?01M0NJZ4SYRC12RXH68C6VKPF2>
+    <rationale ?01M0NJZ4SYRC12RXH68C6VKPF3>
+    Explicit APIs preserve product identity and avoid turning current names into ambiguous aliases.
+    </?01M0NJZ4SYRC12RXH68C6VKPF3>
+    <evidence ?01M0NJZ4SYRC12RXH68C6VKPF4>
+    Canonical product naming behavior and no-legacy-alias policy.
+    </?01M0NJZ4SYRC12RXH68C6VKPF4>
   )>
 )>

@@ -1,0 +1,7 @@
+<MaterialPort #depa.flows.test.Port.Context apiVersion="depa.flows/v1" version="1.0.0" {
+  lifecycle = "Stable"
+  description = "Optional context material"
+  materialKind = "ContextMaterial"
+  required = false
+  cardinality = "many"
+}>

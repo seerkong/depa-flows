@@ -1,0 +1,11 @@
+<ResourcePackage #depa.flows.test.agent_executable_overlay apiVersion="halfcode.resources/v1" version="1.0.0" {
+  lifecycle = "Active"
+  description = "Executable Agent contract overlay"
+} (
+  <Catalogs [
+    <Catalog #kind_definitions { kind = "KindDefinition" shape = "directory" root = "vfs://./KindDefinitions/" entry = "manifest.xnl" }>
+    <Catalog #schemas { kind = "MessageSchema" shape = "single-file" root = "vfs://./Schemas/" }>
+    <Catalog #policies { kind = "EffectPolicy" shape = "single-file" root = "vfs://./Policies/" }>
+    <Catalog #materials { kind = "RequestMaterial" shape = "single-file" root = "vfs://./RequestMaterials/" }>
+  ]>
+)>

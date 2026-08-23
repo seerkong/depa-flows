@@ -1,0 +1,5 @@
+<Step #fulfilled (
+  <Core [
+    <Return #fulfilled { src = "vfs://./actions/fulfillment.actions.ts#toFulfilledResult" }>
+  ]>
+)>

@@ -1,0 +1,17 @@
+<Step #summarize (
+  <Core [
+    <TransformNode #summarize {
+      inputs = { evidence = "flow-port://#retrieve/evidence" prior = "flow-port://#retrieve/instance" }
+      outputs = ["summary"]
+      src = "vfs://./flow-code/evidence.ts#summarizeEvidence"
+      config = { node_type = "manual" agent = { agentDefinitionRef = "resource://depa.examples.Agent.Support" } }
+    }>
+  ]>
+  <Extensions [
+    <ExtensionRef {
+      kind = "depa.example.review-policy"
+      src = "steps/summarize/review-policy.xnl"
+      schema = "schema://depa.example.review-policy/v1"
+    }>
+  ]>
+)>

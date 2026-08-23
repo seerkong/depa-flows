@@ -1,0 +1,9 @@
+<StepSpace #depa.flows.demo.OrderFulfillmentSteps apiVersion="depa.flows/v1" version="1" [
+  <StepGroup #fulfillment [
+    <StepRef #reserve-inventory { src = "steps/reserve-inventory/step.xnl" }>
+    <StepRef #pack { src = "steps/pack/step.xnl" }>
+    <StepRef #cool-down { src = "steps/cool-down/step.xnl" }>
+    <StepRef #complete-fulfillment { src = "steps/complete-fulfillment/step.xnl" }>
+    <StepRef #fulfilled { src = "steps/fulfilled/step.xnl" }>
+  ]>
+]>

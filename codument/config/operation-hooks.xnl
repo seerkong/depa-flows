@@ -1,0 +1,28 @@
+<OperationHooks #codument.config.operation_hooks apiVersion="codument.tech/v1alpha1" version="1" (
+  <Operations [
+    <Operation #plan-track (
+      <Hooks [
+        <Hook { on = "plan-track:before" } (
+          <AttractorCheck { use = "coding" }>
+        )>
+      ]>
+    )>
+    <Operation #plan-mission (
+      <Hooks [
+        <Hook { on = "plan-mission:before" } (
+          <AttractorCheck { use = "coding" }>
+        )>
+      ]>
+    )>
+    <Operation #archive-track (
+      <Hooks [
+        <Hook { on = "archive-track:after" } (
+          <ArtifactSync { use = "docs" }>
+        )>
+      ]>
+    )>
+    <Operation #gap-loop (
+      <GapLoopDefaults { verify_round = false }>
+    )>
+  ]>
+)>

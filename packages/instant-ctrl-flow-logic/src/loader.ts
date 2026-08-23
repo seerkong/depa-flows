@@ -4,6 +4,11 @@
  * 完整 lint 由 tools/flow-dsl-check 承担；此处只做引擎必需的结构化与硬校验。
  */
 import { parseXnl } from 'xnl-core';
+import {
+  assembleDefinitionStepProfile,
+  createDefinitionStepSourceRuntime,
+} from 'flow-step-space-logic';
+import type { DefinitionStepForest, DefinitionStepSourceCollection } from 'flow-step-space-contract';
 import type {
   FlowBundleSpec,
   CtrlFlowContract,
@@ -167,9 +172,34 @@ function loadCtrlFlowSources(
     }
   };
 
-  const sourceEntries = (Array.isArray(sources)
-    ? sources.map(({ name, content }) => ({ name, content }))
-    : Object.entries(sources).map(([name, content]) => ({ name, content })))
+  let definitionStepForest: DefinitionStepForest | undefined;
+  let effectiveSources = sources;
+  const definitionSources: DefinitionStepSourceCollection = Array.isArray(sources)
+    ? sources.map((source) => ({ ref: source.name, content: source.content }))
+    : Object.entries(sources).map(([ref, content]) => ({ ref, content }));
+  const stepRuntime = createDefinitionStepSourceRuntime(definitionSources);
+  for (const candidateRoot of profile ? [profile.rootTag] : FORMS) {
+    const assembled = assembleDefinitionStepProfile(
+      stepRuntime,
+      { sources: definitionSources },
+      { ...(options.stepSpace ?? {}), profileRoot: candidateRoot },
+    );
+    if (assembled.diagnostics.length > 0) {
+      return { diagnostics: assembled.diagnostics.map(({ code, message }) => ({ code, message })) };
+    }
+    if (assembled.forest) {
+      effectiveSources = assembled.sources as FlowSourceCollection;
+      definitionStepForest = assembled.forest;
+      break;
+    }
+  }
+
+  const sourceEntries = (Array.isArray(effectiveSources)
+    ? effectiveSources.map((source) => ({
+        name: 'name' in source ? source.name : source.ref,
+        content: source.content,
+      }))
+    : Object.entries(effectiveSources).map(([name, content]) => ({ name, content })))
     .filter(({ name }) => name.endsWith('.xnl'))
     .sort((left, right) => left.name.localeCompare(right.name));
   const sourceNames = sourceEntries.map(({ name }) => name);
@@ -408,6 +438,7 @@ function loadCtrlFlowSources(
     baseUri: options.baseUri,
     dir: options.baseUri ?? '',
     statements: statementEls.map(toNodeSpec),
+    ...(definitionStepForest ? { definitionStepForest } : {}),
     flowContract,
     config,
     configDef,

@@ -1,0 +1,39 @@
+<BehaviorPatch #track.r_2_0_2_6_-_0_8_-_0_2_-_1_7_0_9_-_i_m_p_l_e_m_e_n_t_-_a_i_-_c_t_r_l_-_w_o_r_k_f_l_o_w_-_o_n_-_w_o_r_k_-_c_t_r_l_-_f_l_o_w.behavior_patch.ai-ctrl-workflow apiVersion="codument.tech/v1alpha1" version="1" { capability = "ai-ctrl-workflow" } (
+  <Mutations [
+    <Upsert { selector = "behavior://ai-ctrl-workflow/requirements/work-ctrl-flow-substrate" } (
+      <Requirement #work-ctrl-flow-substrate (
+        <Statement ?01M0NJZ4QQ7KX6RZKX5HQEZ3TC>
+        The system SHALL implement AI Ctrl Workflow as a WorkCtrlFlow-backed profile adapter.
+        </?01M0NJZ4QQ7KX6RZKX5HQEZ3TC>
+        <Suites [
+          <Suite #runtime { name = "Runtime" } (
+            <Cases [
+              <Case #start-workflow-backed-run (
+                <Given ?01M0NJZ4QQ7KX6RZKX5HQEZ3TD>
+                An AI Ctrl Workflow definition wraps a WorkCtrlFlow definition
+                </?01M0NJZ4QQ7KX6RZKX5HQEZ3TD>
+                <When ?01M0NJZ4QQ7KX6RZKX5HQEZ3TE>
+                The adapter starts a run
+                </?01M0NJZ4QQ7KX6RZKX5HQEZ3TE>
+                <Then ?01M0NJZ4QQ7KX6RZKX5HQEZ3TF>
+                The system SHALL execute through WorkCtrlFlowEngine and persist WorkCtrlFlow snapshot facts
+                </?01M0NJZ4QQ7KX6RZKX5HQEZ3TF>
+              )>
+              <Case #resume-through-workflow (
+                <Given ?01M0NJZ4QQ7KX6RZKX5HQEZ3TG>
+                An AI Ctrl Workflow run is waiting on a WorkCtrlFlow wait handle
+                </?01M0NJZ4QQ7KX6RZKX5HQEZ3TG>
+                <When ?01M0NJZ4QQ7KX6RZKX5HQEZ3TH>
+                A ResumeSignal is submitted
+                </?01M0NJZ4QQ7KX6RZKX5HQEZ3TH>
+                <Then ?01M0NJZ4QQ7KX6RZKX5HQEZ3TJ>
+                The system SHALL resume through WorkCtrlFlowEngine
+                </?01M0NJZ4QQ7KX6RZKX5HQEZ3TJ>
+              )>
+            ]>
+          )>
+        ]>
+      )>
+    )>
+  ]>
+)>

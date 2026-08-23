@@ -1,6 +1,6 @@
 {
   "name": "instant-ctrl-flow-contract",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "private": false,
   "description": "InstantCtrlFlow 契约：纯类型，零依赖",
   "type": "module",
@@ -8,11 +8,13 @@
   "exports": {
     ".": "./src/index.ts"
   },
+  "dependencies": {
+    "flow-step-space-contract": "0.1.1"
+  },
   "files": [
     "src"
   ],
   "publishConfig": {
-    "access": "public",
-    "registry": "https://registry.npmjs.com"
+    "access": "public"
   }
 }

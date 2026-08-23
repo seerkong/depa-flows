@@ -1,0 +1,74 @@
+<BehaviorPatch #track.r_2_0_2_6_-_0_8_-_0_2_-_1_7_0_1_-_d_e_f_i_n_e_-_x_n_l_-_a_i_-_w_o_r_k_f_l_o_w_-_r_e_s_o_u_r_c_e_-_s_y_s_t_e_m.behavior_patch.ai-workflow-resource-system apiVersion="codument.tech/v1alpha1" version="1" { capability = "ai-workflow-resource-system" } (
+  <Mutations [
+    <Upsert { selector = "behavior://ai-workflow-resource-system/requirements/xnl-only-resource-authoring" } (
+      <Requirement #xnl-only-resource-authoring (
+        <Statement ?01M0NJZ4QEQHWK2AF9KABNVWXV>
+        The system SHALL define AI workflow app bundle resources using XNL-only authoring.
+        </?01M0NJZ4QEQHWK2AF9KABNVWXV>
+        <Suites [
+          <Suite #authoring-format { name = "Authoring format" } (
+            <Cases [
+              <Case #accept-xnl (
+                <Given ?01M0NJZ4QEQHWK2AF9KABNVWXW>
+                An AI workflow app bundle resource is authored
+                </?01M0NJZ4QEQHWK2AF9KABNVWXW>
+                <When ?01M0NJZ4QEQHWK2AF9KABNVWXX>
+                The resource is persisted in the bundle tree
+                </?01M0NJZ4QEQHWK2AF9KABNVWXX>
+                <Then ?01M0NJZ4QEQHWK2AF9KABNVWXY>
+                The resource SHALL be represented as XNL
+                </?01M0NJZ4QEQHWK2AF9KABNVWXY>
+              )>
+              <Case #reject-xml-resource (
+                <Given ?01M0NJZ4QEQHWK2AF9KABNVWXZ>
+                An AI workflow app bundle resource is authored as XML
+                </?01M0NJZ4QEQHWK2AF9KABNVWXZ>
+                <When ?01M0NJZ4QEQHWK2AF9KABNVWY0>
+                The resource system validates the bundle
+                </?01M0NJZ4QEQHWK2AF9KABNVWY0>
+                <Then ?01M0NJZ4QEQHWK2AF9KABNVWY1>
+                The system SHALL reject XML as a resource authoring format
+                </?01M0NJZ4QEQHWK2AF9KABNVWY1>
+              )>
+            ]>
+          )>
+        ]>
+      )>
+    )>
+    <Upsert { selector = "behavior://ai-workflow-resource-system/requirements/logical-contained-refs" } (
+      <Requirement #logical-contained-refs (
+        <Statement ?01M0NJZ4QEQHWK2AF9KABNVWY2>
+        The system SHALL accept only logical, containment-safe resource references for AI workflow app bundle authoring.
+        </?01M0NJZ4QEQHWK2AF9KABNVWY2>
+        <Suites [
+          <Suite #ref-validation { name = "Reference validation" } (
+            <Cases [
+              <Case #allow-registered-schemes (
+                <Given ?01M0NJZ4QEQHWK2AF9KABNVWY3>
+                A resource field contains a ref with an allowed scheme
+                </?01M0NJZ4QEQHWK2AF9KABNVWY3>
+                <When ?01M0NJZ4QEQHWK2AF9KABNVWY4>
+                The ref is validated
+                </?01M0NJZ4QEQHWK2AF9KABNVWY4>
+                <Then ?01M0NJZ4QEQHWK2AF9KABNVWY5>
+                The system SHALL accept the ref if it has no containment escape
+                </?01M0NJZ4QEQHWK2AF9KABNVWY5>
+              )>
+              <Case #reject-host-path (
+                <Given ?01M0NJZ4QEQHWK2AF9KABNVWY6>
+                A resource field contains a host absolute path or naked relative path
+                </?01M0NJZ4QEQHWK2AF9KABNVWY6>
+                <When ?01M0NJZ4QEQHWK2AF9KABNVWY7>
+                The ref is validated
+                </?01M0NJZ4QEQHWK2AF9KABNVWY7>
+                <Then ?01M0NJZ4QEQHWK2AF9KABNVWY8>
+                The system SHALL reject the ref
+                </?01M0NJZ4QEQHWK2AF9KABNVWY8>
+              )>
+            ]>
+          )>
+        ]>
+      )>
+    )>
+  ]>
+)>

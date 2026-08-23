@@ -1,0 +1,44 @@
+<decision #track.resource_boundary.halfcode_authority apiVersion="codument.tech/v1alpha1" { status = "accepted" priority = "P0" } (
+    <question ?01M0NJZ4PG5RWZBT4FP86WYA8R>
+    Who owns package loading, catalogs, containment, composition and provenance?
+    </?01M0NJZ4PG5RWZBT4FP86WYA8R>
+    <answer { } (
+      <raw-answer ?>Halfcode owns them exclusively; depa-flows consumes normalized public ResourceRecord facts.</?>
+      <decision-text ?>Halfcode owns package loading, catalogs, containment, composition and provenance exclusively; depa-flows consumes normalized public ResourceRecord facts.</?>
+      <rationale ?>A single authority prevents divergent scanners, reference policies and revisions.</?>
+      <evidence ?>Implementation and final AttractorCheck reports.</?>
+    )>
+  )>
+<decision #track.resource_boundary.consumer_port apiVersion="codument.tech/v1alpha1" { status = "accepted" priority = "P0" } (
+    <question ?01M0NJZ4PG5RWZBT4FP86WYA8V>
+    How can depa-flows consume both legacy ResourceTree and the new effective registry without copying an unpublished type?
+    </?01M0NJZ4PG5RWZBT4FP86WYA8V>
+    <answer { } (
+      <raw-answer ?>Accept the public Pick&lt;ResourceRegistry, "byKind"&gt; read port.</?>
+      <decision-text ?>Use the structural public registry read port shared by legacy ResourceTree and effective registry.</?>
+      <rationale ?>The port is additive and does not duplicate composition semantics.</?>
+      <evidence ?>Published Halfcode contract and compatibility tests.</?>
+    )>
+  )>
+<decision #track.resource_boundary.workflow_membership apiVersion="codument.tech/v1alpha1" { status = "accepted" priority = "P0" } (
+    <question ?01M0NJZ4PG5RWZBT4FP86WYA8Y>
+    What remains inside AIWorkflowAppBundle after generic Catalog retires?
+    </?01M0NJZ4PG5RWZBT4FP86WYA8Y>
+    <answer { } (
+      <raw-answer ?>Only explicit ordered WorkflowBinding nodes and workflow-domain entrypoint semantics.</?>
+      <decision-text ?>AIWorkflowAppBundle retains only explicit ordered WorkflowBinding nodes and workflow-domain entrypoint semantics.</?>
+      <rationale ?>This keeps the app projection useful without recreating an arbitrary resource catalog.</?>
+      <evidence ?>Projection tests and canonical Flow DSL docs.</?>
+    )>
+  )>
+<decision #track.resource_boundary.compatibility apiVersion="codument.tech/v1alpha1" { status = "accepted" priority = "P1" } (
+    <question ?01M0NJZ4PG5RWZBT4FP86WYA91>
+    How are already-published DTO/ref imports handled?
+    </?01M0NJZ4PG5RWZBT4FP86WYA91>
+    <answer { } (
+      <raw-answer ?>Keep them deprecated and isolated for the 0.1 line.</?>
+      <decision-text ?>Published DTO/ref imports remain deprecated and isolated; canonical loading/projection never consumes them.</?>
+      <rationale ?>The boundary can move without an unannounced breaking patch release.</?>
+      <evidence ?>Public compatibility tests.</?>
+    )>
+  )>

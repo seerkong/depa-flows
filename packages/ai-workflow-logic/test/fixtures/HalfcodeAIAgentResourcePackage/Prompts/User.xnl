@@ -1,0 +1,5 @@
+<Prompt #depa.flows.test.Prompt.User apiVersion="depa.flows/v1" version="1.0.0" {
+  lifecycle = "Active"
+  description = "User prompt"
+  template = "Process the request material."
+}>

@@ -1,0 +1,35 @@
+<BehaviorPatch #track.add-typed-agent-invocation-and-instance-selection.behavior_patch.ai-data-workflow apiVersion="codument.tech/v1alpha1" version="1" { capability = "ai-data-workflow" } (
+  <Mutations [
+    <Upsert { selector = "behavior://ai-data-workflow/requirements/typed-agent-task-binding" } (
+      <Requirement #typed-agent-task-binding (
+        <Statement ?>AIDataWorkflow SHALL execute typed Agent tasks through ordinary EagerDataFlow processor nodes, with selectors supplied by static config or typed predecessor data.</?>
+        <Suites [
+          <Suite #data-agent-reuse { name = "Data Agent instance reuse" } (
+            <Cases [
+              <Case #create-and-reuse-through-port (
+                <Given ?>an Agent processor node returns output plus a stable instance identity on declared ports</?>
+                <When ?>a dependent processor builds `{byInstanceId}` from that port and calls `runTargetedAgent`</?>
+                <Then ?>the dependent node SHALL use the same Agent instance and preserve RunGraph data dependencies</?>
+              )>
+              <Case #reuse-authored-name (
+                <Given ?>an earlier Agent node created a unique authored instance name in the same Flow run</?>
+                <When ?>a later processor uses the exact constant `{byInstanceName}` selector</?>
+                <Then ?>the selector SHALL resolve through checkpoint AI profile state and SHALL NOT create another instance</?>
+              )>
+              <Case #fresh-run-graph-recovery (
+                <Given ?>a Data node's Agent completion and output are accepted in the canonical checkpoint</?>
+                <When ?>a fresh scheduler reconstructs the RunGraph</?>
+                <Then ?>it SHALL restore the output and instance identity as durable ports and SHALL NOT replay the completed Agent invocation</?>
+              )>
+              <Case #ordinary-node-grammar (
+                <Given ?>an AIData definition declares Agent task config on a standard processor node</?>
+                <When ?>the loader proves the workflow/node/Agent resource tuple</?>
+                <Then ?>it SHALL bind typed Agent semantics without introducing an `AgentTask` node or guessing from prose</?>
+              )>
+            ]>
+          )>
+        ]>
+      )>
+    )>
+  ]>
+)>

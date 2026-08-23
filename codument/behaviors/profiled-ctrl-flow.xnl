@@ -1,0 +1,81 @@
+<Behavior #profiled-ctrl-flow apiVersion="codument.tech/v1alpha1" version="1" (
+  <Requirements [
+    <Requirement #semantic-primitives (
+      <Statement ?01M0NJZ4N5ECVH7AVK1X6A8WC2>
+      CtrlFlow SHALL expose semantic orchestration primitives rather than raw behavior-tree implementation nodes. The canonical grammar SHALL define Run, If, Require, Fallback, Retry, Timeout, Until, ForEach, Parallel, Race, CallFlow, and Return with explicit data, fault, cancellation, and lifecycle semantics.
+      </?01M0NJZ4N5ECVH7AVK1X6A8WC2>
+      <Suites [
+        <Suite #authoring-boundary { name = "公开作者边界" } (
+          <Cases [
+            <Case #reject-raw-behavior-tree (
+              <Given ?01M0NJZ4N5ECVH7AVK1X6A8WC3>
+              a CtrlFlow product definition contains public Sequence, Selector, or Condition
+              </?01M0NJZ4N5ECVH7AVK1X6A8WC3>
+              <When ?01M0NJZ4N5ECVH7AVK1X6A8WC4>
+              the canonical loader validates it
+              </?01M0NJZ4N5ECVH7AVK1X6A8WC4>
+              <Then ?01M0NJZ4N5ECVH7AVK1X6A8WC5>
+              the definition SHALL be rejected as internal behavior-tree syntax
+              </?01M0NJZ4N5ECVH7AVK1X6A8WC5>
+            )>
+            <Case #parallel-subdomain (
+              <Given ?01M0NJZ4N5ECVH7AVK1X6A8WC6>
+              a Parallel definition contains concurrent bodies
+              </?01M0NJZ4N5ECVH7AVK1X6A8WC6>
+              <When ?01M0NJZ4N5ECVH7AVK1X6A8WC7>
+              it is serialized
+              </?01M0NJZ4N5ECVH7AVK1X6A8WC7>
+              <Then ?01M0NJZ4N5ECVH7AVK1X6A8WC8>
+              it SHALL own one Lanes child domain rather than reusing If Branches
+              </?01M0NJZ4N5ECVH7AVK1X6A8WC8>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+    <Requirement #profile-capabilities (
+      <Statement ?01M0NJZ4N5ECVH7AVK1X6A8WC9>
+      Each public orchestration primitive SHALL declare product capability and lifecycle semantics. InstantCtrlFlow SHALL reject durable waiting and recovery behavior; WorkCtrlFlow and BPCtrlFlow SHALL own all facts needed to resume enabled durable primitives; BPCtrlFlow human parallelism SHALL remain owned by TaskGroup executionMode.
+      </?01M0NJZ4N5ECVH7AVK1X6A8WC9>
+      <Suites [
+        <Suite #capability-validation { name = "产品能力校验" } (
+          <Cases [
+            <Case #instant-rejects-durable-target (
+              <Given ?01M0NJZ4N5ECVH7AVK1X6A8WCA>
+              an InstantCtrlFlow CallFlow targets a suspend-capable product
+              </?01M0NJZ4N5ECVH7AVK1X6A8WCA>
+              <When ?01M0NJZ4N5ECVH7AVK1X6A8WCB>
+              the definition is validated
+              </?01M0NJZ4N5ECVH7AVK1X6A8WCB>
+              <Then ?01M0NJZ4N5ECVH7AVK1X6A8WCC>
+              validation SHALL reject the synchronous invocation
+              </?01M0NJZ4N5ECVH7AVK1X6A8WCC>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+    <Requirement #callable-flow-contract (
+      <Statement ?01M0NJZ4N5ECVH7AVK1X6A8WCD>
+      InstantCtrlFlow, WorkCtrlFlow, and BPCtrlFlow SHALL each own exactly one FlowContract child domain whose id equals the root FQN and whose optional input/output code type references define the static callable boundary. CallFlow validation SHALL resolve target form, contract, and permitted invocation mode through a registry.
+      </?01M0NJZ4N5ECVH7AVK1X6A8WCD>
+      <Suites [
+        <Suite #contract-resolution { name = "可调用契约" } (
+          <Cases [
+            <Case #contract-id (
+              <Given ?01M0NJZ4N5ECVH7AVK1X6A8WCE>
+              a CtrlFlow FlowContract is declared
+              </?01M0NJZ4N5ECVH7AVK1X6A8WCE>
+              <When ?01M0NJZ4N5ECVH7AVK1X6A8WCF>
+              the loader validates its definition
+              </?01M0NJZ4N5ECVH7AVK1X6A8WCF>
+              <Then ?01M0NJZ4N5ECVH7AVK1X6A8WCG>
+              its id SHALL equal the enclosing flow FQN
+              </?01M0NJZ4N5ECVH7AVK1X6A8WCG>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+  ]>
+)>

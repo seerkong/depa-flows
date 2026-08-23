@@ -1,0 +1,56 @@
+<object #flow.ai_workflow_app_bundle_projection apiVersion="codument.tech/v1alpha1" { kind = "entity" fact_grade = "derived_projection_cache" single_writer = "modeling://domain/flow/workflow_resource_projector" derived_from = "modeling://domain/flow/halfcode_resource_registry_port" } [
+  <desc ?01M0NJZ4PJHQZ6VZ63XQYK7NDP>
+  AIWorkflowAppBundleProjection 是 Halfcode 规范化 ResourceRecord 的工作流领域只读投影，只表达 workflow membership 与 entrypoint，不拥有通用 catalog。
+  </?01M0NJZ4PJHQZ6VZ63XQYK7NDP>
+  <types ?t>
+  interface AIWorkflowAppBundleProjection {
+    kind: "AIWorkflowAppBundle"
+    fqn: string
+    resource: ResourceRecord
+    workflowBindings: readonly AIWorkflowBindingProjection[]
+    entrypoints: readonly AIWorkflowBindingProjection[]
+  }
+  </?t>
+  <invariants ?01M0NJZ4PJHQZ6VZ63XQYK7NDQ>
+  投影不得反写 ResourceRecord；不得扫描目录或任意字符串；binding kind 仅允许 AICtrlWorkflow 与 AIDataWorkflow。
+  </?01M0NJZ4PJHQZ6VZ63XQYK7NDQ>
+  <fact-source ?01M0NJZ4PJHQZ6VZ63XQYK7NDR>
+  Halfcode ResourceTree 或 EffectiveResourceRegistry 是资源事实源；本节点只生成可重建的工作流领域视图。
+  </?01M0NJZ4PJHQZ6VZ63XQYK7NDR>
+]>
+
+<port #flow.halfcode_resource_registry_port apiVersion="codument.tech/v1alpha1" { kind = "port" } [
+  <desc ?01M0NJZ4PJHQZ6VZ63XQYK7NDS>
+  Halfcode 资源读端口只暴露公开 ResourceRegistry.byKind；package、catalog、URI containment、layering 与 provenance 仍由 Halfcode 单写。
+  </?01M0NJZ4PJHQZ6VZ63XQYK7NDS>
+  <types ?t>
+  type AIWorkflowResourceRegistryView = Pick<ResourceRegistry, "byKind">
+  </?t>
+  <command ?01M0NJZ4PJHQZ6VZ63XQYK7NDT>
+  loadAIWorkflowResourcePackage 仅在 filesystem entry 中调用 Halfcode loadResourceTree
+  </?01M0NJZ4PJHQZ6VZ63XQYK7NDT>
+]>
+
+<component #flow.workflow_resource_projector apiVersion="codument.tech/v1alpha1" { kind = "component" } [
+  <desc ?01M0NJZ4PJHQZ6VZ63XQYK7NDV>
+  把明确的 AIWorkflowAppBundle.WorkflowBindings 转换为领域投影并执行结构化 fail-closed 校验。
+  </?01M0NJZ4PJHQZ6VZ63XQYK7NDV>
+  <runtime ?r>
+  type Runtime = never
+  </?r>
+  <input ?i>
+  type Input = AIWorkflowResourceRegistryView
+  </?i>
+  <config ?c>
+  type Config = Readonly<{}>
+  </?c>
+  <output ?o>
+  type Output = readonly AIWorkflowAppBundleProjection[]
+  </?o>
+  <pseudo { kind = "dataflow" } ?p>
+  按 kind 取得显式 records → 校验 WorkflowBinding 结构与目标 kind → 返回冻结投影
+  </?p>
+  <not-owned-here ?01M0NJZ4PJHQZ6VZ63XQYK7NDW>
+  ResourcePackage、Catalog、KindDefinition、目录枚举、引用 containment、layer composition 与 dependency snapshot 均属于 Halfcode。
+  </?01M0NJZ4PJHQZ6VZ63XQYK7NDW>
+]>

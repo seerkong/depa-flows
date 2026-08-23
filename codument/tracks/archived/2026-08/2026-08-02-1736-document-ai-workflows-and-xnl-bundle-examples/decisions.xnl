@@ -1,14 +1,13 @@
-<decisions #document-ai-workflows-and-xnl-bundle-examples {
-  version = "1"
-}
-(
-  <decision #track.docs.examples.checker {
-    status = "accepted"
-    priority = "P0"
-  }
-  (
-    <question ?>Should examples be merely illustrative or part of the checker surface?</?>
-    <answer ?>They should be checkable examples and therefore part of the flow-dsl-check surface.</?>
-    <rationale ?>This prevents the new docs from drifting away from accepted XNL authoring syntax.</?>
+<decisions #document-ai-workflows-and-xnl-bundle-examples apiVersion="codument.tech/v1alpha1" { version = "1" } (
+  <decision #track.docs.examples.checker { status = "accepted" priority = "P0" } (
+    <question ?01M0NJZ4S4T60YCWE1ZSB517PK>
+    Should examples be merely illustrative or part of the checker surface?
+    </?01M0NJZ4S4T60YCWE1ZSB517PK>
+    <answer ?01M0NJZ4S4T60YCWE1ZSB517PM>
+    They should be checkable examples and therefore part of the flow-dsl-check surface.
+    </?01M0NJZ4S4T60YCWE1ZSB517PM>
+    <rationale ?01M0NJZ4S4T60YCWE1ZSB517PN>
+    This prevents the new docs from drifting away from accepted XNL authoring syntax.
+    </?01M0NJZ4S4T60YCWE1ZSB517PN>
   )>
 )>

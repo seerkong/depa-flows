@@ -1,18 +1,24 @@
-<object #runtime.flow.snapshot {
-    kind = "entity"
-    fact_grade = "checkpoint_snapshot"
-    single_writer = "modeling://runtime/flow/scheduler"
-    derived_from = "modeling://domain/flow/runtime_lifecycle"
-  } [
-    <desc ?>WorkCtrlFlow/BPCtrlFlow 的 snapshot 是可恢复运行事实，不得回写 flow definition。</?>
-    <types ?t>interface FlowSnapshot { treeId: string; tickNo: number; status: "Waiting" | "Completed" | "Failed"; openWaitHandles: readonly WaitHandle[] }</?t>
-    <fact-source ?>Flow definition 是输入事实；snapshot store 是唯一写入口；runtime 只通过 dependency port 使用它。</?>
-  ]>
-<port #runtime.flow.scheduler {
-    kind = "port"
-    single_writer = "modeling://runtime/flow/scheduler"
-  } [
-    <desc ?>scheduler port 承载持久 flow 的 start、resume、deadline、refresh 和 durable child lifecycle。</?>
-    <types ?t>interface DurableChildFlowResolver { start(reference: string, childTreeId: string, input: unknown): Promise<unknown>; inspect(reference: string, childTreeId: string): Promise<unknown> }</?t>
-  ]>
-  <not-owned-here ?>scheduler 的具体实现、snapshot serialization 和 task store 属于 engineering implementation；本节点只定义事实等级和 owner 关系。</?>
+<object #runtime.flow.snapshot apiVersion="codument.tech/v1alpha1" { kind = "entity" fact_grade = "checkpoint_snapshot" single_writer = "modeling://runtime/flow/scheduler" derived_from = "modeling://domain/flow/runtime_lifecycle" } [
+  <desc ?01M0NJZ4P3FT76S456YAG7N7W4>
+  WorkCtrlFlow/BPCtrlFlow 的 snapshot 是可恢复运行事实，不得回写 flow definition。
+  </?01M0NJZ4P3FT76S456YAG7N7W4>
+  <types ?t>
+  interface FlowSnapshot { treeId: string; tickNo: number; status: "Waiting" | "Completed" | "Failed"; openWaitHandles: readonly WaitHandle[] }
+  </?t>
+  <fact-source ?01M0NJZ4P3FT76S456YAG7N7W5>
+  Flow definition 是输入事实；snapshot store 是唯一写入口；runtime 只通过 dependency port 使用它。
+  </?01M0NJZ4P3FT76S456YAG7N7W5>
+]>
+
+<port #runtime.flow.scheduler apiVersion="codument.tech/v1alpha1" { kind = "port" single_writer = "modeling://runtime/flow/scheduler" } [
+  <desc ?01M0NJZ4P3FT76S456YAG7N7W6>
+  scheduler port 承载持久 flow 的 start、resume、deadline、refresh 和 durable child lifecycle。
+  </?01M0NJZ4P3FT76S456YAG7N7W6>
+  <types ?t>
+  interface DurableChildFlowResolver { start(reference: string, childTreeId: string, input: unknown): Promise<unknown>; inspect(reference: string, childTreeId: string): Promise<unknown> }
+  </?t>
+]>
+
+<not-owned-here apiVersion="codument.tech/v1alpha1" ?01M0NJZ4P3FT76S456YAG7N7W7>
+scheduler 的具体实现、snapshot serialization 和 task store 属于 engineering implementation；本节点只定义事实等级和 owner 关系。
+</?01M0NJZ4P3FT76S456YAG7N7W7>

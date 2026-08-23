@@ -1,0 +1,51 @@
+<BehaviorPatch #track.add-flow-step-space-and-state-sidecars.behavior_patch.flow-step-space apiVersion="codument.tech/v1alpha1" version="1" { capability = "flow-step-space" } (
+  <Mutations [
+    <Upsert { selector = "behavior://flow-step-space/requirements/modular-step-definition" } (
+      <Requirement #modular-step-definition (
+        <Statement ?>A Flow definition MAY use one explicit StepSpace reference whose recursive StepRefs and ExtensionRefs assemble an immutable DefinitionStepForest and canonical profile topology; inline topology and StepSpace topology SHALL be mutually exclusive, and assembly SHALL NOT discover files by scanning directories.</?>
+        <Suites [
+          <Suite #definition-assembly { name = "Modular step definition assembly" } (
+            <Cases [
+              <Case #local-step-edit (
+                <Given ?>a StepSpace with multiple externally referenced step and extension files</?>
+                <When ?>one step extension is edited and the definition is reassembled</?>
+                <Then ?>only that file and the complete artifact digest SHALL change while unrelated bytes remain identical</?>
+              )>
+              <Case #single-topology-owner (
+                <Given ?>a profile root declares both inline executable nodes and a StepSpaceRef, or two refs resolve the same step id</?>
+                <When ?>the profile loader admits the definition</?>
+                <Then ?>it SHALL fail closed before instance materialization without choosing or merging authorities</?>
+              )>
+            ]>
+          )>
+        ]>
+      )>
+    )>
+    <Upsert { selector = "behavior://flow-step-space/requirements/step-record-authority" } (
+      <Requirement #step-record-authority (
+        <Statement ?>A filesystem run SHALL keep one checkpoint head as current authority and SHALL store step core and registered extension facts as immutable digest-bound records selected by one accepted RunStepStateIndex root; runtime index membership SHALL derive only from the frozen profile binding plus accepted canonical patch/orchestration facts.</?>
+        <Suites [
+          <Suite #root-admission { name = "Root-last step record admission" } (
+            <Cases [
+              <Case #local-transition (
+                <Given ?>a run with many accepted step records</?>
+                <When ?>one step core or extension fact changes</?>
+                <Then ?>the store SHALL write only changed records, the logarithmic tree path and one new checkpoint head; untouched records SHALL remain byte-identical</?>
+              )>
+              <Case #interrupted-candidate (
+                <Given ?>candidate records are durable but their checkpoint head was not admitted</?>
+                <When ?>a fresh process loads the run</?>
+                <Then ?>it SHALL restore the previous head and ignore the unreachable candidate records</?>
+              )>
+              <Case #dynamic-membership (
+                <Given ?>an AIData patch adds, updates or removes a node, or Ctrl orchestration admits a composite child</?>
+                <When ?>the runtime state index changes membership</?>
+                <Then ?>the change SHALL be exactly explained by the accepted logical profile fact and SHALL NOT establish an independent topology authority</?>
+              )>
+            ]>
+          )>
+        ]>
+      )>
+    )>
+  ]>
+)>

@@ -1,0 +1,5 @@
+<MessageSchema #depa.flows.test.Schema.Response apiVersion="depa.flows/v1" version="1.0.0" {
+  lifecycle = "Stable"
+  description = "Response schema"
+  schema = { type = "string" }
+}>

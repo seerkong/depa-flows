@@ -1,0 +1,5 @@
+<Step #return (
+  <Core [
+    <ReturnNode #return { inputs = { summary = "flow-port://#summarize/summary" } }>
+  ]>
+)>

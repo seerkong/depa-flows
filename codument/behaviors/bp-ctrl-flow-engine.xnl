@@ -1,0 +1,103 @@
+<Behavior #bp-ctrl-flow-engine apiVersion="codument.tech/v1alpha1" version="1" (
+  <Requirements [
+    <Requirement #task-step-bridge (
+      <Statement ?01M0NJZ4KTXVPPSN7J14R3TTTR>
+      TaskStep SHALL 是流树引用任务树的唯一桥：绑定 TaskSpace 直接子节点（否则加载期拒绝）、无 assignTo、进入置任务 ACTIVE 并执行 before-hooks、任务/组终态映射节点结果（DONE/FORWARDED→Success，REFUSED/ABANDONED→Failure）。
+      </?01M0NJZ4KTXVPPSN7J14R3TTTR>
+      <Suites [
+        <Suite { name = "task-step-bridge" } (
+          <Cases [
+            <Case { name = "进入激活" } (
+              <Given ?01M0NJZ4KTXVPPSN7J14R3TTTS>
+              expense-approval demo
+              </?01M0NJZ4KTXVPPSN7J14R3TTTS>
+              <When ?01M0NJZ4KTXVPPSN7J14R3TTTT>
+              start
+              </?01M0NJZ4KTXVPPSN7J14R3TTTT>
+              <Then ?01M0NJZ4KTXVPPSN7J14R3TTTV>
+              主管任务 ACTIVE，流程挂起于 manager-approval
+              </?01M0NJZ4KTXVPPSN7J14R3TTTV>
+            )>
+            <Case { name = "组绑定" } (
+              <Given ?01M0NJZ4KTXVPPSN7J14R3TTTW>
+              大额路径
+              </?01M0NJZ4KTXVPPSN7J14R3TTTW>
+              <When ?01M0NJZ4KTXVPPSN7J14R3TTTX>
+              主管 complete
+              </?01M0NJZ4KTXVPPSN7J14R3TTTX>
+              <Then ?01M0NJZ4KTXVPPSN7J14R3TTTY>
+              挂起于 grp_finance，组内首任务自动 ACTIVE
+              </?01M0NJZ4KTXVPPSN7J14R3TTTY>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+    <Requirement #approval-signals (
+      <Statement ?01M0NJZ4KTXVPPSN7J14R3TTTZ>
+      人工操作 SHALL 经任务状态机校验后作为 ResumeSignal 推进流程；非法转移被拒绝且流程状态不变；审批分支由节点结果驱动（拒绝走 Selector 兜底分支，流程正常收敛）。
+      </?01M0NJZ4KTXVPPSN7J14R3TTTZ>
+      <Suites [
+        <Suite { name = "approval-signals" } (
+          <Cases [
+            <Case { name = "同意路径" } (
+              <Given ?01M0NJZ4KTXVPPSN7J14R3TTV0>
+              主管+财务先后 complete
+              </?01M0NJZ4KTXVPPSN7J14R3TTV0>
+              <When ?01M0NJZ4KTXVPPSN7J14R3TTV1>
+              operateTask ×2
+              </?01M0NJZ4KTXVPPSN7J14R3TTV1>
+              <Then ?01M0NJZ4KTXVPPSN7J14R3TTV2>
+              COMPLETED，日志含 expense approval finished
+              </?01M0NJZ4KTXVPPSN7J14R3TTV2>
+            )>
+            <Case { name = "拒绝路径" } (
+              <Given ?01M0NJZ4KTXVPPSN7J14R3TTV3>
+              主管 refuse
+              </?01M0NJZ4KTXVPPSN7J14R3TTV3>
+              <When ?01M0NJZ4KTXVPPSN7J14R3TTV4>
+              operateTask
+              </?01M0NJZ4KTXVPPSN7J14R3TTV4>
+              <Then ?01M0NJZ4KTXVPPSN7J14R3TTV5>
+              驳回分支收敛 COMPLETED，财务任务保持 NOT_STARTED
+              </?01M0NJZ4KTXVPPSN7J14R3TTV5>
+            )>
+            <Case { name = "非法转移" } (
+              <Given ?01M0NJZ4KTXVPPSN7J14R3TTV6>
+              NOT_STARTED 财务任务
+              </?01M0NJZ4KTXVPPSN7J14R3TTV6>
+              <When ?01M0NJZ4KTXVPPSN7J14R3TTV7>
+              直接 complete
+              </?01M0NJZ4KTXVPPSN7J14R3TTV7>
+              <Then ?01M0NJZ4KTXVPPSN7J14R3TTV8>
+              抛 TaskTransitionError，open handle 不变
+              </?01M0NJZ4KTXVPPSN7J14R3TTV8>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+    <Requirement #restart-continuity (
+      <Statement ?01M0NJZ4KTXVPPSN7J14R3TTV9>
+      审批等待期间进程 SHALL 可退出：任务树与流程快照均外置（File 存储），全新引擎实例可继续办理至完成。
+      </?01M0NJZ4KTXVPPSN7J14R3TTV9>
+      <Suites [
+        <Suite { name = "restart-continuity" } (
+          <Cases [
+            <Case { name = "重启续办" } (
+              <Given ?01M0NJZ4KTXVPPSN7J14R3TTVA>
+              每步之间全新实例 + 同一存储
+              </?01M0NJZ4KTXVPPSN7J14R3TTVA>
+              <When ?01M0NJZ4KTXVPPSN7J14R3TTVB>
+              逐步审批
+              </?01M0NJZ4KTXVPPSN7J14R3TTVB>
+              <Then ?01M0NJZ4KTXVPPSN7J14R3TTVC>
+              COMPLETED
+              </?01M0NJZ4KTXVPPSN7J14R3TTVC>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+  ]>
+)>

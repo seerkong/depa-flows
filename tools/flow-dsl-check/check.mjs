@@ -7,12 +7,34 @@ import path from 'node:path';
 import { loadBundle } from './load.mjs';
 import { checkBundle } from './rules.mjs';
 
-export function checkDir(dir) {
-  const bundle = loadBundle(dir);
+export const FLOW_DSL_CHECK_RUNTIME = Object.freeze({
+  extensionCodecs: Object.freeze({
+    resolve(kind) {
+      if (kind !== 'depa.example.review-policy') return undefined;
+      return Object.freeze({
+        schemaRef: 'schema://depa.example.review-policy/v1',
+        codec: Object.freeze({
+          normalize(value) {
+            if (!value || typeof value !== 'object' || Array.isArray(value)
+              || !Number.isSafeInteger(value.reviewDepth) || value.reviewDepth < 1
+              || typeof value.audience !== 'string' || !value.audience.trim()) {
+              throw new Error('review policy requires positive reviewDepth and audience');
+            }
+            return { audience: value.audience.trim(), reviewDepth: value.reviewDepth };
+          },
+        }),
+      });
+    },
+  }),
+});
+
+export function checkDir(dir, runtime = FLOW_DSL_CHECK_RUNTIME) {
+  const bundle = loadBundle(dir, runtime);
   return {
     dir,
     form: bundle.form,
     statements: bundle.statements ?? [],
+    definitionStepForest: bundle.definitionStepForest,
     facets: bundle.facets ?? {},
     problems: checkBundle(bundle),
   };

@@ -1,0 +1,4 @@
+<Tool #depa.flows.test.Tool.Lookup apiVersion="depa.flows/v1" version="1.0.0" {
+  lifecycle = "Active"
+  description = "Lookup tool"
+}>

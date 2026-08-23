@@ -1,0 +1,173 @@
+<Behavior #flow-instance apiVersion="codument.tech/v1alpha1" version="1" (
+  <Requirements [
+    <Requirement #instance-materialization (
+      <Statement ?01M0QP04629V9X93GDY4J8HWPQ>
+      WorkCtrlFlow/BPCtrlFlow 引擎 SHALL 在 start 时把定义 bundle 物化为 instancesDir/&amp;lt;treeId&amp;gt;/ 的冻结拷贝（含脚本），实例终身只从拷贝编译执行；定义后续修改不影响在途实例。
+      </?01M0QP04629V9X93GDY4J8HWPQ>
+      <Suites [
+        <Suite { name = "instance-materialization" } (
+          <Cases [
+            <Case { name = "定义修改隔离" } (
+              <Given ?01M0QP04629V9X93GDY4J8HWPR>
+              实例 A 已启动；随后修改定义 tree.xnl
+              </?01M0QP04629V9X93GDY4J8HWPR>
+              <When ?01M0QP04629V9X93GDY4J8HWPS>
+              继续恢复实例 A；另启动实例 B
+              </?01M0QP04629V9X93GDY4J8HWPS>
+              <Then ?01M0QP04629V9X93GDY4J8HWPT>
+              A 按旧树跑完且结果不变；B 使用新树
+              </?01M0QP04629V9X93GDY4J8HWPT>
+            )>
+          ]>
+        )>
+        <Suite #definition-instance-isolation { name = "Definition and instance isolation" } (
+          <Cases [
+            <Case #definition-change-isolation (
+              <Given ?01M0QP04629V9X93GDY4J8HWPV>
+              instance A started from revision R1 and R2 is later published
+              </?01M0QP04629V9X93GDY4J8HWPV>
+              <When ?01M0QP04629V9X93GDY4J8HWPW>
+              a fresh process resumes A and creates B
+              </?01M0QP04629V9X93GDY4J8HWPW>
+              <Then ?01M0QP04629V9X93GDY4J8HWPX>
+              A SHALL use R1 and B SHALL use R2 without A reading the live definition
+              </?01M0QP04629V9X93GDY4J8HWPX>
+            )>
+            <Case #complete-bundle-copy (
+              <Given ?01M0QP04629V9X93GDY4J8HWPY>
+              a definition contains manifest, code, state and config facets
+              </?01M0QP04629V9X93GDY4J8HWPY>
+              <When ?01M0QP04629V9X93GDY4J8HWPZ>
+              the materializer creates a candidate
+              </?01M0QP04629V9X93GDY4J8HWPZ>
+              <Then ?01M0QP04629V9X93GDY4J8HWQ0>
+              it SHALL copy and byte-check the full bundle before run admission
+              </?01M0QP04629V9X93GDY4J8HWQ0>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+    <Requirement #status-annotation (
+      <Statement ?01M0QP04629V9X93GDY4J8HWQ1>
+      每 tick 收尾引擎 SHALL 把节点状态以保留键写入实例 tree.xnl 的 { } 属性块（行为树枚举 INIT/ACTIVE/SUCCESS/FAILURE/WAITING/OMITTED；Until 附 iterations；Tree 根附 runStatus/tickNo），保留定义注释；快照为真源，标注是单向视图且编译期剔除；挂起 tick 的惰性塌陷路径不污染视图。
+      </?01M0QP04629V9X93GDY4J8HWQ1>
+      <Suites [
+        <Suite { name = "status-annotation" } (
+          <Cases [
+            <Case { name = "挂起视图" } (
+              <Given ?01M0QP04629V9X93GDY4J8HWQ2>
+              order-fulfillment 实例挂起于 pack
+              </?01M0QP04629V9X93GDY4J8HWQ2>
+              <When ?01M0QP04629V9X93GDY4J8HWQ3>
+              读实例 tree.xnl
+              </?01M0QP04629V9X93GDY4J8HWQ3>
+              <Then ?01M0QP04629V9X93GDY4J8HWQ4>
+              pack=WAITING、root=ACTIVE、reserve=SUCCESS、未达节点=INIT、Tree runStatus=&quot;WAITING&quot;
+              </?01M0QP04629V9X93GDY4J8HWQ4>
+            )>
+            <Case { name = "完成视图" } (
+              <Given ?01M0QP04629V9X93GDY4J8HWQ5>
+              实例跑完
+              </?01M0QP04629V9X93GDY4J8HWQ5>
+              <When ?01M0QP04629V9X93GDY4J8HWQ6>
+              读实例 tree.xnl
+              </?01M0QP04629V9X93GDY4J8HWQ6>
+              <Then ?01M0QP04629V9X93GDY4J8HWQ7>
+              runStatus=&quot;COMPLETED&quot;；notify-retry 带 iterations=1
+              </?01M0QP04629V9X93GDY4J8HWQ7>
+            )>
+            <Case { name = "BPCtrlFlow 任务视图" } (
+              <Given ?01M0QP04629V9X93GDY4J8HWQ8>
+              expense-approval 实例主管审批中
+              </?01M0QP04629V9X93GDY4J8HWQ8>
+              <When ?01M0QP04629V9X93GDY4J8HWQ9>
+              读实例 task.space.xnl
+              </?01M0QP04629V9X93GDY4J8HWQ9>
+              <Then ?01M0QP04629V9X93GDY4J8HWQA>
+              task_manager_approve status=&quot;ACTIVE&quot;（真源在 TaskSpaceStore）
+              </?01M0QP04629V9X93GDY4J8HWQA>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+    <Requirement #step-space-instance-freeze (
+      <Statement ?01M0QP04629V9X93GDY4J8HWQB>
+      Instance materialization SHALL freeze the complete explicit StepSpace reference closure and every step/core/extension byte before any run exists; run-local step records SHALL live under the same run directory as checkpoint.json and SHALL never read the later live Definition.
+      </?01M0QP04629V9X93GDY4J8HWQB>
+      <Suites [
+        <Suite #step-space-freeze { name = "StepSpace Definition to Instance isolation" } (
+          <Cases [
+            <Case #source-change-isolation (
+              <Given ?01M0QP04629V9X93GDY4J8HWQC>
+              an instance has accepted StepSpace revision R1 and the live source is changed or removed
+              </?01M0QP04629V9X93GDY4J8HWQC>
+              <When ?01M0QP04629V9X93GDY4J8HWQD>
+              a fresh process creates or resumes a run for that instance
+              </?01M0QP04629V9X93GDY4J8HWQD>
+              <Then ?01M0QP04629V9X93GDY4J8HWQE>
+              it SHALL assemble and execute only frozen R1 step and extension bytes
+              </?01M0QP04629V9X93GDY4J8HWQE>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+    <Requirement #definition-instance-run-envelope (
+      <Statement ?01M0QP046359DCWFRPH01997XS>
+      Filesystem support SHALL aggregate runs under instances/&lt;instanceId&gt;/runs/&lt;runId&gt;/ and each run SHALL have exactly one versioned canonical checkpoint; derived events, indexes, node views and receipts SHALL NOT write back to it.
+      </?01M0QP046359DCWFRPH01997XS>
+      <Suites [
+        <Suite #run-envelope { name = "Run envelope" } (
+          <Cases [
+            <Case #multiple-runs (
+              <Given ?01M0QP046359DCWFRPH01997XT>
+              one frozen instance creates two runs
+              </?01M0QP046359DCWFRPH01997XT>
+              <When ?01M0QP046359DCWFRPH01997XV>
+              both advance and recover from fresh stores
+              </?01M0QP046359DCWFRPH01997XV>
+              <Then ?01M0QP046359DCWFRPH01997XW>
+              each SHALL use its own checkpoint while sharing the frozen definition
+              </?01M0QP046359DCWFRPH01997XW>
+            )>
+            <Case #derived-rebuild (
+              <Given ?01M0QP046359DCWFRPH01997XX>
+              the checkpoint is complete and derived views are deleted
+              </?01M0QP046359DCWFRPH01997XX>
+              <When ?01M0QP046359DCWFRPH01997XY>
+              support rebuilds projections
+              </?01M0QP046359DCWFRPH01997XY>
+              <Then ?01M0QP046359DCWFRPH01997XZ>
+              the result SHALL match without changing checkpoint bytes or version
+              </?01M0QP046359DCWFRPH01997XZ>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+    <Requirement #state-seed-immutability (
+      <Statement ?01M0QP046359DCWFRPH01997Y0>
+      state.seed SHALL be copied as a read-only instance facet and applied exactly once to each new run checkpoint; mutable flow and profile state SHALL persist only through checkpoint transitions.
+      </?01M0QP046359DCWFRPH01997Y0>
+      <Suites [
+        <Suite #seed-state { name = "Seed and runtime state" } (
+          <Cases [
+            <Case #seed-read-once (
+              <Given ?01M0QP046359DCWFRPH01997Y1>
+              state.seed defines S0
+              </?01M0QP046359DCWFRPH01997Y1>
+              <When ?01M0QP046359DCWFRPH01997Y2>
+              a run evolves to S1 and recovers
+              </?01M0QP046359DCWFRPH01997Y2>
+              <Then ?01M0QP046359DCWFRPH01997Y3>
+              recovery SHALL return S1 while definition and instance seed remain byte-equal to S0
+              </?01M0QP046359DCWFRPH01997Y3>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+  ]>
+)>

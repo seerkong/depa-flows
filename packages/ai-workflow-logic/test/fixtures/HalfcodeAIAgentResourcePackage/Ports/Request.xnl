@@ -1,0 +1,9 @@
+<MaterialPort #depa.flows.test.Port.Request apiVersion="depa.flows/v1" version="1.0.0" {
+  lifecycle = "Stable"
+  description = "Required request material"
+  materialKind = "RequestMaterial"
+  required = true
+  cardinality = "one"
+} (
+  <SchemaRef { kind = "MessageSchema" ref = "resource://depa.flows.test.Schema.Request" }>
+)>

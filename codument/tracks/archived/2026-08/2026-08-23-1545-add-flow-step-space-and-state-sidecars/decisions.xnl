@@ -1,0 +1,79 @@
+<decision #single-current-head apiVersion="codument.tech/v1alpha1" { status = "accepted" priority = "P0" } (
+  <question ?>引入 step/core/extension sidecar 后，run 的 current authority 是什么？</?>
+  <answer (
+    <raw-answer ?>仍只有 checkpoint head；sidecar 是由 head 精确选择的 immutable material。</?>
+    <decision-text ?>Each run SHALL have exactly one versioned checkpoint head as its current durable authority. Step, core and extension records SHALL be immutable digest-addressed material selected by that head; indexes and filesystem listings SHALL be rebuildable observations.</?>
+    <rationale ?>这样可降低局部修改成本，同时不把一个 logical checkpoint 拆成多个可写半真源。</?>
+    <evidence ?>现有 FlowRunCheckpoint 单一 authority、order-fulfillment state/config 分层与用户要求的 step-ext 方向。</?>
+  )>
+)>
+
+<decision #step-task-separation apiVersion="codument.tech/v1alpha1" { status = "accepted" priority = "P0" } (
+  <question ?>StepSpace 是否复用 TaskSpace 或复制 task status？</?>
+  <answer (
+    <raw-answer ?>不复用 authority；两者各自建模，只保留显式精确桥接。</?>
+    <decision-text ?>StepSpace SHALL own flow definition/runtime step composition. TaskSpace SHALL continue to own task-domain forests and task status. BPCtrl MAY bind a TaskStep to an exact Task reference but neither owner SHALL copy the other's mutable facts.</?>
+    <rationale ?>task-manager、BPCtrl 和 Codument TaskSpace 展示的是可借鉴的森林与读写模式，不是相同领域事实。</?>
+    <evidence ?>packages/task-manager-*, packages/bp-ctrl-flow-* 与 Codument TaskSpace/Schedule。</?>
+  )>
+)>
+
+<decision #explicit-definition-refs apiVersion="codument.tech/v1alpha1" { status = "accepted" priority = "P0" } (
+  <question ?>模块化 step 与 extension 如何被 profile 发现？</?>
+  <answer (
+    <raw-answer ?>只接受 profile 明示的 StepSpaceRef、StepRef 和 ExtensionRef。</?>
+    <decision-text ?>A profile SHALL use either inline topology or one explicit StepSpace reference, never both. Step and extension resources SHALL be reached only through exact declared references with containment and digest verification; directory scanning SHALL NOT create semantic membership.</?>
+    <rationale ?>显式引用保持定义可审阅、可冻结和可重放，避免目录布局成为隐藏 DSL。</?>
+    <evidence ?>指定 Python fixture 的 Core/Extension 分离、order-fulfillment manifest 与当前 depa definition freeze。</?>
+  )>
+)>
+
+<decision #root-last-admission apiVersion="codument.tech/v1alpha1" { status = "accepted" priority = "P0" } (
+  <question ?>局部 record 更新怎样同时获得低写放大与一致恢复？</?>
+  <answer (
+    <raw-answer ?>先写不可变 record/tree/receipt，最后以 CAS 原子替换 checkpoint head。</?>
+    <decision-text ?>The filesystem store SHALL write immutable records, the changed Merkle path and a version receipt before atomically admitting the new checkpoint head by CAS. Interrupted or losing candidates SHALL remain unreachable and SHALL never become current.</?>
+    <rationale ?>root-last admission 让单 step 更新只写局部材料，同时所有读者只观察一个完整旧或新版本。</?>
+    <evidence ?>现有 checkpoint CAS/atomic replacement、TaskSpace 按节点维护的结构思路与用户的速度目标。</?>
+  )>
+)>
+
+<decision #definition-runtime-forest-separation apiVersion="codument.tech/v1alpha1" { status = "accepted" priority = "P0" } (
+  <question ?>定义 StepForest 与运行记录 Merkle index 是否是同一 authority？</?>
+  <answer (
+    <raw-answer ?>不是；DefinitionStepForest 冻结定义，RunStepStateIndex 仅从 canonical profile facts 派生。</?>
+    <decision-text ?>DefinitionStepForest SHALL be immutable definition authority. RunStepStateIndex SHALL be a derived runtime storage projection whose membership comes only from the frozen canonical profile binding plus accepted AIData patch or Ctrl orchestration facts. Dynamic nodes and tombstones SHALL NOT create an independent topology authority.</?>
+    <rationale ?>Ctrl composite 与 Data 动态节点需要运行期成员变化，但变化必须仍由既有 logical checkpoint transition 解释。</?>
+    <evidence ?>现有 WorkCtrl orchestration facts、AIData patchHistory/tombstone invariants 与 fresh AttractorCheck 发现。</?>
+  )>
+)>
+
+<decision #logical-api-and-legacy apiVersion="codument.tech/v1alpha1" { status = "accepted" priority = "P0" } (
+  <question ?>新的物理 codec 是否改变 logical FlowRunCheckpoint contract？</?>
+  <answer (
+    <raw-answer ?>不改变；load/commit 仍处理完整 logical checkpoint，旧文件仅单向导入。</?>
+    <decision-text ?>Public stores and Processors SHALL continue to accept and return the complete normalized FlowRunCheckpoint. The sidecar envelope is private storage form. A legacy direct checkpoint MAY be imported once, but new transitions SHALL NOT dual-write both forms.</?>
+    <rationale ?>保持 profile validator、Ctrl/Data runtime 和下游 host 的契约稳定，把性能优化封装在 store owner 内。</?>
+    <evidence ?>已发布 checkpoint API、memory/filesystem equivalence 与 legacy one-way migration decision。</?>
+  )>
+)>
+
+<decision #bounded-reference-scope apiVersion="codument.tech/v1alpha1" { status = "accepted" priority = "P1" } (
+  <question ?>本 track 使用哪些历史设计证据？</?>
+  <answer (
+    <raw-answer ?>只使用用户指定 Python fixture 与 depa-flows examples/task/BPCtrl/Codument 资料。</?>
+    <decision-text ?>The design SHALL use only the specified sparrow-fabric.py multistep fixture and depa-flows/Codument evidence named in the proposal. sparrow-fabric.ts SHALL NOT be read or cited.</?>
+    <rationale ?>避免扩大职责后的翻译项目覆盖 AI workflow 原始设计，同时确保关键上下文持久化而非只留在会话中。</?>
+    <evidence ?>用户明确限定的资料范围。</?>
+  )>
+)>
+
+<decision #terminal-release apiVersion="codument.tech/v1alpha1" { status = "accepted" priority = "P1" } (
+  <question ?>新能力如何进入下游 Eidolon？</?>
+  <answer (
+    <raw-answer ?>发布末端最小版本的精确 depa 闭包，再由独立 Eidolon track 采用。</?>
+    <decision-text ?>The release SHALL use the smallest terminal package versions with exact internal dependencies. Package metadata and commands SHALL contain no registry override, and npmrc SHALL remain untouched. Eidolon adoption SHALL occur only after fresh registry consumption succeeds.</?>
+    <rationale ?>下游必须消费真实发布物，同时保留用户 npm 配置作为 registry authority。</?>
+    <evidence ?>当前 mission 发布政策与既有 depa release receipts。</?>
+  )>
+)>

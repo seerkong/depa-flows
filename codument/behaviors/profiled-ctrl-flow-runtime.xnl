@@ -1,0 +1,41 @@
+<Behavior #profiled-ctrl-flow-runtime apiVersion="codument.tech/v1alpha1" version="1" (
+  <Requirements [
+    <Requirement #execute-semantic-primitives (
+      <Statement ?01M0NJZ4N3X8Q6A553YG65YVYB>
+      引擎 SHALL 按产品 profile 执行已批准的语义编排原语，并保持 data、fault 与 lifecycle 事实边界。
+      </?01M0NJZ4N3X8Q6A553YG65YVYB>
+      <Suites [
+        <Suite #instant { name = "即时执行" } (
+          <Cases [
+            <Case #memory-primitives (
+              <Given ?01M0NJZ4N3X8Q6A553YG65YVYC>
+              合法 InstantCtrlFlow 使用 Require、Retry、Timeout、ForEach、Parallel、Race 或同步 CallFlow
+              </?01M0NJZ4N3X8Q6A553YG65YVYC>
+              <When ?01M0NJZ4N3X8Q6A553YG65YVYD>
+              runtime 执行 definition
+              </?01M0NJZ4N3X8Q6A553YG65YVYD>
+              <Then ?01M0NJZ4N3X8Q6A553YG65YVYE>
+              引擎 SHALL 在单次 invocation 内按规范产生 output、fault 与取消结果
+              </?01M0NJZ4N3X8Q6A553YG65YVYE>
+            )>
+          ]>
+        )>
+        <Suite #durable { name = "可恢复执行" } (
+          <Cases [
+            <Case #resume-facts (
+              <Given ?01M0NJZ4N3X8Q6A553YG65YVYF>
+              WorkCtrlFlow 或 BPCtrlFlow 在编排原语中挂起或重启
+              </?01M0NJZ4N3X8Q6A553YG65YVYF>
+              <When ?01M0NJZ4N3X8Q6A553YG65YVYG>
+              runtime 从 snapshot 恢复
+              </?01M0NJZ4N3X8Q6A553YG65YVYG>
+              <Then ?01M0NJZ4N3X8Q6A553YG65YVYH>
+              引擎 SHALL 复用已持久化的 attempt、deadline、lane、winner 与取消事实，且不得重复已完成 effect
+              </?01M0NJZ4N3X8Q6A553YG65YVYH>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+  ]>
+)>

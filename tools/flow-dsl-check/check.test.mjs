@@ -11,6 +11,16 @@ const fixture = (name) => path.join(import.meta.dir, 'fixtures', name);
 const codes = (result) => result.problems.map((problem) => problem.code);
 const temporaryDirectories = [];
 
+const canonicalDemos = {
+  'instant-http-check': 'InstantCtrlFlow',
+  'order-fulfillment': 'WorkCtrlFlow',
+  'expense-approval': 'BPCtrlFlow',
+  'eager-data-flow-child': 'EagerDataFlow',
+  'eager-data-flow-parent': 'EagerDataFlow',
+  'ai-ctrl-workflow': 'AICtrlWorkflow',
+  'ai-data-workflow': 'AIDataWorkflow',
+};
+
 function temporaryBundle(form, body, extraFiles = {}) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'flow-dsl-check-'));
   temporaryDirectories.push(dir);
@@ -40,17 +50,7 @@ afterEach(() => {
 
 describe('canonical bundle loading', () => {
   test('loads direct product-root statements for all demos', () => {
-    const expected = {
-      'instant-http-check': 'InstantCtrlFlow',
-      'order-fulfillment': 'WorkCtrlFlow',
-      'expense-approval': 'BPCtrlFlow',
-      'eager-data-flow-child': 'EagerDataFlow',
-      'eager-data-flow-parent': 'EagerDataFlow',
-      'ai-ctrl-workflow': 'AICtrlWorkflow',
-      'ai-data-workflow': 'AIDataWorkflow',
-    };
-
-    for (const [name, form] of Object.entries(expected)) {
+    for (const [name, form] of Object.entries(canonicalDemos)) {
       const result = checkDir(demo(name));
       expect(result.form).toBe(form);
       expect(result.problems).toEqual([]);
@@ -62,6 +62,37 @@ describe('canonical bundle loading', () => {
 
     expect(result.statements.map((statement) => statement.tag)).toEqual(['Run', 'Require', 'Timeout', 'Return']);
     expect(Object.keys(result.facets)).toEqual(['flow.contract']);
+  });
+
+  test('assembles the exact modular StepSpace closure for Ctrl and Data demos', () => {
+    const ctrl = checkDir(demo('order-fulfillment'));
+    const data = checkDir(demo('ai-data-workflow'));
+
+    expect(ctrl.definitionStepForest.stepOrder).toEqual([
+      'reserve-inventory', 'pack', 'cool-down', 'complete-fulfillment', 'fulfilled',
+    ]);
+    expect(ctrl.statements.map((statement) => statement.tag)).toEqual([
+      'Retry', 'ExternalJob', 'Timer', 'Parallel', 'Return',
+    ]);
+    expect(data.definitionStepForest.stepOrder).toEqual(['entry', 'retrieve', 'summarize', 'return']);
+    expect(data.statements.map((statement) => statement.tag)).toEqual([
+      'EntryNode', 'TransformNode', 'TransformNode', 'ReturnNode',
+    ]);
+    expect(ctrl.problems).toEqual([]);
+    expect(data.problems).toEqual([]);
+  });
+
+  test('does not invent StepSpace membership from an unreferenced directory entry', () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'flow-dsl-modular-'));
+    temporaryDirectories.push(root);
+    fs.cpSync(demo('ai-data-workflow'), root, { recursive: true });
+    const unreferenced = path.join(root, 'steps', 'unreferenced');
+    fs.mkdirSync(unreferenced, { recursive: true });
+    fs.writeFileSync(path.join(unreferenced, 'step.xnl'), '<NotAStep #ignored>');
+
+    const result = checkDir(root);
+    expect(result.definitionStepForest.stepOrder).toEqual(['entry', 'retrieve', 'summarize', 'return']);
+    expect(result.problems).toEqual([]);
   });
 
   test.each([
@@ -90,6 +121,69 @@ describe('canonical bundle loading', () => {
     expect(result.problems).toEqual([]);
     expect(idOf(contract)).toBe(id);
     expect(contract.attributes).toMatchObject({ input, output });
+  });
+});
+
+describe('definition, instance and run documentation', () => {
+  test('keeps authored AI examples on the named typed facade', async () => {
+    for (const relativePath of [
+      'examples/xnl-bundles/ai-ctrl-workflow/flow-code/agent.ts',
+      'examples/xnl-bundles/ai-data-workflow/flow-code/evidence.ts',
+    ]) {
+      const source = await fs.promises.readFile(path.join(ROOT, relativePath), 'utf8');
+      expect(source).toContain('.effects.runAgent(');
+      expect(source).toContain('.effects.runTargetedAgent(');
+      expect(source).not.toContain('.effects.invoke(');
+    }
+  });
+  const canonicalDoc = path.join(ROOT, 'docs/flow-dsl/spec/flow-core/instance-run.md');
+  const linkedDocs = [
+    path.join(ROOT, 'docs/flow-dsl/README.md'),
+    path.join(ROOT, 'docs/flow-dsl/foundation/depa-axioms.md'),
+    path.join(ROOT, 'docs/flow-dsl/spec/work-ctrl-flow/domains.md'),
+    path.join(ROOT, 'docs/flow-dsl/spec/ai-workflow/resources.md'),
+    path.join(ROOT, 'docs/flow-dsl/spec/ai-workflow/ctrl-workflow.md'),
+    path.join(ROOT, 'docs/flow-dsl/spec/ai-workflow/data-workflow.md'),
+    path.join(ROOT, 'docs/flow-dsl/std/work-ctrl-flow/axioms.md'),
+    path.join(ROOT, 'docs/flow-dsl/std/ai-ctrl-workflow/axioms.md'),
+    path.join(ROOT, 'docs/flow-dsl/std/ai-data-workflow/axioms.md'),
+    path.join(ROOT, 'examples/xnl-bundles/README.md'),
+  ];
+  const exampleDocs = [
+    path.join(ROOT, 'examples/xnl-bundles/order-fulfillment/README.md'),
+    path.join(ROOT, 'examples/xnl-bundles/ai-ctrl-workflow/README.md'),
+    path.join(ROOT, 'examples/xnl-bundles/ai-data-workflow/README.md'),
+  ];
+
+  test('keeps the seven source bundles valid and links their runtime projection guide', () => {
+    expect(Object.keys(canonicalDemos)).toHaveLength(7);
+    expect(fs.readFileSync(path.join(ROOT, 'docs/flow-dsl/README.md'), 'utf8'))
+      .toContain('[spec/flow-core/instance-run.md](spec/flow-core/instance-run.md)');
+    expect(fs.readFileSync(path.join(ROOT, 'examples/xnl-bundles/README.md'), 'utf8'))
+      .toContain('[Definition、Instance 与 Run](../../docs/flow-dsl/spec/flow-core/instance-run.md)');
+
+    for (const file of [canonicalDoc, ...linkedDocs, ...exampleDocs]) {
+      expect(fs.statSync(file).isFile()).toBe(true);
+      const source = fs.readFileSync(file, 'utf8');
+      for (const match of source.matchAll(/\[[^\]]+\]\(([^)#]+)(?:#[^)]+)?\)/gu)) {
+        if (/^[a-z][a-z+.-]*:/iu.test(match[1])) continue;
+        expect(fs.existsSync(path.resolve(path.dirname(file), match[1]))).toBe(true);
+      }
+    }
+  });
+
+  test('keeps generated instance and run records outside source bundles', () => {
+    for (const name of Object.keys(canonicalDemos)) {
+      const root = demo(name);
+      const pending = [root];
+      while (pending.length > 0) {
+        const current = pending.pop();
+        for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
+          expect(['instance.json', 'checkpoint.json', 'runs'].includes(entry.name)).toBe(false);
+          if (entry.isDirectory()) pending.push(path.join(current, entry.name));
+        }
+      }
+    }
   });
 });
 

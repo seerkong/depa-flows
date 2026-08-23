@@ -1,0 +1,158 @@
+<Behavior #flow-dsl-tree-spec apiVersion="codument.tech/v1alpha1" version="1" (
+  <Requirements [
+    <Requirement #bundle-loading (
+      <Statement ?01M0NJZ4MCM079TG6VKRDBKYZA>
+      校验器 SHALL 用 xnl-core（≥0.1.8）加载流定义 bundle，等价支持多文件形态（manifest.xnl + 按文件根 tag 发现的域文件，无 domains 声明）与单文件形态（域内联为 () 区段），并把 parser 的 DUPLICATE_CHILD 等警告视为违规。
+      </?01M0NJZ4MCM079TG6VKRDBKYZA>
+      <Suites [
+        <Suite { name = "bundle-loading" } (
+          <Cases [
+            <Case { name = "多文件加载" } (
+              <Given ?01M0NJZ4MCM079TG6VKRDBKYZB>
+              order-fulfillment bundle（manifest + 6 个域文件）
+              </?01M0NJZ4MCM079TG6VKRDBKYZB>
+              <When ?01M0NJZ4MCM079TG6VKRDBKYZC>
+              运行校验器
+              </?01M0NJZ4MCM079TG6VKRDBKYZC>
+              <Then ?01M0NJZ4MCM079TG6VKRDBKYZD>
+              成功加载，容器形态识别为 WorkCtrlFlow
+              </?01M0NJZ4MCM079TG6VKRDBKYZD>
+            )>
+            <Case { name = "单文件加载" } (
+              <Given ?01M0NJZ4MCM079TG6VKRDBKYZE>
+              instant-http-check 单文件 bundle
+              </?01M0NJZ4MCM079TG6VKRDBKYZE>
+              <When ?01M0NJZ4MCM079TG6VKRDBKYZF>
+              运行校验器
+              </?01M0NJZ4MCM079TG6VKRDBKYZF>
+              <Then ?01M0NJZ4MCM079TG6VKRDBKYZG>
+              成功加载，内联区段视同域文件
+              </?01M0NJZ4MCM079TG6VKRDBKYZG>
+            )>
+            <Case { name = "域文件缺失" } (
+              <Given ?01M0NJZ4MCM079TG6VKRDBKYZH>
+              bundle 目录缺少必需的 tree 域文件
+              </?01M0NJZ4MCM079TG6VKRDBKYZH>
+              <When ?01M0NJZ4MCM079TG6VKRDBKYZJ>
+              运行校验器
+              </?01M0NJZ4MCM079TG6VKRDBKYZJ>
+              <Then ?01M0NJZ4MCM079TG6VKRDBKYZK>
+              报 missing-tree 违规
+              </?01M0NJZ4MCM079TG6VKRDBKYZK>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+    <Requirement #core-rules (
+      <Statement ?01M0NJZ4MCM079TG6VKRDBKYZM>
+      校验器 SHALL 实施 flow-core 规则：容器根 tag 合法且 #id 为 FQN；apiVersion/version 必须在元数据位；Tree 子节点在 [] 且恰一个根；树内 #id 唯一；节点 tag 属白名单（控制/核心动作/产品扩展）或已注册的点分动作；config:// 引用（含 sub-path）可解析；config 扁平视图无 key 冲突；expr 引用的 config.* 键存在；vfs://./ 引用的文件存在。
+      </?01M0NJZ4MCM079TG6VKRDBKYZM>
+      <Suites [
+        <Suite { name = "core-rules" } (
+          <Cases [
+            <Case { name = "正例全绿" } (
+              <Given ?01M0NJZ4MCM079TG6VKRDBKYZN>
+              examples/xnl-bundles 三个演示 bundle
+              </?01M0NJZ4MCM079TG6VKRDBKYZN>
+              <When ?01M0NJZ4MCM079TG6VKRDBKYZP>
+              运行校验器
+              </?01M0NJZ4MCM079TG6VKRDBKYZP>
+              <Then ?01M0NJZ4MCM079TG6VKRDBKYZQ>
+              0 违规，退出码 0
+              </?01M0NJZ4MCM079TG6VKRDBKYZQ>
+            )>
+            <Case { name = "未注册点分动作" } (
+              <Given ?01M0NJZ4MCM079TG6VKRDBKYZR>
+              树含 demo.Missing 但 action.types 未注册
+              </?01M0NJZ4MCM079TG6VKRDBKYZR>
+              <When ?01M0NJZ4MCM079TG6VKRDBKYZS>
+              运行校验器
+              </?01M0NJZ4MCM079TG6VKRDBKYZS>
+              <Then ?01M0NJZ4MCM079TG6VKRDBKYZT>
+              报 unregistered-action 违规，退出码非 0
+              </?01M0NJZ4MCM079TG6VKRDBKYZT>
+            )>
+            <Case { name = "config 引用悬空" } (
+              <Given ?01M0NJZ4MCM079TG6VKRDBKYZV>
+              节点引用 config://#nope/url
+              </?01M0NJZ4MCM079TG6VKRDBKYZV>
+              <When ?01M0NJZ4MCM079TG6VKRDBKYZW>
+              运行校验器
+              </?01M0NJZ4MCM079TG6VKRDBKYZW>
+              <Then ?01M0NJZ4MCM079TG6VKRDBKYZX>
+              报 unresolved-config-ref 违规
+              </?01M0NJZ4MCM079TG6VKRDBKYZX>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+    <Requirement #form-rules (
+      <Statement ?01M0NJZ4MCM079TG6VKRDBKYZY>
+      校验器 SHALL 实施产品形态规则：InstantCtrlFlow 树中出现 ExternalJob/Timer/TaskStep 或声明 state/task.space 域为违规；WorkCtrlFlow 的 state.seed 字段必须在 state.def 声明（非 ? 字段必须有 seed 值）；BPCtrlFlow 的每个 TaskStep 不得带 assignTo、task 引用必须解析到 TaskSpace 直接子节点、一任务至多一个 TaskStep。
+      </?01M0NJZ4MCM079TG6VKRDBKYZY>
+      <Suites [
+        <Suite { name = "form-rules" } (
+          <Cases [
+            <Case { name = "InstantCtrlFlow 含可中断节点" } (
+              <Given ?01M0NJZ4MCM079TG6VKRDBKYZZ>
+              InstantCtrlFlow 树内含 ExternalJob
+              </?01M0NJZ4MCM079TG6VKRDBKYZZ>
+              <When ?01M0NJZ4MCM079TG6VKRDBKZ00>
+              运行校验器
+              </?01M0NJZ4MCM079TG6VKRDBKZ00>
+              <Then ?01M0NJZ4MCM079TG6VKRDBKZ01>
+              报 interruptible-in-instant-ctrl-flow 违规
+              </?01M0NJZ4MCM079TG6VKRDBKZ01>
+            )>
+            <Case { name = "seed 未声明字段" } (
+              <Given ?01M0NJZ4MCM079TG6VKRDBKZ02>
+              state.seed 含 state.def 未声明的字段
+              </?01M0NJZ4MCM079TG6VKRDBKZ02>
+              <When ?01M0NJZ4MCM079TG6VKRDBKZ03>
+              运行校验器
+              </?01M0NJZ4MCM079TG6VKRDBKZ03>
+              <Then ?01M0NJZ4MCM079TG6VKRDBKZ04>
+              报 seed-undeclared-field 违规
+              </?01M0NJZ4MCM079TG6VKRDBKZ04>
+            )>
+            <Case { name = "TaskStep 任务引用悬空" } (
+              <Given ?01M0NJZ4MCM079TG6VKRDBKZ05>
+              TaskStep task 指向 task.space 不存在的 id
+              </?01M0NJZ4MCM079TG6VKRDBKZ05>
+              <When ?01M0NJZ4MCM079TG6VKRDBKZ06>
+              运行校验器
+              </?01M0NJZ4MCM079TG6VKRDBKZ06>
+              <Then ?01M0NJZ4MCM079TG6VKRDBKZ07>
+              报 unresolved-task-ref 违规
+              </?01M0NJZ4MCM079TG6VKRDBKZ07>
+            )>
+            <Case { name = "TaskStep 引用非直接子节点" } (
+              <Given ?01M0NJZ4MCM079TG6VKRDBKZ08>
+              TaskStep task 指向 TaskSpace 深层嵌套的任务
+              </?01M0NJZ4MCM079TG6VKRDBKZ08>
+              <When ?01M0NJZ4MCM079TG6VKRDBKZ09>
+              运行校验器
+              </?01M0NJZ4MCM079TG6VKRDBKZ09>
+              <Then ?01M0NJZ4MCM079TG6VKRDBKZ0A>
+              报 task-ref-not-direct-child 违规
+              </?01M0NJZ4MCM079TG6VKRDBKZ0A>
+            )>
+            <Case { name = "TaskStep 带 assignTo" } (
+              <Given ?01M0NJZ4MCM079TG6VKRDBKZ0B>
+              TaskStep 节点写了 assignTo
+              </?01M0NJZ4MCM079TG6VKRDBKZ0B>
+              <When ?01M0NJZ4MCM079TG6VKRDBKZ0C>
+              运行校验器
+              </?01M0NJZ4MCM079TG6VKRDBKZ0C>
+              <Then ?01M0NJZ4MCM079TG6VKRDBKZ0D>
+              报 taskstep-assignto-forbidden 违规
+              </?01M0NJZ4MCM079TG6VKRDBKZ0D>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+  ]>
+)>

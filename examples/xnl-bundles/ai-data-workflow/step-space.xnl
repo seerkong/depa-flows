@@ -1,0 +1,8 @@
+<StepSpace #depa.examples.SupportEvidenceDagSteps apiVersion="depa.flows/v1" version="1" [
+  <StepRef #entry { src = "steps/entry/step.xnl" }>
+  <StepGroup #evidence-processing [
+    <StepRef #retrieve { src = "steps/retrieve/step.xnl" }>
+    <StepRef #summarize { src = "steps/summarize/step.xnl" }>
+  ]>
+  <StepRef #return { src = "steps/return/step.xnl" }>
+]>

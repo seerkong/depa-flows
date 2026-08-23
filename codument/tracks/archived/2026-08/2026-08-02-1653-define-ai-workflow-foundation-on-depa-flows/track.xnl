@@ -1,0 +1,50 @@
+<Track #define-ai-workflow-foundation-on-depa-flows version="1" apiVersion="codument.tech/v1alpha1" { status = "completed" goal = "Define the shared TypeScript foundation for AI Ctrl Workflow and AI Data Workflow on the existing flow substrates." description = "Create small contract/logic package boundaries, shared runtime vocabulary, substrate descriptors and validation coverage." question_mode = "decision-tree" question_severity = "light" commit_mode = "manual" created_at = "2026-08-02T13:36:20Z" updated_at = "2026-08-02T13:53:04Z" } (
+  <Ports { scope = "track" } [
+    <MaterialBundle { role = "input" name = "behavior-deltas" domain = "behavior" path = "vfs://./behavior_deltas/" }>
+    <MaterialBundle { role = "output" name = "packages" domain = "source" path = "vfs://@/packages/" }>
+    <MaterialBundle { role = "output" name = "behavior" domain = "codument" path = "vfs://@/codument/behaviors/" }>
+  ]>
+  <TaskSpace #space_define-ai-workflow-foundation-on-depa-flows { name = "define-ai-workflow-foundation-on-depa-flows" } (
+    <Description ?01M0NJZ4QB00JNXPQY62RESZVS>
+    Foundation package and contract work for AI workflow profiles.
+    </?01M0NJZ4QB00JNXPQY62RESZVS>
+    <SubNodes [
+      <TaskGroup #P1 { name = "Contract vocabulary" status = "DONE" order = 0 } (
+        <Description ?01M0NJZ4QB00JNXPQY62RESZVT>
+        Define shared terms, substrate descriptors and runtime injection contracts.
+        </?01M0NJZ4QB00JNXPQY62RESZVT>
+        <SubNodes [
+          <Task { id = "T1.1" name = "Inspect existing WorkCtrlFlow and EagerDataFlow public contracts" status = "DONE" order = 0 }>
+          <Task { id = "T1.2" name = "Design shared AI workflow vocabulary and substrate descriptors" status = "DONE" order = 1 }>
+        ]>
+      )>
+      <TaskGroup #P2 { name = "Package scaffolding" status = "DONE" order = 1 } (
+        <Description ?01M0NJZ4QB00JNXPQY62RESZVV>
+        Add minimal foundation packages and public exports.
+        </?01M0NJZ4QB00JNXPQY62RESZVV>
+        <SubNodes [
+          <Task { id = "T2.1" name = "Add AI workflow contract package" status = "DONE" order = 0 }>
+          <Task { id = "T2.2" name = "Add AI workflow logic package" status = "DONE" order = 1 }>
+        ]>
+      )>
+      <TaskGroup #P3 { name = "Validation" status = "DONE" order = 2 } (
+        <Description ?01M0NJZ4QB00JNXPQY62RESZVW>
+        Verify package exports, substrate descriptors, reuse policy defaults and path hygiene.
+        </?01M0NJZ4QB00JNXPQY62RESZVW>
+        <SubNodes [
+          <Task { id = "T3.1" name = "Add focused tests for descriptors and reuse policy defaults" status = "DONE" order = 0 }>
+          <Task { id = "T3.2" name = "Run typecheck, tests and path hygiene checks" status = "DONE" order = 1 }>
+        ]>
+        <Hooks [
+          <Hook { on = "phase:after" } (
+            <AttractorCheck { use = "coding" }>
+          )>
+        ]>
+      )>
+    ]>
+  )>
+  <Schedule [
+    <Parallel { max_concurrent = 1 spot_check = true }>
+  ]>
+  <Hooks>
+)>

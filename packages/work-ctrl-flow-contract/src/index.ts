@@ -13,6 +13,96 @@ export type { FlowBundleSpec };
 /** v4: durable orchestration facts are explicit snapshot data. */
 export const WORKFLOW_SNAPSHOT_SCHEMA = 'depa.flows.workflow/v4';
 
+export const FLOW_INSTANCE_SCHEMA_VERSION = 'depa.flow-instance/v1' as const;
+
+export const FLOW_RUN_CHECKPOINT_SCHEMA_VERSION = 'depa.flow-run-checkpoint/v1' as const;
+
+export type FlowClosedPrimitive = null | boolean | number | string;
+
+export type FlowClosedValue = FlowClosedPrimitive | FlowClosedArray | FlowClosedObject;
+
+export interface FlowClosedArray extends ReadonlyArray<FlowClosedValue> {}
+
+export interface FlowClosedObject {
+  readonly [field: string]: FlowClosedValue;
+}
+
+export interface FlowRunStepExtensionFact {
+  readonly schemaRef?: string;
+  readonly revision: number;
+  readonly value: FlowClosedValue;
+}
+
+/** Logical extension facts remain part of the one canonical checkpoint. */
+export interface FlowRunStepExtensions {
+  readonly schemaVersion: 'depa.flow-run-step-extensions/v1';
+  readonly byStepId: Readonly<Record<string, Readonly<Record<string, FlowRunStepExtensionFact>>>>;
+}
+
+/** Path-independent source identity for an immutable definition artifact. */
+export interface FlowDefinitionProvenance {
+  readonly authority: string;
+  readonly artifactRef: string;
+  readonly metadata?: FlowClosedObject;
+}
+
+export interface FlowDefinitionArtifactIdentity {
+  readonly revision: string;
+  readonly digest: `sha256:${string}`;
+  readonly provenance: FlowDefinitionProvenance;
+}
+
+/** Immutable instance metadata. Mutable run state never belongs here. */
+export interface FlowInstanceDescriptor {
+  readonly schemaVersion: typeof FLOW_INSTANCE_SCHEMA_VERSION;
+  readonly instanceId: string;
+  readonly definition: FlowDefinitionArtifactIdentity;
+  readonly materializedAtMs: number;
+}
+
+/** Path-independent envelope; profile semantics remain owned by the selected Flow product. */
+export interface FlowRunCheckpoint<ProfileState = FlowClosedObject> {
+  readonly schemaVersion: typeof FLOW_RUN_CHECKPOINT_SCHEMA_VERSION;
+  readonly runId: string;
+  readonly instanceId: string;
+  readonly definition: FlowDefinitionArtifactIdentity;
+  readonly version: number;
+  readonly input: FlowClosedValue;
+  readonly config: FlowClosedValue;
+  readonly state: FlowClosedValue;
+  readonly output: FlowClosedValue;
+  readonly controllerSidecars: FlowClosedObject;
+  readonly nodeSidecars: FlowClosedObject;
+  readonly stepExtensions?: FlowRunStepExtensions;
+  readonly profile: ProfileState;
+}
+
+/** Logical checkpoint address; storage paths are deliberately outside this contract. */
+export interface FlowRunCheckpointKey {
+  readonly instanceId: string;
+  readonly runId: string;
+}
+
+/** One complete optimistic transition of the canonical run fact. */
+export interface FlowRunCheckpointCommit<ProfileState = FlowClosedObject> {
+  readonly expectedVersion: number | null;
+  readonly checkpoint: FlowRunCheckpoint<ProfileState>;
+}
+
+/**
+ * Canonical owner port. Events, indexes and views intentionally are not writable
+ * members: they may only be derived from checkpoints by callers.
+ */
+export interface FlowRunCheckpointStore<ProfileState = FlowClosedObject> {
+  load(key: FlowRunCheckpointKey): Promise<FlowRunCheckpoint<ProfileState> | undefined>;
+  commit(input: FlowRunCheckpointCommit<ProfileState>): Promise<FlowRunCheckpoint<ProfileState>>;
+}
+
+/** Explicit Processor runtime for path-independent checkpoint transitions. */
+export interface FlowRunCheckpointRuntime<ProfileState = FlowClosedObject> {
+  readonly checkpointStore: FlowRunCheckpointStore<ProfileState>;
+}
+
 export type WaitKind = 'external-job' | 'timer' | 'task-step';
 
 /** 等待句柄生命周期（可审计）：Open 在 openWaitHandles，其余在 closedWaitHandles */
