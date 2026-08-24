@@ -18,6 +18,8 @@ import type {
   WorkCtrlFlowRuntime,
 } from 'work-ctrl-flow-contract';
 
+export * from './holon-task.js';
+
 export {
   FLOW_INSTANCE_SCHEMA_VERSION,
   FLOW_RUN_CHECKPOINT_SCHEMA_VERSION,

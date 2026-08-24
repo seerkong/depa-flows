@@ -25,8 +25,8 @@ const packageManifest = JSON.parse(await readFile(join(packageRoot, 'package.jso
   version: string;
 };
 
-if (packageManifest.name !== 'ai-workflow-flow-dsl-reference' || packageManifest.version !== '0.1.5') {
-  throw new Error('FLOW_DSL_REFERENCE_PACKAGE_IDENTITY_INVALID: expected ai-workflow-flow-dsl-reference@0.1.5');
+if (packageManifest.name !== 'ai-workflow-flow-dsl-reference' || packageManifest.version !== '0.1.6') {
+  throw new Error('FLOW_DSL_REFERENCE_PACKAGE_IDENTITY_INVALID: expected ai-workflow-flow-dsl-reference@0.1.6');
 }
 
 const sourceFiles = await collectCanonicalMarkdownFiles(sourceRoot);

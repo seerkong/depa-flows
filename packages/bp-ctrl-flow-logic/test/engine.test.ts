@@ -9,10 +9,10 @@ import {
   loadFlowBundleFromSources,
 } from 'instant-ctrl-flow-logic';
 import type { TickOutcome, WorkCtrlFlowStore } from 'work-ctrl-flow-contract';
-import type { TaskSpaceStore } from 'task-manager-contract';
-import { InMemoryTaskSpaceStore, TaskTransitionError } from 'task-manager-logic';
+import type { TaskSpaceOwnerPort } from 'task-manager-contract';
+import { InMemoryTaskSpaceOwner } from 'task-manager-logic';
 import { InMemoryWorkCtrlFlowStore } from 'work-ctrl-flow-logic';
-import { BPCtrlFlowEngine } from '../src/engine.js';
+import { BPCtrlFlowEngine, BPCtrlFlowError } from '../src/engine.js';
 import { createBPCtrlFlowEngineFromDirectory, defaultBPCtrlFlowTaskDependencies } from '../src/filesystem.js';
 
 const ROOT = path.resolve(import.meta.dir, '../../..');
@@ -21,7 +21,7 @@ const demo = () => path.join(ROOT, 'examples/xnl-bundles/expense-approval');
 interface Harness {
   instancesDir: string;
   store: WorkCtrlFlowStore;
-  taskStore: TaskSpaceStore;
+  taskStore: TaskSpaceOwnerPort;
   payouts: unknown[];
 }
 
@@ -29,7 +29,7 @@ function makeHarness(): Harness {
   return {
     instancesDir: fs.mkdtempSync(path.join(os.tmpdir(), 'bp-inst-')),
     store: new InMemoryWorkCtrlFlowStore(),
-    taskStore: new InMemoryTaskSpaceStore(),
+    taskStore: new InMemoryTaskSpaceOwner(),
     payouts: [],
   };
 }
@@ -88,7 +88,31 @@ describe('BPCtrlFlow canonical compiler wiring', () => {
     await engine.start('b2');
     await expect(
       engine.operateTask('b2', { taskId: 'task_manager_approve', operation: 'start', operatorAccount: 'user:x' }),
-    ).rejects.toThrow(TaskTransitionError);
+    ).rejects.toThrow(BPCtrlFlowError);
+  });
+
+  it('admits delegate-reactivate-delegate as two distinct lifecycle commands', async () => {
+    const harness = makeHarness();
+    const engine = makeEngine(harness);
+    await engine.start('delegate-cycle');
+    await engine.operateTask('delegate-cycle', {
+      taskId: 'task_manager_approve', operation: 'delegate', operatorAccount: 'user:first',
+    });
+    await engine.operateTask('delegate-cycle', {
+      taskId: 'task_manager_approve', operation: 'reactivate', operatorAccount: 'user:second',
+    });
+    await engine.operateTask('delegate-cycle', {
+      taskId: 'task_manager_approve', operation: 'delegate', operatorAccount: 'user:third',
+    });
+
+    expect((await engine.tasks('delegate-cycle')).find(({ id }) => id === 'task_manager_approve')).toMatchObject({
+      status: 'Delegated',
+      operatorAccount: 'user:third',
+    });
+    const delegateEvents = (await harness.taskStore.readHistory('delegate-cycle'))
+      .filter(({ kind }) => kind === 'task.waiting');
+    expect(delegateEvents).toHaveLength(2);
+    expect(new Set(delegateEvents.map(({ commandId }) => commandId))).toHaveLength(2);
   });
 
   it('routes approved TaskStepResult data through finance approval and payout', async () => {
@@ -129,7 +153,8 @@ describe('BPCtrlFlow canonical compiler wiring', () => {
   });
 
   it('routes refused TaskStepResult as normal data instead of technical Failure', async () => {
-    const engine = makeEngine();
+    const harness = makeHarness();
+    const engine = makeEngine(harness);
     await engine.start('refused');
     const result = await engine.operateTask('refused', {
       taskId: 'task_manager_approve',
@@ -146,6 +171,18 @@ describe('BPCtrlFlow canonical compiler wiring', () => {
       outcome: 'refused',
       payload: { expenseId: 'exp-demo-001', amount: 8800, currency: 'CNY' },
     });
+    const snapshot = await harness.taskStore.readSnapshot('refused');
+    const task = snapshot?.tasks.find(({ taskId }) => taskId === 'task_manager_approve');
+    expect(task?.status).toBe('Succeeded');
+    expect(task?.profile).toMatchObject({
+      profileKind: 'depa.bp.task',
+      facts: { status: 'Refused', operatorAccount: 'user:manager' },
+    });
+    expect(await harness.taskStore.readHistory('refused')).toEqual(expect.arrayContaining([
+      expect.objectContaining({ kind: 'task.claimed' }),
+      expect.objectContaining({ kind: 'task.started' }),
+      expect.objectContaining({ kind: 'task.settled' }),
+    ]));
   });
 
   it('routes forwarded TaskStepResult through an ordinary If branch', async () => {
@@ -208,7 +245,7 @@ describe('BPCtrlFlow canonical compiler wiring', () => {
       bundleDir: path.join(ROOT, 'examples/xnl-bundles/order-fulfillment'),
       instancesDir: fs.mkdtempSync(path.join(os.tmpdir(), 'bp-form-')),
       store: new InMemoryWorkCtrlFlowStore(),
-      taskStore: new InMemoryTaskSpaceStore(),
+      taskStore: new InMemoryTaskSpaceOwner(),
     })).toThrow('expected BPCtrlFlow');
   });
 
@@ -232,7 +269,7 @@ describe('BPCtrlFlow canonical compiler wiring', () => {
       ]>`,
     });
     const store = new InMemoryWorkCtrlFlowStore();
-    const taskStore = new InMemoryTaskSpaceStore();
+    const taskStore = new InMemoryTaskSpaceOwner();
     let calls = 0;
     const make = () => new BPCtrlFlowEngine({
       definition: {

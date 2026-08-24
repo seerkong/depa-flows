@@ -1,0 +1,10 @@
+<BehaviorPatch #track.add-holon-task-targets-to-ai-workflows.behavior_patch.ai-data-workflow apiVersion="codument.tech/v1alpha1" version="1" { capability = "ai-data-workflow" } (
+  <Mutations [<Upsert { selector = "behavior://ai-data-workflow/requirements/organization-task-material-output" } (
+    <Requirement #organization-task-material-output (
+      <Statement ?>AI Data Workflow SHALL consume schema-validated organization TaskSpace settlement output through declared MaterialPorts and SHALL NOT inspect or persist Member actor conversation history.</?>
+      <Suites [<Suite #data-task-cases { name = "Data organization task" } (<Cases [
+        <Case #fresh-output [<Given ?>An organization task settled before process restart.</?><When ?>A fresh Data runtime continues.</?><Then ?>It SHALL reconstruct output from TaskSpace/checkpoint receipts without redispatching the completed member work.</?>]>
+      ]>)>]>
+    )>
+  )>]>
+)>

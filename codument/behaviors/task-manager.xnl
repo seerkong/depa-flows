@@ -1,55 +1,143 @@
 <Behavior #task-manager apiVersion="codument.tech/v1alpha1" version="1" (
   <Requirements [
     <Requirement #status-machine (
-      <Statement ?01M0NJZ4NC4S26V924HD9Q1HTK>
+      <Statement ?01M0RNR98N10KB7M2YWVYEABAG>
       任务状态机 SHALL 遵守 task-manager-contract：NOT_STARTED→[ACTIVE,ABANDONED]；ACTIVE→[DONE,REFUSED,FORWARDED,DELEGATED,NOT_STARTED,ABANDONED]；DELEGATED→[ACTIVE,ABANDONED]；DONE/REFUSED/FORWARDED/ABANDONED 为终态；非法转移抛错；ACTIVE 记 startedAt、终态记 endedAt。
-      </?01M0NJZ4NC4S26V924HD9Q1HTK>
+      </?01M0RNR98N10KB7M2YWVYEABAG>
       <Suites [
         <Suite { name = "status-machine" } (
           <Cases [
             <Case { name = "非法转移" } (
-              <Given ?01M0NJZ4NC4S26V924HD9Q1HTM>
+              <Given ?01M0RNR98N10KB7M2YWVYEABAH>
               终态任务或 NOT_STARTED 任务
-              </?01M0NJZ4NC4S26V924HD9Q1HTM>
-              <When ?01M0NJZ4NC4S26V924HD9Q1HTN>
+              </?01M0RNR98N10KB7M2YWVYEABAH>
+              <When ?01M0RNR98N10KB7M2YWVYEABAJ>
               再操作 / 直接 complete
-              </?01M0NJZ4NC4S26V924HD9Q1HTN>
-              <Then ?01M0NJZ4NC4S26V924HD9Q1HTP>
+              </?01M0RNR98N10KB7M2YWVYEABAJ>
+              <Then ?01M0RNR98N10KB7M2YWVYEABAK>
               抛 TaskTransitionError
-              </?01M0NJZ4NC4S26V924HD9Q1HTP>
+              </?01M0RNR98N10KB7M2YWVYEABAK>
             )>
             <Case { name = "委派链" } (
-              <Given ?01M0NJZ4NC4S26V924HD9Q1HTQ>
+              <Given ?01M0RNR98N10KB7M2YWVYEABAM>
               ACTIVE 任务
-              </?01M0NJZ4NC4S26V924HD9Q1HTQ>
-              <When ?01M0NJZ4NC4S26V924HD9Q1HTR>
+              </?01M0RNR98N10KB7M2YWVYEABAM>
+              <When ?01M0RNR98N10KB7M2YWVYEABAN>
               delegate→reactivate→complete
-              </?01M0NJZ4NC4S26V924HD9Q1HTR>
-              <Then ?01M0NJZ4NC4S26V924HD9Q1HTS>
+              </?01M0RNR98N10KB7M2YWVYEABAN>
+              <Then ?01M0RNR98N10KB7M2YWVYEABAP>
               各步合法收敛 DONE
-              </?01M0NJZ4NC4S26V924HD9Q1HTS>
+              </?01M0RNR98N10KB7M2YWVYEABAP>
             )>
           ]>
         )>
       ]>
     )>
     <Requirement #group-aggregation (
-      <Statement ?01M0NJZ4NC4S26V924HD9Q1HTT>
+      <Statement ?01M0RNR98N10KB7M2YWVYEABAQ>
       TaskGroup SHALL 按 executionMode 聚合终态：SEQUENTIAL/ALL 全 done-like→DONE、任一失败终态提前→REFUSED；ANY 任一 done-like→DONE、全失败终态→REFUSED；FORWARDED 视同 DONE；未收敛返回 undefined。
-      </?01M0NJZ4NC4S26V924HD9Q1HTT>
+      </?01M0RNR98N10KB7M2YWVYEABAQ>
       <Suites [
         <Suite { name = "group-aggregation" } (
           <Cases [
             <Case { name = "三种模式" } (
-              <Given ?01M0NJZ4NC4S26V924HD9Q1HTV>
+              <Given ?01M0RNR98N10KB7M2YWVYEABAR>
               各状态组合
-              </?01M0NJZ4NC4S26V924HD9Q1HTV>
-              <When ?01M0NJZ4NC4S26V924HD9Q1HTW>
+              </?01M0RNR98N10KB7M2YWVYEABAR>
+              <When ?01M0RNR98N10KB7M2YWVYEABAS>
               terminalStatusOf
-              </?01M0NJZ4NC4S26V924HD9Q1HTW>
-              <Then ?01M0NJZ4NC4S26V924HD9Q1HTX>
+              </?01M0RNR98N10KB7M2YWVYEABAS>
+              <Then ?01M0RNR98N10KB7M2YWVYEABAT>
               见 statusMachine.test.ts 组聚合 suite
-              </?01M0NJZ4NC4S26V924HD9Q1HTX>
+              </?01M0RNR98N10KB7M2YWVYEABAT>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+    <Requirement #shared-task-space-kernel (
+      <Statement ?01M0RNR98N10KB7M2YWVYEABAV>
+      task-manager SHALL provide a profile-neutral closed TaskSpace forest with exact Pending|Ready|Claimed|Running|Waiting|Succeeded|Failed|Cancelled lifecycle, one canonical own-data authority, owner-issued heartbeat/expiry claims, projected TaskGroup lifecycle, append-only history/artifacts, full-command-digest receipts, runtime-first Processors and CAS transitions; filesystem and domain profile facts SHALL remain outside the kernel packages.
+      </?01M0RNR98N10KB7M2YWVYEABAV>
+      <Suites [
+        <Suite #kernel-cases { name = "TaskSpace kernel" } (
+          <Cases [
+            <Case #terminal-immutable (
+              <Given ?01M0RNR98N10KB7M2YWVYEABAW>
+              A task has an admitted terminal settlement.
+              </?01M0RNR98N10KB7M2YWVYEABAW>
+              <When ?01M0RNR98N10KB7M2YWVYEABAX>
+              A later command or surviving-id replan attempts to rewrite its result, status, complete node definition/profile/identity/artifacts/order/kind, or any incident parent/dependency relation.
+              </?01M0RNR98N10KB7M2YWVYEABAX>
+              <Then ?01M0RNR98N10KB7M2YWVYEABAY>
+              The transition SHALL fail closed as terminal-task-immutable while unrelated nonterminal plan additions remain admissible.
+              </?01M0RNR98N10KB7M2YWVYEABAY>
+            )>
+            <Case #profile-isolation (
+              <Given ?01M0RNR98N10KB7M2YWVYEABAZ>
+              BP and AI task profiles use the same TaskSpace.
+              </?01M0RNR98N10KB7M2YWVYEABAZ>
+              <When ?01M0RNR98N10KB7M2YWVYEABB0>
+              Their durable records are normalized.
+              </?01M0RNR98N10KB7M2YWVYEABB0>
+              <Then ?01M0RNR98N10KB7M2YWVYEABB1>
+              Kernel identity/lifecycle SHALL be shared while profile fields remain separately typed.
+              </?01M0RNR98N10KB7M2YWVYEABB1>
+            )>
+            <Case #claim-recovery (
+              <Given ?01M0RNR98N10KB7M2YWVYEABB2>
+              A claimed task loses its owner after the lease expires.
+              </?01M0RNR98N10KB7M2YWVYEABB2>
+              <When ?01M0RNR98N10KB7M2YWVYEABB3>
+              Recovery claims it again.
+              </?01M0RNR98N10KB7M2YWVYEABB3>
+              <Then ?01M0RNR98N10KB7M2YWVYEABB4>
+              The new owner SHALL receive a higher attempt and leaseEpoch while prior claim/heartbeat history remains immutable.
+              </?01M0RNR98N10KB7M2YWVYEABB4>
+            )>
+            <Case #exact-command-replay (
+              <Given ?01M0RNR98N10KB7M2YWVYEABB5>
+              A commandId already has an admitted receipt.
+              </?01M0RNR98N10KB7M2YWVYEABB5>
+              <When ?01M0RNR98N10KB7M2YWVYEABB6>
+              A command with that id but different canonical own-data is submitted.
+              </?01M0RNR98N10KB7M2YWVYEABB6>
+              <Then ?01M0RNR98N10KB7M2YWVYEABB7>
+              The Processor and owner SHALL reject it as a command-receipt mismatch.
+              </?01M0RNR98N10KB7M2YWVYEABB7>
+            )>
+            <Case #closed-own-data (
+              <Given ?01M0RNR98N10KB7M2YWVYEABB8>
+              A boundary value contains an accessor, symbol, custom prototype, sparse or extended array, undefined, non-finite number or cycle.
+              </?01M0RNR98N10KB7M2YWVYEABB8>
+              <When ?01M0RNR98N10KB7M2YWVYEABB9>
+              The kernel or owner admits it.
+              </?01M0RNR98N10KB7M2YWVYEABB9>
+              <Then ?01M0RNR98N10KB7M2YWVYEABBA>
+              Admission SHALL reject it without invoking user code, and accepted values SHALL be deep-frozen canonical clones.
+              </?01M0RNR98N10KB7M2YWVYEABBA>
+            )>
+            <Case #group-reachability (
+              <Given ?01M0RNR98N10KB7M2YWVYEABBB>
+              A successor depends on a TaskGroup.
+              </?01M0RNR98N10KB7M2YWVYEABBB>
+              <When ?01M0RNR98N10KB7M2YWVYEABBC>
+              The group's children reach the mode-defined result.
+              </?01M0RNR98N10KB7M2YWVYEABBC>
+              <Then ?01M0RNR98N10KB7M2YWVYEABBD>
+              The group SHALL project that lifecycle and the successor SHALL become reachable; mixed containment/dependency cycles SHALL fail closed.
+              </?01M0RNR98N10KB7M2YWVYEABBD>
+            )>
+            <Case #artifact-authority (
+              <Given ?01M0RNR98N10KB7M2YWVYEABBE>
+              A snapshot references an artifact digest.
+              </?01M0RNR98N10KB7M2YWVYEABBE>
+              <When ?01M0RNR98N10KB7M2YWVYEABBF>
+              Neither the same admission nor the same owner CAS contains an exact body.
+              </?01M0RNR98N10KB7M2YWVYEABBF>
+              <Then ?01M0RNR98N10KB7M2YWVYEABBG>
+              Processor and raw CAS admission SHALL reject the dangling or metadata-conflicting reference.
+              </?01M0RNR98N10KB7M2YWVYEABBG>
             )>
           ]>
         )>

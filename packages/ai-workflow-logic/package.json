@@ -1,6 +1,6 @@
 {
   "name": "ai-workflow-logic",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "private": false,
   "description": "AI workflow domain projections and pure runtime helpers with an explicit Halfcode filesystem adapter",
   "type": "module",
@@ -13,10 +13,13 @@
     "./run-freeze": "./src/run-freeze.ts"
   },
   "dependencies": {
-    "ai-workflow-contract": "0.1.7",
+    "ai-workflow-contract": "0.1.8",
     "flow-step-space-contract": "0.1.1",
     "flow-step-space-logic": "0.1.1",
     "halfcode-compiler.xnl": "0.2.2",
+    "holarchy-core-contract": "0.1.1",
+    "task-manager-contract": "0.1.3",
+    "task-manager-logic": "0.1.6",
     "work-ctrl-flow-contract": "0.1.3",
     "work-ctrl-flow-logic": "0.1.4"
   },

@@ -54,3 +54,5 @@ Before the first node, the complete bundle is admitted as a frozen Instance. A f
 The canonical controller CAS-commits checkpoint `v0` with `lastTickNo = 0` before invoking any node. Its historical `stateStore` runtime field is a readonly projection; the writable `AIWorkflowStateStore` API is legacy/derived compatibility and is not a second owner.
 
 See [Definition、Instance 与 Run](../flow-core/instance-run.md) for the physical hierarchy and one-way legacy boundary.
+
+For organization-level delegation, see [Holon-targeted organization tasks](holon-task.md). It uses the shared TaskSpace owner and frozen Holon snapshot rather than adding a Ctrl-specific task forest.

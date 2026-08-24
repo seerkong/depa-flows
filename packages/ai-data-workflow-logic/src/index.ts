@@ -61,6 +61,8 @@ import {
 } from 'ai-workflow-logic';
 import { assertFrozenAIAgentTaskBinding } from 'ai-workflow-logic/run-freeze';
 
+export * from './holon-task.js';
+
 export interface CreateAIDataWorkflowCheckpointInput {
   readonly instanceId: string;
   readonly definition: FlowDefinitionArtifactIdentity;

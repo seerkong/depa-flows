@@ -111,11 +111,16 @@ Delegated  -> Active | Abandoned
 Done / Refused / Forwarded / Abandoned = terminal
 ```
 
-approve 操作把任务推进到 `Done`，并由 TaskStep 投影为 `outcome = "approved"`。TaskGroup 按 executionMode 聚合子任务并输出同形 TaskStepResult；聚合细节属于任务域，不改变 CtrlFlow grammar。
+approve 操作把任务推进到 `Done`，并由 TaskStep 投影为 `outcome = "approved"`。TaskGroup 按 executionMode 聚合子任务并输出同形 TaskStepResult；聚合细节属于任务域，不改变 CtrlFlow grammar。`Done | Refused | Forwarded` 都映射 canonical `Succeeded`，所以 `ANY` 在第一个此类业务处理完成时与 kernel group 同时终态，并返回 profile 中 `endedAtMs` 最早的精确 BP outcome（同毫秒按稳定 child order）；`Abandoned` 映射 `Cancelled`，不命中 `ANY` success。`ALL` / `SEQUENTIAL` 对 `Refused` 仍按 canonical success 等待其他子项，直到 kernel group 终态后才输出聚合业务结果。
+
+这是 BP profile 状态机，不是共享 TaskSpace kernel 的状态枚举。engine 的 BP adapter 通过共享 `claimTask`、`startTask`、`waitTask`、`settleTask`、`cancelTask` Processors 执行转换：`Active -> Running`，`Delegated -> Waiting`，`Done | Refused | Forwarded -> Succeeded`，`Abandoned -> Cancelled`。因此业务拒绝或转交仍可被精确恢复，但不会污染 kernel，也不会复制另一套 CAS/claim/receipt 规则。
+
+每次 BP lifecycle 转换递增 profile 的 `lifecycleSequence`，并把下一序列纳入 command identity，因此同一 claim attempt 内重复 `delegate -> reactivate -> delegate` 仍产生两个不同的 delegate command。authoring bundle 与 legacy converter 只允许初始 `NotStarted`；不得把非初始 profile 直接写入一个仅含 create receipt 的 kernel。
 
 ## Validation And Rejections
 
 - `TaskStep.task` 必须解析到当前 bundle TaskSpace 的直接子节点；同一任务不能绑定多个 TaskStep。
+- authoring/legacy task status 必须为 `NotStarted`；非初始生命周期没有显式 import events/receipts 时拒绝加载。
 - `TaskStep` 只能出现在 BPCtrlFlow definition，且必须有稳定唯一 `#id`。
 - `status`、`executionMode` 与状态迁移必须合法；运行期事实不得回写 definition。
 - authoring 中出现 `Tree`、`Sequence`、`Selector`、`Condition`、`action.types`、`SubNodes` 或 `assignTo` 必须拒绝。

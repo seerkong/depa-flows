@@ -330,3 +330,5 @@ export async function getAICtrlWorkflowRunRecord(
   const snapshot = await controller.store.load(treeId);
   return snapshot ? projectAICtrlWorkflowRunRecord(snapshot, await controller.getOutcome(treeId)) : undefined;
 }
+
+export * from './holon-task.js';

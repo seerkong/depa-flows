@@ -1,0 +1,9 @@
+<decision #track.add_holon_task_targets_to_ai_workflows.target_snapshot apiVersion="codument.tech/v1alpha1" { status = "accepted" priority = "P0" durable_candidate = false } (
+  <question ?>What organization authority does an AI Workflow task-target node use?</?>
+  <answer (
+    <raw-answer ?>Freeze target policy/execution closure at instance admission and freeze the issuer-owned organization snapshot at TaskSpace creation; change only by explicit compatible replan or successor instance.</?>
+    <decision-text ?>HolonTaskTarget binds Holon selector, execution-binding ref/digest, TaskSpace policy and output contract. TaskSpace creation issues HolonTaskSnapshotReceipt from a verified Holon issuer receipt. Organization-only compatible replan records old/new snapshot proof; changed binding/code/Agent closure requires a successor Flow instance/run.</?>
+    <rationale ?>Frozen authority makes restart and replay stable while TaskSpace stays independent from Flow checkpoint.</?>
+    <evidence ?>Parent mission organization-freeze decision and depa-flows Definition→Instance→Run authority.</?>
+  )>
+)>

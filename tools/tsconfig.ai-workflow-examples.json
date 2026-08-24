@@ -3,11 +3,15 @@
   "compilerOptions": {
     "baseUrl": "..",
     "paths": {
-      "ai-workflow-contract": ["packages/ai-workflow-contract/src/index.ts"]
+      "ai-workflow-contract": ["packages/ai-workflow-contract/src/index.ts"],
+      "ai-ctrl-workflow-logic": ["packages/ai-ctrl-workflow-logic/src/index.ts"],
+      "ai-data-workflow-logic": ["packages/ai-data-workflow-logic/src/index.ts"]
     }
   },
   "include": [
     "../examples/xnl-bundles/ai-ctrl-workflow/flow-code/agent.ts",
-    "../examples/xnl-bundles/ai-data-workflow/flow-code/evidence.ts"
+    "../examples/xnl-bundles/ai-data-workflow/flow-code/evidence.ts",
+    "../examples/xnl-bundles/ai-ctrl-holon-task/flow-code/holon-task.ts",
+    "../examples/xnl-bundles/ai-data-holon-task/flow-code/holon-task.ts"
   ]
 }

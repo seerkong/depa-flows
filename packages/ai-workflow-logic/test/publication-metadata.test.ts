@@ -13,22 +13,26 @@ async function readManifest(path: string): Promise<PackageManifest> {
 }
 
 describe('AI workflow public package metadata', () => {
-  test('uses exact registry-installable dependencies for the contract 0.1.7 and logic 0.1.8 patches', async () => {
+  test('uses exact registry-installable dependencies for the contract 0.1.8 and logic 0.1.9 patches', async () => {
     const contract = await readManifest(join(import.meta.dir, '../../ai-workflow-contract/package.json'));
     const logic = await readManifest(join(import.meta.dir, '../package.json'));
 
-    expect(contract.version).toBe('0.1.7');
+    expect(contract.version).toBe('0.1.8');
     expect(contract.dependencies).toEqual({
       'eager-data-flow-contract': '0.1.3',
       'halfcode-compiler.xnl': '0.2.2',
+      'task-manager-contract': '0.1.3',
       'work-ctrl-flow-contract': '0.1.3',
     });
-    expect(logic.version).toBe('0.1.8');
+    expect(logic.version).toBe('0.1.9');
     expect(logic.dependencies).toEqual({
-      'ai-workflow-contract': '0.1.7',
+      'ai-workflow-contract': '0.1.8',
       'flow-step-space-contract': '0.1.1',
       'flow-step-space-logic': '0.1.1',
       'halfcode-compiler.xnl': '0.2.2',
+      'holarchy-core-contract': '0.1.1',
+      'task-manager-contract': '0.1.3',
+      'task-manager-logic': '0.1.6',
       'work-ctrl-flow-contract': '0.1.3',
       'work-ctrl-flow-logic': '0.1.4',
     });
@@ -46,25 +50,29 @@ describe('AI workflow public package metadata', () => {
     const ctrl = await readManifest(join(import.meta.dir, '../../ai-ctrl-workflow-logic/package.json'));
     const data = await readManifest(join(import.meta.dir, '../../ai-data-workflow-logic/package.json'));
 
-    expect(ctrl.version).toBe('0.1.7');
+    expect(ctrl.version).toBe('0.1.8');
     expect(ctrl.dependencies).toEqual({
-      'ai-ctrl-workflow-contract': '0.1.4',
-      'ai-workflow-contract': '0.1.7',
-      'ai-workflow-logic': '0.1.8',
+      'ai-ctrl-workflow-contract': '0.1.5',
+      'ai-workflow-contract': '0.1.8',
+      'ai-workflow-logic': '0.1.9',
       'flow-step-space-logic': '0.1.1',
       'instant-ctrl-flow-contract': '0.1.2',
       'instant-ctrl-flow-logic': '0.1.5',
+      'task-manager-contract': '0.1.3',
+      'task-manager-logic': '0.1.6',
       'work-ctrl-flow-contract': '0.1.3',
       'work-ctrl-flow-logic': '0.1.4',
     });
-    expect(data.version).toBe('0.1.9');
+    expect(data.version).toBe('0.1.11');
     expect(data.dependencies).toEqual({
-      'ai-data-workflow-contract': '0.1.4',
-      'ai-workflow-contract': '0.1.7',
-      'ai-workflow-logic': '0.1.8',
+      'ai-data-workflow-contract': '0.1.5',
+      'ai-workflow-contract': '0.1.8',
+      'ai-workflow-logic': '0.1.9',
       'eager-data-flow-contract': '0.1.3',
-      'eager-data-flow-logic': '0.1.4',
+      'eager-data-flow-logic': '0.1.5',
       'flow-step-space-logic': '0.1.1',
+      'task-manager-contract': '0.1.3',
+      'task-manager-logic': '0.1.6',
       'work-ctrl-flow-logic': '0.1.4',
     });
   });
@@ -89,31 +97,38 @@ describe('AI workflow public package metadata', () => {
 
   test('prepares the BP and task runtime patch release without registry selection', async () => {
     const expected = {
-      'task-manager-contract': { version: '0.1.1', dependencies: undefined },
+      'task-manager-contract': { version: '0.1.3', dependencies: undefined },
       'task-manager-logic': {
-        version: '0.1.1',
-        dependencies: { 'task-manager-contract': '0.1.1' },
+        version: '0.1.6',
+        dependencies: { 'task-manager-contract': '0.1.3' },
+      },
+      'task-manager-file-support': {
+        version: '0.1.4',
+        dependencies: {
+          'task-manager-contract': '0.1.3',
+          'task-manager-logic': '0.1.6',
+        },
       },
       'depa-behavior-tree': {
         version: '0.1.1',
         dependencies: { 'depa-processor': '0.1.1' },
       },
       'bp-ctrl-flow-contract': {
-        version: '0.1.1',
+        version: '0.1.3',
         dependencies: {
-          'task-manager-contract': '0.1.1',
+          'task-manager-contract': '0.1.3',
           'work-ctrl-flow-contract': '0.1.3',
         },
       },
       'bp-ctrl-flow-logic': {
-        version: '0.1.2',
+        version: '0.1.7',
         dependencies: {
-          'bp-ctrl-flow-contract': '0.1.1',
+          'bp-ctrl-flow-contract': '0.1.3',
           'depa-behavior-tree': '0.1.1',
           'instant-ctrl-flow-contract': '0.1.2',
           'instant-ctrl-flow-logic': '0.1.5',
-          'task-manager-contract': '0.1.1',
-          'task-manager-logic': '0.1.1',
+          'task-manager-contract': '0.1.3',
+          'task-manager-logic': '0.1.6',
           'work-ctrl-flow-contract': '0.1.3',
           'work-ctrl-flow-logic': '0.1.4',
         },

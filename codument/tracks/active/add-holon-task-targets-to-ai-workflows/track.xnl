@@ -1,0 +1,79 @@
+<Track #add-holon-task-targets-to-ai-workflows apiVersion="codument.tech/v1alpha1" version="1" { status = "completed" goal = "Let AI Ctrl and AI Data workflow nodes delegate complex work to an independent TaskSpace targeted at a frozen Holon organization snapshot and execution binding." description = "Add the AI organization-task profile, typed Holon target/settlement contracts and thin Ctrl/Data adapters without copying TaskSpace or actor authority." question_mode = "decision-tree" question_severity = "auto" commit_mode = "manual" created_at = "2026-08-23T18:40:48.381Z" updated_at = "2026-08-24T09:31:13.440Z" modeling_base_commit = "b5ec622337f95825b051ad730a52f3ab3818e190" engineering_base_commit = "b5ec622337f95825b051ad730a52f3ab3818e190" } (
+  <Ports { scope = "track" }>
+  <TaskSpace #space_add-holon-task-targets-to-ai-workflows { name = "add-holon-task-targets-to-ai-workflows" version = "1" child_mode = "dag" } (
+    <SubNodes [
+      <TaskGroup #P1 { name = "AI organization task profile and DSL" status = "DONE" order = 0 } (
+        <SubNodes [
+          <Task #P1-T1 { name = "define closed HolonTaskTarget and organization task profile" status = "DONE" order = 0 } (
+            <Acceptance [
+              <Criterion #P1-T1-AC1 { checked = true } ?01M0SFNJ7WN0RWEWEN4QJ1HTEX>
+              Instance-frozen target binds Holon root selector, executionBindingRef/digest, TaskSpace policy and output contract; TaskSpace creation stores issuer-owned snapshot bytes and binds them through HolonTaskSnapshotReceipt.
+              </?01M0SFNJ7WN0RWEWEN4QJ1HTEX>
+              <Criterion #P1-T1-AC2 { checked = true } ?01M0SFNJ7WN0RWEWEN4QJ1HTEY>
+              No Holon filesystem path, live query or actor history is accepted as target authority.
+              </?01M0SFNJ7WN0RWEWEN4QJ1HTEY>
+              <Criterion #P1-T1-AC3 { checked = true } ?01M0SFNJ7WN0RWEWEN4QJ1HTEZ>
+              HolonTaskTarget carries neither a Member selector nor an Agent-instance selector; Member assignment belongs to the Holon coordinator, and targeted Agent continuity is permitted only afterward through the frozen execution binding and MemberRuntime.
+              </?01M0SFNJ7WN0RWEWEN4QJ1HTEZ>
+            ]>
+          )>
+          <Task #P1-T2 { name = "extend Flow DSL and frozen run proof" status = "DONE" order = 1 }>
+        ]>
+      )>
+      <TaskGroup #P2 { name = "AI Ctrl workflow adapter" status = "DONE" order = 1 } (
+        <SubNodes [
+          <Task #P2-T1 { name = "add create reference wait settle and explicit replan transitions" status = "DONE" order = 0 } (
+            <Acceptance [
+              <Criterion #P2-T1-AC1 { checked = true } ?01M0SFNJ7WN0RWEWEN4QJ1HTF0>
+              Waiting/resume consumes stable TaskSpace receipts; compatible organization-only replan stores new snapshot material and old/new adoption receipts without rewriting the Flow instance, while binding/code/Agent closure change requires a linked successor instance/run.
+              </?01M0SFNJ7WN0RWEWEN4QJ1HTF0>
+            ]>
+          )>
+        ]>
+      )>
+      <TaskGroup #P3 { name = "AI Data workflow adapter" status = "DONE" order = 2 } (
+        <SubNodes [
+          <Task #P3-T1 { name = "bind task outputs to declared material ports" status = "DONE" order = 0 } (
+            <Acceptance [
+              <Criterion #P3-T1-AC1 { checked = true } ?01M0SFNJ7WN0RWEWEN4QJ1HTF1>
+              Data nodes consume schema-validated settlement material and never inspect Member actor conversation/history.
+              </?01M0SFNJ7WN0RWEWEN4QJ1HTF1>
+              <Criterion #P3-T1-AC2 { checked = true } ?01M0SFNJ7WN0RWEWEN4QJ1HTF2>
+              Fresh reconstruction uses frozen target and TaskSpace receipts after live Holon resources change or disappear.
+              </?01M0SFNJ7WN0RWEWEN4QJ1HTF2>
+            ]>
+          )>
+        ]>
+      )>
+      <TaskGroup #P4 { name = "examples release and verification" status = "DONE" order = 3 } (
+        <SubNodes [
+          <Task #P4-T1 { name = "add modular Ctrl/Data Holon task bundles" status = "DONE" order = 0 }>
+          <Task #P4-T2 { name = "publish minimum patch closure and run DSL reference runtime consumers" status = "DONE" order = 1 } (
+            <Acceptance [
+              <Criterion #P4-T2-AC1 { checked = true } ?01M0SFNJ7WN0RWEWEN4QJ1HTF3>
+              Static scans find no fuzzy host routing, kernel fork, public generic effect invoke or Mission 2 transport.
+              </?01M0SFNJ7WN0RWEWEN4QJ1HTF3>
+              <Criterion #P4-T2-AC2 { checked = true } ?01M0SFNJ7WN0RWEWEN4QJ1HTF4>
+              Changed workflow/reference packages use minimum patch versions, exact internal dependencies, no registry metadata/CLI override, and a fresh registry consumer runs both Ctrl/Data task-target bundles.
+              </?01M0SFNJ7WN0RWEWEN4QJ1HTF4>
+            ]>
+          )>
+        ]>
+      )>
+    ]>
+  )>
+  <Schedule [
+    <Dag { for = "space_add-holon-task-targets-to-ai-workflows" } [
+      <Node #P2 [
+        <After { ref = "P1" }>
+      ]>
+      <Node #P3 [
+        <After { ref = "P2" }>
+      ]>
+      <Node #P4 [
+        <After { ref = "P3" }>
+      ]>
+    ]>
+  ]>
+  <Hooks []>
+)>

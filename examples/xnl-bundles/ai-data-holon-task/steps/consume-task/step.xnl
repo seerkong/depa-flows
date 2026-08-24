@@ -1,0 +1,20 @@
+<Step #consume-task (
+  <Core [
+    <TransformNode #consume-task {
+      inputs = { task = "flow-port://#entry/task" }
+      outputs = ["result"]
+      src = "vfs://./flow-code/holon-task.ts#consumeOrganizationTask"
+      config = {
+        holonTaskTarget = {
+          kind = "holon-task-target"
+          schemaVersion = "ai-workflow.holon-task-target/v1"
+          invocation = { workflowKind = "AIDataWorkflow" workflowRef = "resource://depa.examples.HolonTaskResultData" nodeId = "consume-task" invocationId = "support-review-result" }
+          holon = { rootHolonRef = "support-review-holon" effectiveAt = "2026-01-01T00:00:00.000Z" }
+          executionBinding = { ref = "resource://depa.examples.Binding.SupportReview" digest = "sha256:1111111111111111111111111111111111111111111111111111111111111111" }
+          taskSpace = { profileRef = "resource://depa.examples.TaskProfile.SupportReview" policyRef = "resource://depa.examples.TaskPolicy.SupportReview" requiredRoleRefs = ["support-reviewer"] requiredCapabilityRefs = ["resource://depa.examples.Capability.SupportReview"] }
+          output = { schemaRef = "resource://depa.examples.Schema.SupportReview" materialPortRefs = ["resource://depa.examples.Port.SupportReview"] }
+        }
+      }
+    }>
+  ]>
+)>

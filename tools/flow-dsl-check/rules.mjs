@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { listChildren, sectionChildren, idOf } from './load.mjs';
-import { TASK_TRANSITIONS, EXECUTION_MODES as CONTRACT_EXECUTION_MODES } from 'task-manager-contract';
+import { BP_EXECUTION_MODES, BP_TASK_STATUSES } from 'bp-ctrl-flow-contract';
 
 const CTRL_FLOW_FORMS = new Set(['InstantCtrlFlow', 'WorkCtrlFlow', 'BPCtrlFlow', 'AICtrlWorkflow']);
 const DAG_FORMS = new Set(['EagerDataFlow', 'AIDataWorkflow']);
@@ -50,8 +50,8 @@ const FACETS_BY_FORM = {
   EagerDataFlow: new Set(['flow.contract']),
   AIDataWorkflow: new Set(['flow.contract']),
 };
-const TASK_STATUS = new Set(Object.keys(TASK_TRANSITIONS));
-const EXECUTION_MODES = new Set(CONTRACT_EXECUTION_MODES);
+const TASK_STATUS = new Set(BP_TASK_STATUSES);
+const EXECUTION_MODES = new Set(BP_EXECUTION_MODES);
 
 const walk = (element, visit) => {
   visit(element);

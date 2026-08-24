@@ -1,6 +1,6 @@
 {
   "name": "ai-workflow-flow-dsl-reference",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "private": false,
   "description": "Canonical depa Flow DSL reference module for Halfcode authoring assemblies",
   "type": "module",

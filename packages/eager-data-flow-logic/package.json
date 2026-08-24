@@ -1,6 +1,6 @@
 {
   "name": "eager-data-flow-logic",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "private": false,
   "description": "Pure EagerDataFlow XNL loading, linking, validation, and plan projection",
   "type": "module",

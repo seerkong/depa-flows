@@ -1,0 +1,19 @@
+<decision #track.harden_task_space_kernel_and_file_authority.package_boundary apiVersion="codument.tech/v1alpha1" { status = "accepted" priority = "P0" durable_candidate = false } (
+  <question ?>Which packages own TaskSpace kernel, filesystem effects and domain fields?</?>
+  <answer (
+    <raw-answer ?>Use shared kernel plus domain profiles and a separate task-manager-file-support package; ignore Codument TaskSpace.</?>
+    <decision-text ?>task-manager-contract owns closed data/ports; task-manager-logic owns pure/runtime-first processors; task-manager-file-support owns Node FS transaction; BP and AI packages own their profiles; Ctrl/Data packages are adapters.</?>
+    <rationale ?>This preserves one lifecycle authority and keeps effects and domain-specific fields out of the kernel.</?>
+    <evidence ?>Parent mission accepted package-boundary decision and current package inventory.</?>
+  )>
+)>
+
+<decision #track.harden_task_space_kernel_and_file_authority.neutral_lifecycle apiVersion="codument.tech/v1alpha1" { status = "accepted" priority = "P0" durable_candidate = false } (
+  <question ?>Which lifecycle and claim facts belong to the shared TaskSpace kernel rather than the BP profile?</?>
+  <answer (
+    <raw-answer ?>Use a neutral execution lifecycle with owner-issued lease claims; retain delegation/forward/refusal language in BP profile facts.</?>
+    <decision-text ?>Kernel status is Pending|Ready|Claimed|Running|Waiting|Succeeded|Failed|Cancelled. Claims bind assignee, attempt, leaseEpoch, heartbeat and expiry; terminal settlement and history are immutable. BP Delegated/Forwarded/Refused/Abandoned map through the BP profile.</?>
+    <rationale ?>AI organization work and human BP work can share concurrency/recovery semantics without forcing BP vocabulary into every domain.</?>
+    <evidence ?>Current task-manager-contract status union is BP-specific; parent mission requires one shared profile-neutral runtime.</?>
+  )>
+)>

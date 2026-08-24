@@ -1,0 +1,10 @@
+<BehaviorPatch #track.add-holon-task-targets-to-ai-workflows.behavior_patch.ai-ctrl-workflow apiVersion="codument.tech/v1alpha1" version="1" { capability = "ai-ctrl-workflow" } (
+  <Mutations [<Upsert { selector = "behavior://ai-ctrl-workflow/requirements/organization-task-wait-resume-replan" } (
+    <Requirement #organization-task-wait-resume-replan (
+      <Statement ?>AI Ctrl Workflow SHALL create/reference an organization TaskSpace, wait for an exact settlement receipt, resume idempotently, and change organization only by admitting issuer-owned snapshot material plus old/new adoption receipts into TaskSpace without rewriting the Flow instance, or by creating a linked successor instance/run when executable closure changes.</?>
+      <Suites [<Suite #ctrl-task-cases { name = "Ctrl organization task" } (<Cases [
+        <Case #receipt-handoff [<Given ?>A TaskSpace has admitted a settlement receipt.</?><When ?>Ctrl resumes.</?><Then ?>A separate Flow checkpoint CAS SHALL consume that receipt exactly once.</?>]>
+      ]>)>]>
+    )>
+  )>]>
+)>

@@ -1,0 +1,6 @@
+<StepSpace #depa.examples.HolonTaskReviewCtrlSteps apiVersion="depa.flows/v1" version="1" [
+  <StepRef #open-task { src = "steps/open-task/step.xnl" }>
+  <StepRef #wait-for-task { src = "steps/wait-for-task/step.xnl" }>
+  <StepRef #observe-task { src = "steps/observe-task/step.xnl" }>
+  <StepRef #return { src = "steps/return/step.xnl" }>
+]>

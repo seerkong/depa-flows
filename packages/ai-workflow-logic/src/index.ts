@@ -53,6 +53,7 @@ export {
   runAgent,
   runTargetedAgent,
 } from './agent-invocation.js';
+export * from './holon-task.js';
 export { assertAIAgentNodeTaskBinding, upgradeLegacyAIWorkflowProfileDurableState } from './agent-state.js';
 export type { AIAgentNodeBindingIdentity } from './agent-state.js';
 export {

@@ -67,7 +67,7 @@ describe('AI Workflow Flow DSL reference module', () => {
     expect(provenance.schemaVersion).toBe('depa.flow-dsl-reference/v1');
     expect(provenance.moduleId).toBe('DepaFlowsFlowDslReference');
     expect(provenance.packageName).toBe('ai-workflow-flow-dsl-reference');
-    expect(provenance.packageVersion).toBe('0.1.5');
+    expect(provenance.packageVersion).toBe('0.1.6');
     expect(provenance.source).toBe('depa-flows/docs/flow-dsl');
     expect(provenance.files.map((file) => file.path)).toEqual(canonicalFiles);
     expect(provenance.files.every((file) => /^sha256:[a-f0-9]{64}$/.test(file.contentDigest))).toBe(true);
@@ -134,7 +134,7 @@ describe('AI Workflow Flow DSL reference module', () => {
       publishConfig: Record<string, string>;
     };
     expect(manifest.name).toBe('ai-workflow-flow-dsl-reference');
-    expect(manifest.version).toBe('0.1.5');
+    expect(manifest.version).toBe('0.1.6');
     expect(manifest.dependencies).toEqual({ 'halfcode-compiler.xnl': '0.2.3' });
     expect(manifest.publishConfig).toEqual({ access: 'public' });
   });

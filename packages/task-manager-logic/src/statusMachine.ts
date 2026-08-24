@@ -1,43 +1,36 @@
-/**
- * 任务状态机（BP-1）：转移合法性 + started_at/ended_at 语义。
- */
-import {
-  OPERATION_TARGET,
-  TASK_TRANSITIONS,
-  TERMINAL_STATUSES,
-  type TaskDTO,
-  type TaskOperation,
-  type TaskStatus,
-} from 'task-manager-contract';
+import type { TaskStatus } from 'task-manager-contract';
+import { TaskManagerError } from './errors.js';
 
-export class TaskTransitionError extends Error {
-  constructor(public taskId: string, public from: TaskStatus, public to: TaskStatus) {
-    super(`illegal task transition ${from} -> ${to} (task ${taskId})`);
-  }
-}
+export const TASK_TRANSITIONS: Readonly<Record<TaskStatus, readonly TaskStatus[]>> = Object.freeze({
+  Pending: Object.freeze(['Ready', 'Cancelled'] as const),
+  Ready: Object.freeze(['Claimed', 'Cancelled', 'Pending'] as const),
+  Claimed: Object.freeze(['Running', 'Ready', 'Cancelled'] as const),
+  Running: Object.freeze(['Waiting', 'Ready', 'Succeeded', 'Failed', 'Cancelled'] as const),
+  Waiting: Object.freeze(['Running', 'Ready', 'Succeeded', 'Failed', 'Cancelled'] as const),
+  Succeeded: Object.freeze([] as const),
+  Failed: Object.freeze([] as const),
+  Cancelled: Object.freeze([] as const),
+});
+
+const TERMINAL_STATUSES = Object.freeze([
+  'Succeeded',
+  'Failed',
+  'Cancelled',
+] as const);
 
 export function canTransition(from: TaskStatus, to: TaskStatus): boolean {
   return TASK_TRANSITIONS[from].includes(to);
 }
 
-export function isTerminal(status: TaskStatus): boolean {
-  return TERMINAL_STATUSES.has(status);
+export function isTerminal(status: TaskStatus): status is Extract<TaskStatus, 'Succeeded' | 'Failed' | 'Cancelled'> {
+  return (TERMINAL_STATUSES as readonly TaskStatus[]).includes(status);
 }
 
-/** 应用一次人工操作；非法转移抛 TaskTransitionError。返回同一 task 对象（原地更新）。 */
-export function applyOperation(
-  task: TaskDTO,
-  operation: TaskOperation,
-  operatorAccount: string,
-  nowMs: number,
-): TaskDTO {
-  const to = OPERATION_TARGET[operation];
-  if (!canTransition(task.status, to)) throw new TaskTransitionError(task.id, task.status, to);
-  const from = task.status;
-  task.status = to;
-  task.operatorAccount = operatorAccount;
-  if (to === 'Active' && from !== 'Active') task.startedAtMs ??= nowMs;
-  if (isTerminal(to)) task.endedAtMs = nowMs;
-  if (operation === 'delegate' || operation === 'forward') task.transferredBy = operatorAccount;
-  return task;
+export function assertTaskTransition(taskId: string, from: TaskStatus, to: TaskStatus): void {
+  if (isTerminal(from)) {
+    throw new TaskManagerError('terminal-task-immutable', `task ${taskId} is terminal (${from})`);
+  }
+  if (!canTransition(from, to)) {
+    throw new TaskManagerError('invalid-task-transition', `task ${taskId} cannot transition ${from} -> ${to}`);
+  }
 }

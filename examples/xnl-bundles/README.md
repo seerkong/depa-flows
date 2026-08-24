@@ -11,15 +11,18 @@ These examples use XNL definitions plus external TypeScript code refs. A product
 | `eager-data-flow-parent/` | `EagerDataFlow` | `SubFlowNode`, `SinkNode`, `waitFor` |
 | `ai-ctrl-workflow/` | `AICtrlWorkflow` | WorkCtrlFlow-backed AI runtime/effect boundary |
 | `ai-data-workflow/` | `AIDataWorkflow` | EagerDataFlow-backed RunGraph boundary |
+| `ai-ctrl-holon-task/` | `AICtrlWorkflow` | frozen Holon target → TaskSpace create/wait/settlement |
+| `ai-data-holon-task/` | `AIDataWorkflow` | TaskSpace settlement → validated MaterialPort value |
 
-`order-fulfillment/` and `ai-data-workflow/` are the modular fixtures. Their
+`order-fulfillment/`, `ai-data-workflow/`, `ai-ctrl-holon-task/` and
+`ai-data-holon-task/` are modular fixtures. Their
 `step-space.xnl` files enumerate every Step explicitly; nested `steps/` directories are
 only storage locations and are never scanned to invent membership. Step Core facts map
 back to the same WorkCtrl/EagerDataFlow bindings used by inline definitions.
 
 持久产品遵守 [Definition、Instance 与 Run](../../docs/flow-dsl/spec/flow-core/instance-run.md) 的三层 hierarchy。这里列出的七个目录始终是 source Definition bundles；runtime 将完整 bundle 录取到注入的 support root，并把每个 run 的唯一可变事实写入 instance 同级 `runs/<run-id>/checkpoint.json`。不要把生成的 `instance.json`、`checkpoint.json`、events、index 或 status view 放回这些目录。
 
-三个带物理生命周期说明的示例是 [order-fulfillment](order-fulfillment/README.md)、[ai-ctrl-workflow](ai-ctrl-workflow/README.md) 与 [ai-data-workflow](ai-data-workflow/README.md)。它们仍由同一个 bundle checker 作为七个 canonical source fixtures 逐一验证。
+五个带物理生命周期说明的示例是 [order-fulfillment](order-fulfillment/README.md)、[ai-ctrl-workflow](ai-ctrl-workflow/README.md)、[ai-data-workflow](ai-data-workflow/README.md)、[ai-ctrl-holon-task](ai-ctrl-holon-task/README.md) 与 [ai-data-holon-task](ai-data-holon-task/README.md)。所有目录仍由同一个 bundle checker 作为 canonical source fixtures 逐一验证。
 
 The shared public statements are `Run`, `If` with `Branches` / `Branch` / `Otherwise`, `Fallback` with `Strategy`, `Until`, and `Return`. Statement output becomes the next statement input. All `src` and `when` exports are ordinary functions following:
 

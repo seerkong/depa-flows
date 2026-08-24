@@ -1,0 +1,89 @@
+<Track #harden-task-space-kernel-and-file-authority apiVersion="codument.tech/v1alpha1" version="1" { status = "completed" goal = "Turn task-manager-* into a shared, profile-neutral TaskSpace runtime with closed transitions and a separate recoverable local-file authority package." description = "Separate contracts, pure/runtime-first logic, Node filesystem effects and BP/AI profiles while keeping Codument TaskSpace out of scope." question_mode = "decision-tree" question_severity = "auto" commit_mode = "manual" created_at = "2026-08-23T18:40:48.359Z" updated_at = "2026-08-24T00:48:23.118Z" modeling_base_commit = "b5ec622337f95825b051ad730a52f3ab3818e190" engineering_base_commit = "b5ec622337f95825b051ad730a52f3ab3818e190" gap_round = 5 } (
+  <Ports { scope = "track" }>
+  <TaskSpace #space_harden-task-space-kernel-and-file-authority { name = "harden-task-space-kernel-and-file-authority" version = "1" child_mode = "dag" } (
+    <SubNodes [
+      <TaskGroup #P1 { name = "TaskSpace kernel contracts" status = "DONE" order = 0 } (
+        <SubNodes [
+          <Task #P1-T1 { name = "define closed TaskSpace forest commands events and receipts" status = "DONE" order = 0 } (
+            <Acceptance [
+              <Criterion #P1-T1-AC1 { checked = true } ?01M0R723SQB4EN816R4400SHE9>
+              Task, relation, owner-issued claim token, heartbeat/expiry, settlement, replan, history, artifact and profile-envelope identities are closed and deeply immutable.
+              </?01M0R723SQB4EN816R4400SHE9>
+              <Criterion #P1-T1-AC2 { checked = true } ?01M0R723SQB4EN816R4400SHEA>
+              Codument TaskSpace contracts and files are not imported or mirrored.
+              </?01M0R723SQB4EN816R4400SHEA>
+              <Criterion #P1-T1-AC3 { checked = true } ?01M0R723SQB4EN816R4400SHEB>
+              Kernel status is exactly Pending|Ready|Claimed|Running|Waiting|Succeeded|Failed|Cancelled; BP Delegated/Forwarded/Refused/Abandoned remain profile outcomes.
+              </?01M0R723SQB4EN816R4400SHEB>
+            ]>
+          )>
+          <Task #P1-T2 { name = "define backend-neutral owner and CAS ports" status = "DONE" order = 1 }>
+        ]>
+      )>
+      <TaskGroup #P2 { name = "runtime-first transition processors" status = "DONE" order = 1 } (
+        <SubNodes [
+          <Task #P2-T1 { name = "implement create claim heartbeat start wait settle fail cancel and replan processors" status = "DONE" order = 0 } (
+            <Acceptance [
+              <Criterion #P2-T1-AC1 { checked = true } ?01M0R723SQB4EN816R4400SHEC>
+              All effectful entry points use DEPA runtime-first Processor forms and emit stable idempotency receipts.
+              </?01M0R723SQB4EN816R4400SHEC>
+              <Criterion #P2-T1-AC2 { checked = true } ?01M0R723SQB4EN816R4400SHED>
+              Transition validation rejects terminal rewrite, stale CAS, cyclic forest and cross-space identity.
+              </?01M0R723SQB4EN816R4400SHED>
+              <Criterion #P2-T1-AC3 { checked = true } ?01M0R723SQB4EN816R4400SHEE>
+              Only the exact live claim token may work/settle; expiry recovery increments attempt and leaseEpoch and preserves append-only claim history.
+              </?01M0R723SQB4EN816R4400SHEE>
+            ]>
+          )>
+        ]>
+      )>
+      <TaskGroup #P3 { name = "local-file support and BP profile" status = "DONE" order = 2 } (
+        <SubNodes [
+          <Task #P3-T1 { name = "add task-manager-file-support transaction owner" status = "DONE" order = 0 } (
+            <Acceptance [
+              <Criterion #P3-T1-AC1 { checked = true } ?01M0R723SQB4EN816R4400SHEF>
+              The package owns containment, recoverable lock, immutable records/tree/receipt, journal, fsync and head-last CAS.
+              </?01M0R723SQB4EN816R4400SHEF>
+            ]>
+          )>
+          <Task #P3-T2 { name = "project BP TaskStep through a domain profile" status = "DONE" order = 1 } (
+            <Acceptance [
+              <Criterion #P3-T2-AC1 { checked = true } ?01M0R723SQB4EN816R4400SHEG>
+              BP-specific fields do not enter the shared kernel and existing simple consumers retain a migration path.
+              </?01M0R723SQB4EN816R4400SHEG>
+            ]>
+          )>
+        ]>
+      )>
+      <TaskGroup #P4 { name = "recovery release and fresh consumer" status = "DONE" order = 3 } (
+        <SubNodes [
+          <Task #P4-T1 { name = "run concurrency corruption crash and replay suites" status = "DONE" order = 0 }>
+          <Task #P4-T2 { name = "publish minimum patch packages and exact dependency closure" status = "DONE" order = 1 } (
+            <Acceptance [
+              <Criterion #P4-T2-AC1 { checked = true } ?01M0R723SQB4EN816R4400SHEH>
+              New task-manager-file-support starts at 0.1.0; changed existing packages use minimum patch versions, internal dependencies are exact, pack/publish commands never specify registry and package metadata contains no registry override.
+              </?01M0R723SQB4EN816R4400SHEH>
+              <Criterion #P4-T2-AC2 { checked = true } ?01M0R723SQB4EN816R4400SHEJ>
+              A fresh registry consumer exercises claim expiry/recovery, terminal settlement, BP mapping and file-owner restart from the released closure.
+              </?01M0R723SQB4EN816R4400SHEJ>
+            ]>
+          )>
+        ]>
+      )>
+    ]>
+  )>
+  <Schedule [
+    <Dag { for = "space_harden-task-space-kernel-and-file-authority" } [
+      <Node #P2 [
+        <After { ref = "P1" }>
+      ]>
+      <Node #P3 [
+        <After { ref = "P2" }>
+      ]>
+      <Node #P4 [
+        <After { ref = "P3" }>
+      ]>
+    ]>
+  ]>
+  <Hooks []>
+)>

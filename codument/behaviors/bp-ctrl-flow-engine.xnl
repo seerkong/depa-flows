@@ -1,99 +1,154 @@
 <Behavior #bp-ctrl-flow-engine apiVersion="codument.tech/v1alpha1" version="1" (
   <Requirements [
     <Requirement #task-step-bridge (
-      <Statement ?01M0NJZ4KTXVPPSN7J14R3TTTR>
+      <Statement ?01M0RNR98HR59NF6XVKX4TFSNB>
       TaskStep SHALL 是流树引用任务树的唯一桥：绑定 TaskSpace 直接子节点（否则加载期拒绝）、无 assignTo、进入置任务 ACTIVE 并执行 before-hooks、任务/组终态映射节点结果（DONE/FORWARDED→Success，REFUSED/ABANDONED→Failure）。
-      </?01M0NJZ4KTXVPPSN7J14R3TTTR>
+      </?01M0RNR98HR59NF6XVKX4TFSNB>
       <Suites [
         <Suite { name = "task-step-bridge" } (
           <Cases [
             <Case { name = "进入激活" } (
-              <Given ?01M0NJZ4KTXVPPSN7J14R3TTTS>
+              <Given ?01M0RNR98HR59NF6XVKX4TFSNC>
               expense-approval demo
-              </?01M0NJZ4KTXVPPSN7J14R3TTTS>
-              <When ?01M0NJZ4KTXVPPSN7J14R3TTTT>
+              </?01M0RNR98HR59NF6XVKX4TFSNC>
+              <When ?01M0RNR98HR59NF6XVKX4TFSND>
               start
-              </?01M0NJZ4KTXVPPSN7J14R3TTTT>
-              <Then ?01M0NJZ4KTXVPPSN7J14R3TTTV>
+              </?01M0RNR98HR59NF6XVKX4TFSND>
+              <Then ?01M0RNR98HR59NF6XVKX4TFSNE>
               主管任务 ACTIVE，流程挂起于 manager-approval
-              </?01M0NJZ4KTXVPPSN7J14R3TTTV>
+              </?01M0RNR98HR59NF6XVKX4TFSNE>
             )>
             <Case { name = "组绑定" } (
-              <Given ?01M0NJZ4KTXVPPSN7J14R3TTTW>
+              <Given ?01M0RNR98HR59NF6XVKX4TFSNF>
               大额路径
-              </?01M0NJZ4KTXVPPSN7J14R3TTTW>
-              <When ?01M0NJZ4KTXVPPSN7J14R3TTTX>
+              </?01M0RNR98HR59NF6XVKX4TFSNF>
+              <When ?01M0RNR98HR59NF6XVKX4TFSNG>
               主管 complete
-              </?01M0NJZ4KTXVPPSN7J14R3TTTX>
-              <Then ?01M0NJZ4KTXVPPSN7J14R3TTTY>
+              </?01M0RNR98HR59NF6XVKX4TFSNG>
+              <Then ?01M0RNR98HR59NF6XVKX4TFSNH>
               挂起于 grp_finance，组内首任务自动 ACTIVE
-              </?01M0NJZ4KTXVPPSN7J14R3TTTY>
+              </?01M0RNR98HR59NF6XVKX4TFSNH>
             )>
           ]>
         )>
       ]>
     )>
     <Requirement #approval-signals (
-      <Statement ?01M0NJZ4KTXVPPSN7J14R3TTTZ>
+      <Statement ?01M0RNR98HR59NF6XVKX4TFSNJ>
       人工操作 SHALL 经任务状态机校验后作为 ResumeSignal 推进流程；非法转移被拒绝且流程状态不变；审批分支由节点结果驱动（拒绝走 Selector 兜底分支，流程正常收敛）。
-      </?01M0NJZ4KTXVPPSN7J14R3TTTZ>
+      </?01M0RNR98HR59NF6XVKX4TFSNJ>
       <Suites [
         <Suite { name = "approval-signals" } (
           <Cases [
             <Case { name = "同意路径" } (
-              <Given ?01M0NJZ4KTXVPPSN7J14R3TTV0>
+              <Given ?01M0RNR98HR59NF6XVKX4TFSNK>
               主管+财务先后 complete
-              </?01M0NJZ4KTXVPPSN7J14R3TTV0>
-              <When ?01M0NJZ4KTXVPPSN7J14R3TTV1>
+              </?01M0RNR98HR59NF6XVKX4TFSNK>
+              <When ?01M0RNR98HR59NF6XVKX4TFSNM>
               operateTask ×2
-              </?01M0NJZ4KTXVPPSN7J14R3TTV1>
-              <Then ?01M0NJZ4KTXVPPSN7J14R3TTV2>
+              </?01M0RNR98HR59NF6XVKX4TFSNM>
+              <Then ?01M0RNR98HR59NF6XVKX4TFSNN>
               COMPLETED，日志含 expense approval finished
-              </?01M0NJZ4KTXVPPSN7J14R3TTV2>
+              </?01M0RNR98HR59NF6XVKX4TFSNN>
             )>
             <Case { name = "拒绝路径" } (
-              <Given ?01M0NJZ4KTXVPPSN7J14R3TTV3>
+              <Given ?01M0RNR98HR59NF6XVKX4TFSNP>
               主管 refuse
-              </?01M0NJZ4KTXVPPSN7J14R3TTV3>
-              <When ?01M0NJZ4KTXVPPSN7J14R3TTV4>
+              </?01M0RNR98HR59NF6XVKX4TFSNP>
+              <When ?01M0RNR98HR59NF6XVKX4TFSNQ>
               operateTask
-              </?01M0NJZ4KTXVPPSN7J14R3TTV4>
-              <Then ?01M0NJZ4KTXVPPSN7J14R3TTV5>
+              </?01M0RNR98HR59NF6XVKX4TFSNQ>
+              <Then ?01M0RNR98HR59NF6XVKX4TFSNR>
               驳回分支收敛 COMPLETED，财务任务保持 NOT_STARTED
-              </?01M0NJZ4KTXVPPSN7J14R3TTV5>
+              </?01M0RNR98HR59NF6XVKX4TFSNR>
             )>
             <Case { name = "非法转移" } (
-              <Given ?01M0NJZ4KTXVPPSN7J14R3TTV6>
+              <Given ?01M0RNR98HR59NF6XVKX4TFSNS>
               NOT_STARTED 财务任务
-              </?01M0NJZ4KTXVPPSN7J14R3TTV6>
-              <When ?01M0NJZ4KTXVPPSN7J14R3TTV7>
+              </?01M0RNR98HR59NF6XVKX4TFSNS>
+              <When ?01M0RNR98HR59NF6XVKX4TFSNT>
               直接 complete
-              </?01M0NJZ4KTXVPPSN7J14R3TTV7>
-              <Then ?01M0NJZ4KTXVPPSN7J14R3TTV8>
+              </?01M0RNR98HR59NF6XVKX4TFSNT>
+              <Then ?01M0RNR98HR59NF6XVKX4TFSNV>
               抛 TaskTransitionError，open handle 不变
-              </?01M0NJZ4KTXVPPSN7J14R3TTV8>
+              </?01M0RNR98HR59NF6XVKX4TFSNV>
             )>
           ]>
         )>
       ]>
     )>
     <Requirement #restart-continuity (
-      <Statement ?01M0NJZ4KTXVPPSN7J14R3TTV9>
+      <Statement ?01M0RNR98HR59NF6XVKX4TFSNW>
       审批等待期间进程 SHALL 可退出：任务树与流程快照均外置（File 存储），全新引擎实例可继续办理至完成。
-      </?01M0NJZ4KTXVPPSN7J14R3TTV9>
+      </?01M0RNR98HR59NF6XVKX4TFSNW>
       <Suites [
         <Suite { name = "restart-continuity" } (
           <Cases [
             <Case { name = "重启续办" } (
-              <Given ?01M0NJZ4KTXVPPSN7J14R3TTVA>
+              <Given ?01M0RNR98HR59NF6XVKX4TFSNX>
               每步之间全新实例 + 同一存储
-              </?01M0NJZ4KTXVPPSN7J14R3TTVA>
-              <When ?01M0NJZ4KTXVPPSN7J14R3TTVB>
+              </?01M0RNR98HR59NF6XVKX4TFSNX>
+              <When ?01M0RNR98HR59NF6XVKX4TFSNY>
               逐步审批
-              </?01M0NJZ4KTXVPPSN7J14R3TTVB>
-              <Then ?01M0NJZ4KTXVPPSN7J14R3TTVC>
+              </?01M0RNR98HR59NF6XVKX4TFSNY>
+              <Then ?01M0RNR98HR59NF6XVKX4TFSNZ>
               COMPLETED
-              </?01M0NJZ4KTXVPPSN7J14R3TTVC>
+              </?01M0RNR98HR59NF6XVKX4TFSNZ>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+    <Requirement #task-space-bp-profile (
+      <Statement ?01M0RNR98HR59NF6XVKX4TFSP0>
+      BP Ctrl Flow SHALL map NotStarted/Active/Delegated/Forwarded/Done/Refused/Abandoned through one sequenced BP TaskSpace profile onto the neutral kernel lifecycle, retaining BP-specific outcomes in profile facts, binding every lifecycle transition to a unique command identity, admitting only NotStarted authoring/import state without explicit lifecycle events and receipts, aggregating TaskGroups with the same canonical success classification and terminal timing, and SHALL NOT fork claim, settlement, dependency or file transaction rules.
+      </?01M0RNR98HR59NF6XVKX4TFSP0>
+      <Suites [
+        <Suite #bp-profile-cases { name = "BP profile" } (
+          <Cases [
+            <Case #legacy-task-step (
+              <Given ?01M0RNR98HR59NF6XVKX4TFSP1>
+              An existing supported TaskStep is converted.
+              </?01M0RNR98HR59NF6XVKX4TFSP1>
+              <When ?01M0RNR98HR59NF6XVKX4TFSP2>
+              The BP adapter projects it.
+              </?01M0RNR98HR59NF6XVKX4TFSP2>
+              <Then ?01M0RNR98HR59NF6XVKX4TFSP3>
+              Its business fields SHALL be retained in the BP profile and kernel state SHALL remain canonical.
+              </?01M0RNR98HR59NF6XVKX4TFSP3>
+            )>
+            <Case #repeated-delegation (
+              <Given ?01M0RNR98HR59NF6XVKX4TFSP4>
+              A task delegates, reactivates and delegates again in one claim attempt.
+              </?01M0RNR98HR59NF6XVKX4TFSP4>
+              <When ?01M0RNR98HR59NF6XVKX4TFSP5>
+              The engine submits the second delegate.
+              </?01M0RNR98HR59NF6XVKX4TFSP5>
+              <Then ?01M0RNR98HR59NF6XVKX4TFSP6>
+              Its lifecycle sequence and command identity SHALL differ from the first delegate.
+              </?01M0RNR98HR59NF6XVKX4TFSP6>
+            )>
+            <Case #historical-import-fail-closed (
+              <Given ?01M0RNR98HR59NF6XVKX4TFSP7>
+              A source or legacy task is already beyond NotStarted.
+              </?01M0RNR98HR59NF6XVKX4TFSP7>
+              <When ?01M0RNR98HR59NF6XVKX4TFSP8>
+              No lifecycle event/receipt import protocol is supplied.
+              </?01M0RNR98HR59NF6XVKX4TFSP8>
+              <Then ?01M0RNR98HR59NF6XVKX4TFSP9>
+              The converter SHALL reject it instead of creating split profile/kernel authority.
+              </?01M0RNR98HR59NF6XVKX4TFSP9>
+            )>
+            <Case #group-terminal-authority (
+              <Given ?01M0RNR98HR59NF6XVKX4TFSPA>
+              A BP TaskGroup contains successful business handling outcomes Done, Refused or Forwarded and cancellation outcome Abandoned.
+              </?01M0RNR98HR59NF6XVKX4TFSPA>
+              <When ?01M0RNR98HR59NF6XVKX4TFSPB>
+              The neutral kernel projects ANY, ALL or SEQUENTIAL group lifecycle.
+              </?01M0RNR98HR59NF6XVKX4TFSPB>
+              <Then ?01M0RNR98HR59NF6XVKX4TFSPC>
+              The BP group SHALL become terminal in the same canonical admission; ANY SHALL retain the earliest successful profile outcome by endedAtMs with stable child-order tie-break, and Abandoned SHALL NOT count as success.
+              </?01M0RNR98HR59NF6XVKX4TFSPC>
             )>
           ]>
         )>

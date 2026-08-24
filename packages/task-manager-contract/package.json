@@ -1,8 +1,8 @@
 {
   "name": "task-manager-contract",
-  "version": "0.1.1",
+  "version": "0.1.3",
   "private": false,
-  "description": "任务管理契约：任务树 DTO 与状态机（纯类型 + 转移表，零依赖）",
+  "description": "Profile-neutral TaskSpace forest, command, event, receipt and owner-port contracts",
   "type": "module",
   "main": "./src/index.ts",
   "exports": {

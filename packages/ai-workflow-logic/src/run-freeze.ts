@@ -9,6 +9,12 @@ import type {
   MaterialPortProjection,
 } from 'ai-workflow-contract';
 import {
+  normalizeHolonTaskTarget,
+  type AIWorkflowHolonTaskTargetFreezeReceipt,
+  type FrozenHolonTaskTarget,
+  type HolonTaskTarget,
+} from 'ai-workflow-contract';
+import {
   buildResourceDependencySnapshot,
   composeLayeredResourceRegistry,
   loadResourceTree,
@@ -53,6 +59,123 @@ export class AIWorkflowRunResourceFreezeError extends Error {
 
 const authenticFreezeReceipts = new WeakSet<object>();
 const authenticTaskBindings = new WeakSet<object>();
+const authenticHolonTargetFreezeReceipts = new WeakSet<object>();
+const authenticFrozenHolonTargets = new WeakSet<object>();
+
+export interface FreezeAIWorkflowHolonTaskTargetInput {
+  readonly registry: EffectiveResourceRegistry;
+  readonly target: HolonTaskTarget;
+  readonly contentIdentities: ReadonlyMap<string, ResourceContentIdentity>;
+}
+
+export async function freezeAIWorkflowHolonTaskTargetFromDirectory(
+  rootDir: string,
+  target: HolonTaskTarget,
+): Promise<AIWorkflowHolonTaskTargetFreezeReceipt> {
+  const tree = await loadResourceTree({ rootDir });
+  const layers = [{ id: 'workspace', tree }] as const;
+  const registry = composeLayeredResourceRegistry({ layers });
+  return freezeAIWorkflowHolonTaskTarget({
+    registry,
+    target,
+    contentIdentities: resolveEffectiveResourceContentIdentities({ registry, layers }),
+  });
+}
+
+export function freezeAIWorkflowHolonTaskTarget(
+  input: FreezeAIWorkflowHolonTaskTargetInput,
+): AIWorkflowHolonTaskTargetFreezeReceipt {
+  const target = normalizeHolonTaskTarget(input.target);
+  const references = Object.freeze([
+    target.invocation.workflowRef,
+    target.executionBinding.ref,
+    target.taskSpace.profileRef,
+    target.taskSpace.policyRef,
+    ...target.taskSpace.requiredCapabilityRefs,
+    target.output.schemaRef,
+    ...target.output.materialPortRefs,
+  ]);
+  const roots = references.map(resourceIdFromRef).filter((value): value is string => value !== undefined);
+  if (roots.length !== references.length) throw new AIWorkflowRunResourceFreezeError(Object.freeze([
+    diagnostic('AI_RUN_HOLON_TARGET_REF_INVALID', 'run-freeze:holon-target', 'Every target reference must be one exact resource:// identity.'),
+  ]));
+  const workflowId = resourceIdFromRef(target.invocation.workflowRef)!;
+  const workflow = input.registry.byId.get(workflowId)?.resource;
+  if (!workflow || workflow.kind !== target.invocation.workflowKind) throw new AIWorkflowRunResourceFreezeError(Object.freeze([
+    diagnostic('AI_RUN_HOLON_TARGET_WORKFLOW_MISSING', target.invocation.workflowRef, 'Target workflow is absent or has another kind.'),
+  ]));
+  const bindingId = resourceIdFromRef(target.executionBinding.ref)!;
+  const binding = input.registry.byId.get(bindingId)?.resource;
+  if (!binding || binding.kind !== 'HolonExecutionBinding') throw new AIWorkflowRunResourceFreezeError(Object.freeze([
+    diagnostic('AI_RUN_HOLON_EXECUTION_BINDING_MISSING', target.executionBinding.ref, 'Execution binding is absent or has another kind.'),
+  ]));
+  const bindingIdentity = input.contentIdentities.get(bindingId);
+  if (!bindingIdentity || bindingIdentity.contentDigest !== target.executionBinding.digest) {
+    throw new AIWorkflowRunResourceFreezeError(Object.freeze([
+      diagnostic('AI_RUN_HOLON_EXECUTION_BINDING_DIGEST_MISMATCH', target.executionBinding.ref, 'Execution binding digest differs from the admitted resource content identity.'),
+    ]));
+  }
+  for (const resourceId of roots) {
+    if (!input.registry.byId.get(resourceId)?.resource || !input.contentIdentities.has(resourceId)) {
+      throw new AIWorkflowRunResourceFreezeError(Object.freeze([
+        diagnostic('AI_RUN_HOLON_TARGET_CLOSURE_MISSING', `resource://${resourceId}`, 'Target closure member is absent from the admitted registry.'),
+      ]));
+    }
+  }
+  const dependencySnapshot = buildResourceDependencySnapshot({
+    registry: input.registry,
+    roots,
+    edges: references.slice(1).map((ref, index) => ({
+      fromResourceId: workflowId,
+      toResourceId: resourceIdFromRef(ref)!,
+      relation: 'workflow-holon-task-target',
+      declaredBy: `${workflowId}#${target.invocation.nodeId}:${index}`,
+    })),
+    contentIdentities: input.contentIdentities,
+  });
+  const closureResourceIds = Object.freeze(dependencySnapshot.closure.map(({ resourceId }) => resourceId));
+  const semanticFingerprint = sha256Digest(JSON.stringify({
+    schemaVersion: 'ai-workflow.holon-task-target-semantic/v1',
+    target,
+    closure: dependencySnapshot.closure.map(({ resourceId, kind, contentDigest }) => ({ resourceId, kind, contentDigest })),
+  }));
+  const receipt = Object.freeze({
+    schemaVersion: 'ai-workflow.holon-task-target-freeze/v1' as const,
+    target,
+    dependencySnapshot: Object.freeze({
+      registryRevision: dependencySnapshot.registryRevision,
+      snapshotRevision: dependencySnapshot.snapshotRevision,
+      closureResourceIds,
+    }),
+    semanticFingerprint,
+  });
+  authenticHolonTargetFreezeReceipts.add(receipt);
+  return receipt;
+}
+
+export function projectFrozenHolonTaskTarget(
+  receipt: AIWorkflowHolonTaskTargetFreezeReceipt,
+): FrozenHolonTaskTarget {
+  if (!authenticHolonTargetFreezeReceipts.has(receipt as object)) throw new AIWorkflowRunResourceFreezeError(Object.freeze([
+    diagnostic('AI_RUN_HOLON_TARGET_FREEZE_RECEIPT_UNTRUSTED', 'run-freeze:holon-target-receipt', 'Target proof requires the authentic receipt produced by run freeze.'),
+  ]));
+  const proof = Object.freeze({
+    schemaVersion: 'ai-workflow.frozen-holon-task-target/v1' as const,
+    target: receipt.target,
+    semanticFingerprint: receipt.semanticFingerprint,
+    snapshotRevision: receipt.dependencySnapshot.snapshotRevision,
+    closureResourceIds: receipt.dependencySnapshot.closureResourceIds,
+  });
+  authenticFrozenHolonTargets.add(proof);
+  return proof;
+}
+
+export function assertFrozenHolonTaskTarget(value: FrozenHolonTaskTarget): FrozenHolonTaskTarget {
+  if (!authenticFrozenHolonTargets.has(value as object)) throw new AIWorkflowRunResourceFreezeError(Object.freeze([
+    diagnostic('AI_RUN_HOLON_TARGET_PROOF_UNTRUSTED', 'run-freeze:holon-target-proof', 'Holon task target was not projected from an authentic target freeze receipt.'),
+  ]));
+  return value;
+}
 
 export function freezeAIWorkflowRunResources(
   input: FreezeAIWorkflowRunResourcesInput,

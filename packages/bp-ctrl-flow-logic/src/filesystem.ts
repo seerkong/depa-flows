@@ -6,27 +6,13 @@ import {
 } from 'instant-ctrl-flow-logic/filesystem';
 import { annotateTaskSpaceFile, materializeInstance } from 'work-ctrl-flow-logic';
 import {
-  applyOperation,
-  findNode,
-  findTask,
-  isOperable,
-  listTasks,
-  terminalStatusOf,
-} from 'task-manager-logic';
-import {
   BPCtrlFlowEngine,
+  defaultBPCtrlFlowTaskDependencies,
   type BPCtrlFlowEngineOptions,
   type BPCtrlFlowTaskDependencies,
 } from './engine.js';
 
-export const defaultBPCtrlFlowTaskDependencies: BPCtrlFlowTaskDependencies = {
-  applyOperation,
-  findNode,
-  findTask,
-  isOperable,
-  listTasks,
-  terminalStatusOf,
-};
+export { defaultBPCtrlFlowTaskDependencies };
 
 export interface BPCtrlFlowDirectoryOptions
   extends Omit<BPCtrlFlowEngineOptions, 'definition' | 'tasks' | 'view'> {

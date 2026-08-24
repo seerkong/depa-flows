@@ -1,0 +1,16 @@
+<BehaviorPatch #track.harden-task-space-kernel-and-file-authority.behavior_patch.task-manager apiVersion="codument.tech/v1alpha1" version="1" { capability = "task-manager" } (
+  <Mutations [<Upsert { selector = "behavior://task-manager/requirements/shared-task-space-kernel" } (
+    <Requirement #shared-task-space-kernel (
+      <Statement ?>task-manager SHALL provide a profile-neutral closed TaskSpace forest with exact Pending|Ready|Claimed|Running|Waiting|Succeeded|Failed|Cancelled lifecycle, one canonical own-data authority, owner-issued heartbeat/expiry claims, projected TaskGroup lifecycle, append-only history/artifacts, full-command-digest receipts, runtime-first Processors and CAS transitions; filesystem and domain profile facts SHALL remain outside the kernel packages.</?>
+      <Suites [<Suite #kernel-cases { name = "TaskSpace kernel" } (<Cases [
+        <Case #terminal-immutable [<Given ?>A task has an admitted terminal settlement.</?><When ?>A later command or surviving-id replan attempts to rewrite its result, status, complete node definition/profile/identity/artifacts/order/kind, or any incident parent/dependency relation.</?><Then ?>The transition SHALL fail closed as terminal-task-immutable while unrelated nonterminal plan additions remain admissible.</?>]>
+        <Case #profile-isolation [<Given ?>BP and AI task profiles use the same TaskSpace.</?><When ?>Their durable records are normalized.</?><Then ?>Kernel identity/lifecycle SHALL be shared while profile fields remain separately typed.</?>]>
+        <Case #claim-recovery [<Given ?>A claimed task loses its owner after the lease expires.</?><When ?>Recovery claims it again.</?><Then ?>The new owner SHALL receive a higher attempt and leaseEpoch while prior claim/heartbeat history remains immutable.</?>]>
+        <Case #exact-command-replay [<Given ?>A commandId already has an admitted receipt.</?><When ?>A command with that id but different canonical own-data is submitted.</?><Then ?>The Processor and owner SHALL reject it as a command-receipt mismatch.</?>]>
+        <Case #closed-own-data [<Given ?>A boundary value contains an accessor, symbol, custom prototype, sparse or extended array, undefined, non-finite number or cycle.</?><When ?>The kernel or owner admits it.</?><Then ?>Admission SHALL reject it without invoking user code, and accepted values SHALL be deep-frozen canonical clones.</?>]>
+        <Case #group-reachability [<Given ?>A successor depends on a TaskGroup.</?><When ?>The group's children reach the mode-defined result.</?><Then ?>The group SHALL project that lifecycle and the successor SHALL become reachable; mixed containment/dependency cycles SHALL fail closed.</?>]>
+        <Case #artifact-authority [<Given ?>A snapshot references an artifact digest.</?><When ?>Neither the same admission nor the same owner CAS contains an exact body.</?><Then ?>Processor and raw CAS admission SHALL reject the dangling or metadata-conflicting reference.</?>]>
+      ]>)>]>
+    )>
+  )>]>
+)>

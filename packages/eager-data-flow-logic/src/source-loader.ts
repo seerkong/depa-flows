@@ -138,7 +138,8 @@ function toSerializableValue(value: unknown): EagerDataFlowValue | undefined {
     if ((value as { kind?: string }).kind === 'Word') {
       return wordToString(value as Parameters<typeof wordToString>[0]) ?? '';
     }
-    if ('kind' in value) return undefined;
+    const syntaxKind = (value as { kind?: unknown }).kind;
+    if (syntaxKind === 'DataElement' || syntaxKind === 'TextElement' || syntaxKind === 'Comment') return undefined;
     const result: Record<string, EagerDataFlowValue> = {};
     for (const [key, item] of Object.entries(value)) {
       const converted = toSerializableValue(item);

@@ -1,0 +1,11 @@
+<BehaviorPatch #track.add-holon-task-targets-to-ai-workflows.behavior_patch.ai-workflow-foundation apiVersion="codument.tech/v1alpha1" version="1" { capability = "ai-workflow-foundation" } (
+  <Mutations [<Upsert { selector = "behavior://ai-workflow-foundation/requirements/holon-task-target" } (
+    <Requirement #holon-task-target (
+      <Statement ?>AI Workflow SHALL support a closed HolonTaskTarget that freezes execution policy/binding at instance admission and binds an issuer-owned exact organization snapshot to an independent TaskSpace through HolonTaskSnapshotReceipt at task creation.</?>
+      <Suites [<Suite #target-cases { name = "Holon task target" } (<Cases [
+        <Case #live-drift [<Given ?>A run has frozen its target and live Holon resources later change or disappear.</?><When ?>A fresh runtime resumes.</?><Then ?>It SHALL use the frozen target and SHALL NOT query live authority.</?>]>
+        <Case #no-member-or-agent-preselection [<Given ?>A Flow node targets a Holon organization.</?><When ?>The HolonTaskTarget is admitted and a TaskSpace is created.</?><Then ?>The target SHALL contain no Member or Agent-instance selector; the coordinator SHALL assign a Member first, and any targeted Agent continuity SHALL be resolved later by the frozen execution binding and MemberRuntime.</?>]>
+      ]>)>]>
+    )>
+  )>]>
+)>

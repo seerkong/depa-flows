@@ -1,0 +1,10 @@
+<BehaviorPatch #track.add-holon-task-targets-to-ai-workflows.behavior_patch.ai-workflow-resource-system apiVersion="codument.tech/v1alpha1" version="1" { capability = "ai-workflow-resource-system" } (
+  <Mutations [<Upsert { selector = "behavior://ai-workflow-resource-system/requirements/frozen-holon-task-proof" } (
+    <Requirement #frozen-holon-task-proof (
+      <Statement ?>Flow instance resource freeze SHALL prove Holon target policy, execution-binding digest, TaskSpace profile and required Agent/Material closure before the first node effect; TaskSpace creation SHALL separately prove the issuer-owned organization snapshot and bind it in HolonTaskSnapshotReceipt.</?>
+      <Suites [<Suite #freeze-cases { name = "Target freeze" } (<Cases [
+        <Case #forged-target [<Given ?>A structurally matching target was not derived from the admitted resource closure.</?><When ?>Run freeze validates it.</?><Then ?>It SHALL be rejected before dispatch.</?>]>
+      ]>)>]>
+    )>
+  )>]>
+)>

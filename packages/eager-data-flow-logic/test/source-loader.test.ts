@@ -139,6 +139,37 @@ describe('EagerDataFlow source loader', () => {
     expect(result.plan?.nodeById.finish?.tag).toBe('TransformNode');
   });
 
+  test('preserves ordinary closed config objects that declare a domain kind field', () => {
+    const result = loadEagerDataFlowProfileSources({
+      'manifest.xnl': validSource(`
+        <EntryNode #entry>
+        <TransformNode #normalize {
+          inputs = { raw = "flow-port://#entry/raw" }
+          outputs = ["result"]
+          src = "vfs://./flow-code/export.ts#normalize"
+          config = {
+            target = {
+              kind = "holon-task-target"
+              nested = { kind = "member" memberRef = "member-reviewer" }
+            }
+          }
+        }>
+        <ReturnNode #return { inputs = { result = "flow-port://#normalize/result" } }>
+      `).replace('<EagerDataFlow ', '<AIDataWorkflow '),
+    }, { profileRoot: 'AIDataWorkflow' });
+
+    expect(result.diagnostics).toEqual([]);
+    expect(result.plan?.nodeById.normalize).toMatchObject({
+      tag: 'TransformNode',
+      config: {
+        target: {
+          kind: 'holon-task-target',
+          nested: { kind: 'member', memberRef: 'member-reviewer' },
+        },
+      },
+    });
+  });
+
   test('keeps filesystem loading as a thin adapter over named sources', () => {
     const dir = mkdtempSync(path.join(tmpdir(), 'eager-flow-'));
     tempDirs.push(dir);

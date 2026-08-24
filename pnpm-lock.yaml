@@ -21,7 +21,7 @@ importers:
   packages/ai-ctrl-workflow-contract:
     dependencies:
       ai-workflow-contract:
-        specifier: 0.1.7
+        specifier: 0.1.8
         version: link:../ai-workflow-contract
       work-ctrl-flow-contract:
         specifier: 0.1.3
@@ -30,13 +30,13 @@ importers:
   packages/ai-ctrl-workflow-logic:
     dependencies:
       ai-ctrl-workflow-contract:
-        specifier: 0.1.4
+        specifier: 0.1.5
         version: link:../ai-ctrl-workflow-contract
       ai-workflow-contract:
-        specifier: 0.1.7
+        specifier: 0.1.8
         version: link:../ai-workflow-contract
       ai-workflow-logic:
-        specifier: 0.1.8
+        specifier: 0.1.9
         version: link:../ai-workflow-logic
       flow-step-space-logic:
         specifier: 0.1.1
@@ -47,6 +47,12 @@ importers:
       instant-ctrl-flow-logic:
         specifier: 0.1.5
         version: link:../instant-ctrl-flow-logic
+      task-manager-contract:
+        specifier: 0.1.3
+        version: link:../task-manager-contract
+      task-manager-logic:
+        specifier: 0.1.6
+        version: link:../task-manager-logic
       work-ctrl-flow-contract:
         specifier: 0.1.3
         version: link:../work-ctrl-flow-contract
@@ -57,7 +63,7 @@ importers:
   packages/ai-data-workflow-contract:
     dependencies:
       ai-workflow-contract:
-        specifier: 0.1.7
+        specifier: 0.1.8
         version: link:../ai-workflow-contract
       eager-data-flow-contract:
         specifier: 0.1.3
@@ -66,23 +72,29 @@ importers:
   packages/ai-data-workflow-logic:
     dependencies:
       ai-data-workflow-contract:
-        specifier: 0.1.4
+        specifier: 0.1.5
         version: link:../ai-data-workflow-contract
       ai-workflow-contract:
-        specifier: 0.1.7
+        specifier: 0.1.8
         version: link:../ai-workflow-contract
       ai-workflow-logic:
-        specifier: 0.1.8
+        specifier: 0.1.9
         version: link:../ai-workflow-logic
       eager-data-flow-contract:
         specifier: 0.1.3
         version: link:../eager-data-flow-contract
       eager-data-flow-logic:
-        specifier: 0.1.4
+        specifier: 0.1.5
         version: link:../eager-data-flow-logic
       flow-step-space-logic:
         specifier: 0.1.1
         version: link:../flow-step-space-logic
+      task-manager-contract:
+        specifier: 0.1.3
+        version: link:../task-manager-contract
+      task-manager-logic:
+        specifier: 0.1.6
+        version: link:../task-manager-logic
       work-ctrl-flow-logic:
         specifier: 0.1.4
         version: link:../work-ctrl-flow-logic
@@ -95,6 +107,9 @@ importers:
       halfcode-compiler.xnl:
         specifier: 0.2.2
         version: 0.2.2
+      task-manager-contract:
+        specifier: 0.1.3
+        version: link:../task-manager-contract
       work-ctrl-flow-contract:
         specifier: 0.1.3
         version: link:../work-ctrl-flow-contract
@@ -108,7 +123,7 @@ importers:
   packages/ai-workflow-logic:
     dependencies:
       ai-workflow-contract:
-        specifier: 0.1.7
+        specifier: 0.1.8
         version: link:../ai-workflow-contract
       flow-step-space-contract:
         specifier: 0.1.1
@@ -119,6 +134,15 @@ importers:
       halfcode-compiler.xnl:
         specifier: 0.2.2
         version: 0.2.2
+      holarchy-core-contract:
+        specifier: 0.1.1
+        version: 0.1.1
+      task-manager-contract:
+        specifier: 0.1.3
+        version: link:../task-manager-contract
+      task-manager-logic:
+        specifier: 0.1.6
+        version: link:../task-manager-logic
       work-ctrl-flow-contract:
         specifier: 0.1.3
         version: link:../work-ctrl-flow-contract
@@ -129,7 +153,7 @@ importers:
   packages/bp-ctrl-flow-contract:
     dependencies:
       task-manager-contract:
-        specifier: 0.1.1
+        specifier: 0.1.3
         version: link:../task-manager-contract
       work-ctrl-flow-contract:
         specifier: 0.1.3
@@ -138,7 +162,7 @@ importers:
   packages/bp-ctrl-flow-logic:
     dependencies:
       bp-ctrl-flow-contract:
-        specifier: 0.1.1
+        specifier: 0.1.3
         version: link:../bp-ctrl-flow-contract
       depa-behavior-tree:
         specifier: 0.1.1
@@ -150,10 +174,10 @@ importers:
         specifier: 0.1.5
         version: link:../instant-ctrl-flow-logic
       task-manager-contract:
-        specifier: 0.1.1
+        specifier: 0.1.3
         version: link:../task-manager-contract
       task-manager-logic:
-        specifier: 0.1.1
+        specifier: 0.1.6
         version: link:../task-manager-logic
       work-ctrl-flow-contract:
         specifier: 0.1.3
@@ -223,10 +247,19 @@ importers:
 
   packages/task-manager-contract: {}
 
+  packages/task-manager-file-support:
+    dependencies:
+      task-manager-contract:
+        specifier: 0.1.3
+        version: link:../task-manager-contract
+      task-manager-logic:
+        specifier: 0.1.6
+        version: link:../task-manager-logic
+
   packages/task-manager-logic:
     dependencies:
       task-manager-contract:
-        specifier: 0.1.1
+        specifier: 0.1.3
         version: link:../task-manager-contract
 
   packages/work-ctrl-flow-contract:
@@ -255,12 +288,12 @@ importers:
 
   tools/flow-dsl-check:
     dependencies:
+      bp-ctrl-flow-contract:
+        specifier: workspace:*
+        version: link:../../packages/bp-ctrl-flow-contract
       flow-step-space-logic:
         specifier: workspace:*
         version: link:../../packages/flow-step-space-logic
-      task-manager-contract:
-        specifier: workspace:*
-        version: link:../../packages/task-manager-contract
       xnl-core:
         specifier: ^0.1.8
         version: 0.1.11
@@ -273,6 +306,9 @@ packages:
   bun-types@1.3.14:
     resolution: {integrity: sha512-4N0ig0fEomHt5R0KCFWjovxow98rIoRwKolrYdCcknNwMekCXRnWEUvgu5soYV8QXtVsrUD8B95MBOZGPvr6KQ==, tarball: https://registry.npmjs.org/bun-types/-/bun-types-1.3.14.tgz}
 
+  depa-domain-protocol@0.1.0:
+    resolution: {integrity: sha512-/sPTEph4fFfU6C1fPh7zXfYpJEO4LYdHEzUf2KOrXuAgRVY6LmFWjHGhirepFmpcYsR+BWBqKybRqWONmYRBNA==, tarball: https://registry.npmjs.org/depa-domain-protocol/-/depa-domain-protocol-0.1.0.tgz}
+
   depa-processor@0.1.1:
     resolution: {integrity: sha512-yZQuRE/9NDlV6Bld3sUYCxGDSyXz86rhNfx2WASb5Z7vlTeu3KMAPDDDSfqNF6b6FyNIahvEVA41ot9OUfhfjw==, tarball: https://registry.npmjs.org/depa-processor/-/depa-processor-0.1.1.tgz}
     engines: {node: '>=14.0.0'}
@@ -282,6 +318,9 @@ packages:
 
   halfcode-compiler.xnl@0.2.3:
     resolution: {integrity: sha512-ebKnVKK+yfgKIWpNagkr5aMwVbJWqj/A7m7MqTslvB60BmOZYPwRqg+DxWXblh3n3ymH/a3TSGp26fFw9NPP2g==, tarball: https://registry.npmjs.org/halfcode-compiler.xnl/-/halfcode-compiler.xnl-0.2.3.tgz}
+
+  holarchy-core-contract@0.1.1:
+    resolution: {integrity: sha512-9nFI6XjR/Z3JGtY4lgyvUYLA7CIEmIDWHAfNX0j27dM/hSTVt77grkDRM0x2oXq9AmMjEkedmb9G3wF1SUVDNA==, tarball: https://registry.npmjs.org/holarchy-core-contract/-/holarchy-core-contract-0.1.1.tgz}
 
   typescript@5.9.3:
     resolution: {integrity: sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==, tarball: https://registry.npmjs.org/typescript/-/typescript-5.9.3.tgz}
@@ -309,6 +348,8 @@ snapshots:
     dependencies:
       '@types/node': 26.1.2
 
+  depa-domain-protocol@0.1.0: {}
+
   depa-processor@0.1.1: {}
 
   halfcode-compiler.xnl@0.2.2:
@@ -320,6 +361,10 @@ snapshots:
     dependencies:
       typescript: 5.9.3
       yaml: 2.9.0
+
+  holarchy-core-contract@0.1.1:
+    dependencies:
+      depa-domain-protocol: 0.1.0
 
   typescript@5.9.3: {}
 

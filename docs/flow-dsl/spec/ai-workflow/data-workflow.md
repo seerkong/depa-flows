@@ -113,3 +113,5 @@ Semantic reuse is run-local. Generation is history metadata and is not part of t
 Runtime-bearing普通 `TransformNode`/`SinkNode` code保持 `output = fn(runtime, input, config)`。首次调用使用同名bound `runAgent`；后继节点可从declared port构造exact `{byInstanceId}`，或使用static `{byInstanceName}`调用bound `runTargetedAgent`。底层Processor始终显式接收runtime；Agent instance index/receipt与RunGraph只写同一canonical checkpoint，authored surface不暴露generic `invoke`。
 
 See [Definition、Instance 与 Run](../flow-core/instance-run.md) for the physical hierarchy, seed exact-once rule and fresh recovery path.
+
+For a Data node that consumes schema-validated organization-task material, see [Holon-targeted organization tasks](holon-task.md).

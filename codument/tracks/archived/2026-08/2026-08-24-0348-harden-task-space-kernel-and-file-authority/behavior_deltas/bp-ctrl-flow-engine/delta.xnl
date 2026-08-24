@@ -1,0 +1,13 @@
+<BehaviorPatch #track.harden-task-space-kernel-and-file-authority.behavior_patch.bp-ctrl-flow-engine apiVersion="codument.tech/v1alpha1" version="1" { capability = "bp-ctrl-flow-engine" } (
+  <Mutations [<Upsert { selector = "behavior://bp-ctrl-flow-engine/requirements/task-space-bp-profile" } (
+    <Requirement #task-space-bp-profile (
+      <Statement ?>BP Ctrl Flow SHALL map NotStarted/Active/Delegated/Forwarded/Done/Refused/Abandoned through one sequenced BP TaskSpace profile onto the neutral kernel lifecycle, retaining BP-specific outcomes in profile facts, binding every lifecycle transition to a unique command identity, admitting only NotStarted authoring/import state without explicit lifecycle events and receipts, aggregating TaskGroups with the same canonical success classification and terminal timing, and SHALL NOT fork claim, settlement, dependency or file transaction rules.</?>
+      <Suites [<Suite #bp-profile-cases { name = "BP profile" } (<Cases [
+        <Case #legacy-task-step [<Given ?>An existing supported TaskStep is converted.</?><When ?>The BP adapter projects it.</?><Then ?>Its business fields SHALL be retained in the BP profile and kernel state SHALL remain canonical.</?>]>
+        <Case #repeated-delegation [<Given ?>A task delegates, reactivates and delegates again in one claim attempt.</?><When ?>The engine submits the second delegate.</?><Then ?>Its lifecycle sequence and command identity SHALL differ from the first delegate.</?>]>
+        <Case #historical-import-fail-closed [<Given ?>A source or legacy task is already beyond NotStarted.</?><When ?>No lifecycle event/receipt import protocol is supplied.</?><Then ?>The converter SHALL reject it instead of creating split profile/kernel authority.</?>]>
+        <Case #group-terminal-authority [<Given ?>A BP TaskGroup contains successful business handling outcomes Done, Refused or Forwarded and cancellation outcome Abandoned.</?><When ?>The neutral kernel projects ANY, ALL or SEQUENTIAL group lifecycle.</?><Then ?>The BP group SHALL become terminal in the same canonical admission; ANY SHALL retain the earliest successful profile outcome by endedAtMs with stable child-order tie-break, and Abandoned SHALL NOT count as success.</?>]>
+      ]>)>]>
+    )>
+  )>]>
+)>
