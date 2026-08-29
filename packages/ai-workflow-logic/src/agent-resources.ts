@@ -1,5 +1,6 @@
 import type {
   AIAgentDefinitionProjection,
+  AIAgentMessagePrefixItemProjection,
   AIAgentMessageProjection,
   AIAgentMessageRole,
   AIWorkflowEffectPolicyProjection,
@@ -27,6 +28,8 @@ import { AIWorkflowResourceProjectionError } from './errors.js';
 
 const AGENT_SUBDOMAINS = Object.freeze([
   'Messages',
+  'MessagePrefix',
+  'ContextPipeline',
   'InputSchemaRef',
   'OutputSchemaRef',
   'ToolRefs',
@@ -144,12 +147,44 @@ function projectAgentDefinition(
   diagnostics: AIWorkflowResourceProjectionDiagnostic[],
 ): AIAgentDefinitionProjection | undefined {
   validateAllowedSubdomains(resource, AGENT_SUBDOMAINS, diagnostics);
-  const messagesNode = requiredSubdomain(resource, 'Messages', diagnostics);
+  const messagesNode = exactOptionalSubdomain(resource, 'Messages', diagnostics);
+  const messagePrefixNode = exactOptionalSubdomain(resource, 'MessagePrefix', diagnostics);
+  if (messagesNode && messagePrefixNode) {
+    diagnostics.push(diagnostic(
+      'AI_AGENT_MESSAGE_PREFIX_CONFLICT',
+      resource.documentUri,
+      'AIAgentDefinition must declare exactly one of legacy Messages or MessagePrefix.',
+    ));
+  } else if (!messagesNode && !messagePrefixNode) {
+    diagnostics.push(diagnostic(
+      'AI_AGENT_MESSAGE_PREFIX_MISSING',
+      resource.documentUri,
+      'AIAgentDefinition must declare legacy Messages or MessagePrefix.',
+    ));
+  }
   const toolRefsNode = requiredSubdomain(resource, 'ToolRefs', diagnostics);
   const materialPortRefsNode = requiredSubdomain(resource, 'MaterialPortRefs', diagnostics);
+  const projectedMessagePrefix = messagePrefixNode
+    ? projectMessagePrefix(resource, messagePrefixNode, resources, edges, diagnostics)
+    : undefined;
   const messages = messagesNode
     ? projectMessages(resource, messagesNode, resources, edges, diagnostics)
-    : [];
+    : projectedMessagePrefix
+      ? projectedMessagePrefix
+        .filter((item): item is Extract<AIAgentMessagePrefixItemProjection, { type: 'message' }> => item.type === 'message')
+        .map(({ type: _type, ...message }) => Object.freeze(message))
+      : [];
+  const messagePrefix = projectedMessagePrefix
+    ?? messages.map((message) => Object.freeze({ ...message, type: 'message' as const }));
+  const contextPipeline = projectOptionalTypedSubdomain(
+    resource,
+    'ContextPipeline',
+    resources,
+    'agent-context-pipeline',
+    edges,
+    diagnostics,
+    'AgentContextPipeline',
+  );
   const inputSchema = projectOptionalSchemaSubdomain(resource, 'InputSchemaRef', resources, 'agent-input-schema', edges, diagnostics);
   const outputSchema = projectOptionalSchemaSubdomain(resource, 'OutputSchemaRef', resources, 'agent-output-schema', edges, diagnostics);
   const tools = toolRefsNode
@@ -160,18 +195,81 @@ function projectAgentDefinition(
     ? projectTypedRefList(resource, materialPortRefsNode, 'MaterialPortRef', resources, 'agent-material-port', edges, diagnostics, 'MaterialPort')
     : [];
 
-  if (!messagesNode || !toolRefsNode || !materialPortRefsNode) return undefined;
+  if ((!messagesNode && !messagePrefixNode) || (messagesNode && messagePrefixNode) || !toolRefsNode || !materialPortRefsNode) return undefined;
   return Object.freeze({
     kind: 'AIAgentDefinition',
     fqn: resource.fqn ?? resource.resourceId,
     resource,
+    messagePrefix: Object.freeze(messagePrefix),
     messages: Object.freeze(messages),
+    ...(contextPipeline === undefined ? {} : { contextPipeline }),
     ...(inputSchema === undefined ? {} : { inputSchema }),
     ...(outputSchema === undefined ? {} : { outputSchema }),
     tools: Object.freeze(tools),
     ...(effectPolicy === undefined ? {} : { effectPolicy }),
     materialPorts: Object.freeze(materialPorts),
   });
+}
+
+function exactOptionalSubdomain(
+  resource: ResourceRecord,
+  name: string,
+  diagnostics: AIWorkflowResourceProjectionDiagnostic[],
+): ResourceNode | undefined {
+  const value = resource.node.subdomains[name];
+  if (!value) return undefined;
+  if (value.tag !== name) {
+    diagnostics.push(diagnostic(
+      'AI_RESOURCE_SUBDOMAIN_TAG_MISMATCH',
+      `${resource.documentUri}#${name}`,
+      `Subdomain ${name} must contain a ${name} node, got '${value.tag}'.`,
+    ));
+    return undefined;
+  }
+  return value;
+}
+
+function projectMessagePrefix(
+  resource: ResourceRecord,
+  prefixNode: ResourceNode,
+  resources: ReadonlyMap<string, ResourceRecord>,
+  edges: ResourceDependencyEdge[],
+  diagnostics: AIWorkflowResourceProjectionDiagnostic[],
+): AIAgentMessagePrefixItemProjection[] {
+  const output: AIAgentMessagePrefixItemProjection[] = [];
+  const ids = new Set<string>();
+  prefixNode.body.forEach((value, index) => {
+    const location = `${resource.documentUri}#MessagePrefix:${index}`;
+    if (!isResourceNode(value) || (value.tag !== 'Message' && value.tag !== 'MessageSource')) {
+      diagnostics.push(diagnostic(
+        'AI_AGENT_MESSAGE_PREFIX_NODE_INVALID',
+        location,
+        'MessagePrefix may contain only Message or MessageSource nodes.',
+      ));
+      return;
+    }
+    const id = canonicalString(value.resourceId);
+    if (!id) {
+      diagnostics.push(diagnostic('AI_AGENT_MESSAGE_ID_MISSING', location, `${value.tag} must declare an explicit #id.`));
+      return;
+    }
+    if (ids.has(id)) {
+      diagnostics.push(diagnostic('AI_AGENT_MESSAGE_ID_DUPLICATE', location, `MessagePrefix id '${id}' is declared more than once.`));
+      return;
+    }
+    ids.add(id);
+    if (value.tag === 'Message') {
+      const message = projectMessageNode(resource, value, resources, edges, diagnostics, location);
+      if (message) output.push(Object.freeze({ ...message, type: 'message' }));
+      return;
+    }
+    validateAllowedNodeSubdomains(value, [], location, diagnostics);
+    const source = projectTypedValues(value.properties.kind, value.properties.ref, resources, location, diagnostics, 'AgentMessageSource');
+    if (!source) return;
+    edges.push(edge(resource.resourceId, source.resource.resourceId, 'agent-message-source'));
+    output.push(Object.freeze({ type: 'message-source', id, source }));
+  });
+  return output;
 }
 
 function projectMessages(
@@ -189,37 +287,43 @@ function projectMessages(
       diagnostics.push(diagnostic('AI_AGENT_MESSAGE_NODE_INVALID', location, 'Messages may contain only Message nodes.'));
       return;
     }
-    validateAllowedNodeSubdomains(value, ['SchemaRef'], location, diagnostics);
     const id = canonicalString(value.resourceId);
-    const role = value.properties.role;
-    if (!id) {
-      diagnostics.push(diagnostic('AI_AGENT_MESSAGE_ID_MISSING', location, 'Message must declare an explicit #id.'));
-    } else if (ids.has(id)) {
+    if (id && ids.has(id)) {
       diagnostics.push(diagnostic('AI_AGENT_MESSAGE_ID_DUPLICATE', location, `Message id '${id}' is declared more than once.`));
-    } else {
+      return;
+    }
+    if (id) {
       ids.add(id);
     }
-    if (!isMessageRole(role)) {
-      diagnostics.push(diagnostic('AI_AGENT_MESSAGE_ROLE_INVALID', location, 'Message role must be system, developer, user, or assistant.'));
-    }
-    const prompt = projectTypedValues(
-      value.properties.promptKind,
-      value.properties.promptRef,
-      resources,
-      location,
-      diagnostics,
-    );
-    if (prompt) edges.push(edge(resource.resourceId, prompt.resource.resourceId, 'agent-message-prompt'));
-    const schemaNode = value.subdomains.SchemaRef;
-    const schema = schemaNode?.tag === 'SchemaRef'
-      ? projectMessageSchemaRefNode(schemaNode, resources, `${location}#SchemaRef`, diagnostics)
-      : undefined;
-    if (schemaNode && schemaNode.tag !== 'SchemaRef') diagnostics.push(diagnostic('AI_RESOURCE_SUBDOMAIN_TAG_MISMATCH', `${location}#SchemaRef`, `Subdomain SchemaRef must contain a SchemaRef node, got '${schemaNode.tag}'.`));
-    if (schema) edges.push(edge(resource.resourceId, schema.resource.resourceId, 'agent-message-schema'));
-    if (!id || !isMessageRole(role) || !prompt) return;
-    output.push(Object.freeze({ id, role, prompt, ...(schema === undefined ? {} : { schema }) }));
+    const message = projectMessageNode(resource, value, resources, edges, diagnostics, location);
+    if (message) output.push(message);
   });
   return output;
+}
+
+function projectMessageNode(
+  resource: ResourceRecord,
+  value: ResourceNode,
+  resources: ReadonlyMap<string, ResourceRecord>,
+  edges: ResourceDependencyEdge[],
+  diagnostics: AIWorkflowResourceProjectionDiagnostic[],
+  location: string,
+): AIAgentMessageProjection | undefined {
+  validateAllowedNodeSubdomains(value, ['SchemaRef'], location, diagnostics);
+  const id = canonicalString(value.resourceId);
+  const role = value.properties.role;
+  if (!id) diagnostics.push(diagnostic('AI_AGENT_MESSAGE_ID_MISSING', location, 'Message must declare an explicit #id.'));
+  if (!isMessageRole(role)) diagnostics.push(diagnostic('AI_AGENT_MESSAGE_ROLE_INVALID', location, 'Message role must be system, developer, user, or assistant.'));
+  const prompt = projectTypedValues(value.properties.promptKind, value.properties.promptRef, resources, location, diagnostics);
+  if (prompt) edges.push(edge(resource.resourceId, prompt.resource.resourceId, 'agent-message-prompt'));
+  const schemaNode = value.subdomains.SchemaRef;
+  const schema = schemaNode?.tag === 'SchemaRef'
+    ? projectMessageSchemaRefNode(schemaNode, resources, `${location}#SchemaRef`, diagnostics)
+    : undefined;
+  if (schemaNode && schemaNode.tag !== 'SchemaRef') diagnostics.push(diagnostic('AI_RESOURCE_SUBDOMAIN_TAG_MISMATCH', `${location}#SchemaRef`, `Subdomain SchemaRef must contain a SchemaRef node, got '${schemaNode.tag}'.`));
+  if (schema) edges.push(edge(resource.resourceId, schema.resource.resourceId, 'agent-message-schema'));
+  if (!id || !isMessageRole(role) || !prompt) return undefined;
+  return Object.freeze({ id, role, prompt, ...(schema === undefined ? {} : { schema }) });
 }
 
 function projectTypedRefList(
@@ -265,6 +369,7 @@ function projectOptionalTypedSubdomain(
   relation: AIWorkflowAgentResourceRelation,
   edges: ResourceDependencyEdge[],
   diagnostics: AIWorkflowResourceProjectionDiagnostic[],
+  expectedKind?: string,
 ): AIWorkflowTypedResourceRef | undefined {
   const node = owner.node.subdomains[name];
   if (!node) return undefined;
@@ -272,7 +377,7 @@ function projectOptionalTypedSubdomain(
     diagnostics.push(diagnostic('AI_RESOURCE_SUBDOMAIN_TAG_MISMATCH', `${owner.documentUri}#${name}`, `Subdomain ${name} must contain a ${name} node, got '${node.tag}'.`));
     return undefined;
   }
-  const typedRef = projectTypedRefNode(node, resources, `${owner.documentUri}#${name}`, diagnostics);
+  const typedRef = projectTypedRefNode(node, resources, `${owner.documentUri}#${name}`, diagnostics, expectedKind);
   if (typedRef) edges.push(edge(owner.resourceId, typedRef.resource.resourceId, relation));
   return typedRef;
 }

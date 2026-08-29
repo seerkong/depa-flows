@@ -329,16 +329,26 @@ function semanticResourceFingerprint(
     },
     agent: {
       resourceId: agent.resource.resourceId,
-      messages: agent.messages.map((message) => ({
-        id: message.id,
-        role: message.role,
-        prompt: [message.prompt.kind, message.prompt.resource.resourceId],
-        schema: message.schema ? {
-          kind: message.schema.kind,
-          resourceId: message.schema.resource.resourceId,
-          value: message.schema.schema,
-        } : null,
-      })),
+      messagePrefix: agent.messagePrefix.map((item) => item.type === 'message'
+        ? {
+            type: item.type,
+            id: item.id,
+            role: item.role,
+            prompt: [item.prompt.kind, item.prompt.resource.resourceId],
+            schema: item.schema ? {
+              kind: item.schema.kind,
+              resourceId: item.schema.resource.resourceId,
+              value: item.schema.schema,
+            } : null,
+          }
+        : {
+            type: item.type,
+            id: item.id,
+            source: [item.source.kind, item.source.resource.resourceId],
+          }),
+      contextPipeline: agent.contextPipeline
+        ? [agent.contextPipeline.kind, agent.contextPipeline.resource.resourceId]
+        : null,
       inputSchema: agent.inputSchema ? {
         kind: agent.inputSchema.kind,
         resourceId: agent.inputSchema.resource.resourceId,

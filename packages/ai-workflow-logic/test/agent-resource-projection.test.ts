@@ -107,6 +107,57 @@ describe('AI Agent and Material resource projection', () => {
     expect(projection.dependencyEdges.some((edge) => edge.toResourceId === hidden.resourceId)).toBe(false);
   });
 
+  test('projects an ordered heterogeneous MessagePrefix and explicit ContextPipeline', () => {
+    const prompt = record('Prompt', 'depa.flows.test.Prompt.System');
+    const source = record('AgentMessageSource', 'depa.flows.test.MessageSource.Workspace');
+    const pipeline = record('AgentContextPipeline', 'depa.flows.test.ContextPipeline.Standard');
+    const agent = record('AIAgentDefinition', 'depa.flows.test.Agent.Composed', {
+      MessagePrefix: node('MessagePrefix', undefined, {}, [
+        message('system'),
+        node('MessageSource', 'workspace', {
+          kind: 'AgentMessageSource',
+          ref: 'resource://depa.flows.test.MessageSource.Workspace',
+        }),
+      ]),
+      ContextPipeline: node('ContextPipeline', undefined, {
+        kind: 'AgentContextPipeline',
+        ref: 'resource://depa.flows.test.ContextPipeline.Standard',
+      }),
+      ToolRefs: node('ToolRefs'),
+      MaterialPortRefs: node('MaterialPortRefs'),
+    });
+
+    const projection = projectAIWorkflowAgentResources(registry(agent, prompt, source, pipeline));
+    const composed = projection.agentDefinitions[0]!;
+    expect(composed.messagePrefix.map((item) => item.type)).toEqual(['message', 'message-source']);
+    expect(composed.messages.map((item) => item.id)).toEqual(['system']);
+    expect(composed.messagePrefix[1]).toMatchObject({
+      type: 'message-source',
+      id: 'workspace',
+      source: { kind: 'AgentMessageSource', ref: 'resource://depa.flows.test.MessageSource.Workspace' },
+    });
+    expect(composed.contextPipeline).toMatchObject({
+      kind: 'AgentContextPipeline',
+      ref: 'resource://depa.flows.test.ContextPipeline.Standard',
+    });
+    expect(projection.dependencyEdges.map((edge) => edge.relation)).toContain('agent-message-source');
+    expect(projection.dependencyEdges.map((edge) => edge.relation)).toContain('agent-context-pipeline');
+    expect(Object.isFrozen(composed.messagePrefix)).toBe(true);
+  });
+
+  test('fails closed on ambiguous prefix containers and unsupported prefix children', () => {
+    const prompt = record('Prompt', 'depa.flows.test.Prompt.System');
+    const conflict = replaceSubdomain(baseAgent(), 'MessagePrefix', node('MessagePrefix', undefined, {}, [message('system')]));
+    expectProjectionError(registry(conflict, prompt), 'AI_AGENT_MESSAGE_PREFIX_CONFLICT');
+
+    const unsupported = record('AIAgentDefinition', 'depa.flows.test.Agent.Unsupported', {
+      MessagePrefix: node('MessagePrefix', undefined, {}, [node('ImplicitWorkspacePrompt', 'workspace')]),
+      ToolRefs: node('ToolRefs'),
+      MaterialPortRefs: node('MaterialPortRefs'),
+    });
+    expectProjectionError(registry(unsupported, prompt), 'AI_AGENT_MESSAGE_PREFIX_NODE_INVALID');
+  });
+
   test.each([
     {
       name: 'unknown message role',

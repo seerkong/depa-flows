@@ -2,7 +2,7 @@
   lifecycle = "Active"
   description = "Support Agent definition"
 } (
-  <Messages [
+  <MessagePrefix [
     <Message #system {
       role = "system"
       promptKind = "Prompt"
@@ -15,7 +15,15 @@
     } (
       <SchemaRef { kind = "MessageSchema" ref = "resource://depa.flows.test.Schema.Response" }>
     )>
+    <MessageSource #workspace {
+      kind = "AgentMessageSource"
+      ref = "resource://depa.flows.test.MessageSource.Workspace"
+    }>
   ]>
+  <ContextPipeline {
+    kind = "AgentContextPipeline"
+    ref = "resource://depa.flows.test.ContextPipeline.Standard"
+  }>
   <InputSchemaRef { kind = "MessageSchema" ref = "resource://depa.flows.test.Schema.Request" }>
   <OutputSchemaRef { kind = "MessageSchema" ref = "resource://depa.flows.test.Schema.Response" }>
   <ToolRefs [

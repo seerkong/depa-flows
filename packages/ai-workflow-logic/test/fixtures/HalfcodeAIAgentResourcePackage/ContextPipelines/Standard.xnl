@@ -1,0 +1,6 @@
+<AgentContextPipeline #depa.flows.test.ContextPipeline.Standard apiVersion="depa.flows/v1" version="1.0.0" {
+  lifecycle = "Active"
+  description = "Standard dynamic context pipeline"
+} (
+  <Content ?>export function compile(runtime) { return runtime.standardContext() }</?>
+)>

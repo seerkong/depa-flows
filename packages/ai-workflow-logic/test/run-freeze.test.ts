@@ -16,6 +16,7 @@ const fixtureRoot = join(import.meta.dir, 'fixtures/HalfcodeAIAgentResourcePacka
 const unrelatedOverlayRoot = join(import.meta.dir, 'fixtures/HalfcodeAIAgentUnrelatedOverlay');
 const selectedOverlayRoot = join(import.meta.dir, 'fixtures/HalfcodeAIAgentSelectedOverlay');
 const executableOverlayRoot = join(import.meta.dir, 'fixtures/HalfcodeAIAgentExecutableOverlay');
+const dynamicOverlayRoot = join(import.meta.dir, 'fixtures/HalfcodeAIAgentDynamicOverlay');
 
 describe('AI workflow run resource freeze', () => {
   test('delegates closure proof to Halfcode and returns an immutable ordered receipt', async () => {
@@ -57,6 +58,12 @@ describe('AI workflow run resource freeze', () => {
     ]);
     expect(receipt.dependencySnapshot.closure.map((item) => item.resourceId)).toContain(
       'depa.flows.test.Prompt.System',
+    );
+    expect(receipt.dependencySnapshot.closure.map((item) => item.resourceId)).toContain(
+      'depa.flows.test.MessageSource.Workspace',
+    );
+    expect(receipt.dependencySnapshot.closure.map((item) => item.resourceId)).toContain(
+      'depa.flows.test.ContextPipeline.Standard',
     );
     expect(receipt.semanticFingerprint).toMatch(/^sha256:[a-f0-9]{64}$/);
     expect(Object.isFrozen(receipt)).toBe(true);
@@ -161,6 +168,24 @@ describe('AI workflow run resource freeze', () => {
     expect(changed.projection.agentDefinitions[0]?.effectPolicy?.toolMode).toBe('none');
     expect(changed.projection.materialBindings.find((binding) =>
       binding.resource.resourceId === 'depa.flows.test.Binding.Request')?.material.value).toEqual({ request: 'request-002' });
+    expect(changed.receipt.semanticFingerprint).not.toBe(base.receipt.semanticFingerprint);
+  });
+
+  test('binds MessageSource and ContextPipeline content identities to semantic identity', async () => {
+    const baseTree = await loadResourceTree({ rootDir: fixtureRoot });
+    const dynamicTree = await loadResourceTree({ rootDir: dynamicOverlayRoot });
+    const base = freezeLayers([{ id: 'global', tree: baseTree }]);
+    const changed = freezeLayers([
+      { id: 'global', tree: baseTree },
+      { id: 'workspace', tree: dynamicTree },
+    ]);
+
+    expect(changed.projection.agentDefinitions[0]?.messagePrefix[2]).toMatchObject({
+      type: 'message-source',
+      source: { ref: 'resource://depa.flows.test.MessageSource.Workspace' },
+    });
+    expect(changed.projection.agentDefinitions[0]?.contextPipeline?.ref)
+      .toBe('resource://depa.flows.test.ContextPipeline.Standard');
     expect(changed.receipt.semanticFingerprint).not.toBe(base.receipt.semanticFingerprint);
   });
 

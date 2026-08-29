@@ -1,0 +1,6 @@
+<AgentMessageSource #depa.flows.test.MessageSource.Workspace apiVersion="depa.flows/v1" version="1.0.0" {
+  lifecycle = "Active"
+  description = "Changed workspace instruction message source"
+} (
+  <Content ?>export function compile(runtime) { return runtime.workspaceInstructionsV2() }</?>
+)>

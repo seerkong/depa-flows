@@ -1,0 +1,72 @@
+<Track #extend-ai-agent-definition-halfcode-composition apiVersion="codument.tech/v1alpha1" version="1" { status = "completed" goal = "Extend the closed AIAgentDefinition resource contract with heterogeneous MessagePrefix composition and an explicit code-backed ContextPipeline under the existing authentic projection and freeze authority." description = "Preserve legacy Messages compatibility while adding typed message-source and context-pipeline dependencies, fail-closed diagnostics, immutable projections and semantic freeze coverage for downstream Eidolon execution." question_mode = "decision-tree" question_severity = "auto" commit_mode = "manual" created_at = "2026-08-29T10:10:11.120Z" updated_at = "2026-08-29T10:18:46.936Z" modeling_base_commit = "df50e411880d59746eae6fd9cf1d6e486e4f5e86" engineering_base_commit = "df50e411880d59746eae6fd9cf1d6e486e4f5e86" } (
+  <Ports { scope = "track" } [
+    <MaterialBundle #behavior_deltas { role = "input" name = "behavior-deltas" domain = "behavior" path = "vfs://./behavior_deltas/" }>
+  ]>
+  <TaskSpace #space_extend-ai-agent-definition-halfcode-composition { name = "extend-ai-agent-definition-halfcode-composition" version = "1" child_mode = "dag" } (
+    <SubNodes [
+      <TaskGroup #P1 { name = "Closed composition contract" status = "DONE" order = 0 } (
+        <SubNodes [
+          <Task #P1-T1 { name = "Establish MessagePrefix and ContextPipeline RED" status = "DONE" order = 0 } (
+            <Acceptance [
+              <Criterion #P1-T1-AC1 { checked = true } ?01M16G304GD5K67Z9B4QZ08HWV>
+              Tests define ordered Message/MessageSource projection, ContextPipeline typed identity and legacy Messages compatibility.
+              </?01M16G304GD5K67Z9B4QZ08HWV>
+              <Criterion #P1-T1-AC2 { checked = true } ?01M16G304GD5K67Z9B4QZ08HWW>
+              Tests fail on the current projector and cover conflict, unknown child and wrong typed target diagnostics.
+              </?01M16G304GD5K67Z9B4QZ08HWW>
+            ]>
+          )>
+        ]>
+      )>
+      <TaskGroup #P2 { name = "Projection and freeze implementation" status = "DONE" order = 1 } (
+        <SubNodes [
+          <Task #P2-T1 { name = "Implement typed composition projection and dependency edges" status = "DONE" order = 0 } (
+            <Acceptance [
+              <Criterion #P2-T1-AC1 { checked = true } ?01M16G304GD5K67Z9B4QZ08HWX>
+              Contract exposes immutable closed prefix item projections and optional ContextPipeline projection.
+              </?01M16G304GD5K67Z9B4QZ08HWX>
+              <Criterion #P2-T1-AC2 { checked = true } ?01M16G304GD5K67Z9B4QZ08HWY>
+              Projector preserves order, exact ids and legacy static view, and fails closed on ambiguous or malformed declarations.
+              </?01M16G304GD5K67Z9B4QZ08HWY>
+            ]>
+          )>
+          <Task #P2-T2 { name = "Bind dynamic resources into authentic run freeze" status = "DONE" order = 1 } (
+            <Acceptance [
+              <Criterion #P2-T2-AC1 { checked = true } ?01M16G304HBGSQNFYQZK2TR58Y>
+              MessageSource and ContextPipeline resources and content identities are present in the frozen closure.
+              </?01M16G304HBGSQNFYQZK2TR58Y>
+              <Criterion #P2-T2-AC2 { checked = true } ?01M16G304HBGSQNFYQZK2TR58Z>
+              Selected dynamic resource changes alter semantic fingerprint while unrelated overlays do not.
+              </?01M16G304HBGSQNFYQZK2TR58Z>
+            ]>
+          )>
+        ]>
+      )>
+      <TaskGroup #P3 { name = "Package verification" status = "DONE" order = 2 } (
+        <SubNodes [
+          <Task #P3-T1 { name = "Verify focused packages and consumer-ready contract" status = "DONE" order = 0 } (
+            <Acceptance [
+              <Criterion #P3-T1-AC1 { checked = true } ?01M16G304HBGSQNFYQZK2TR590>
+              Focused projection/freeze tests and workspace typecheck pass.
+              </?01M16G304HBGSQNFYQZK2TR590>
+              <Criterion #P3-T1-AC2 { checked = true } ?01M16G304HBGSQNFYQZK2TR591>
+              Strict Codument validation, diff check and dirty-tree review preserve unrelated selector changes.
+              </?01M16G304HBGSQNFYQZK2TR591>
+            ]>
+          )>
+        ]>
+      )>
+    ]>
+  )>
+  <Schedule [
+    <Dag { for = "space_extend-ai-agent-definition-halfcode-composition" } [
+      <Node #P2 [
+        <After { ref = "P1" }>
+      ]>
+      <Node #P3 [
+        <After { ref = "P2" }>
+      ]>
+    ]>
+  ]>
+  <Hooks []>
+)>

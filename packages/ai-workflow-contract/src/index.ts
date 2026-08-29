@@ -156,6 +156,8 @@ export type MaterialCardinality = 'one' | 'many';
 export type AIWorkflowAgentResourceRelation =
   | 'agent-message-prompt'
   | 'agent-message-schema'
+  | 'agent-message-source'
+  | 'agent-context-pipeline'
   | 'agent-input-schema'
   | 'agent-output-schema'
   | 'agent-tool'
@@ -196,6 +198,20 @@ export interface AIAgentMessageProjection {
   readonly schema?: AIWorkflowMessageSchemaProjection;
 }
 
+export interface AIAgentStaticMessagePrefixProjection extends AIAgentMessageProjection {
+  readonly type: 'message';
+}
+
+export interface AIAgentMessageSourcePrefixProjection {
+  readonly type: 'message-source';
+  readonly id: string;
+  readonly source: AIWorkflowTypedResourceRef;
+}
+
+export type AIAgentMessagePrefixItemProjection =
+  | AIAgentStaticMessagePrefixProjection
+  | AIAgentMessageSourcePrefixProjection;
+
 export interface MaterialPortProjection {
   readonly kind: 'MaterialPort';
   readonly fqn: string;
@@ -210,7 +226,10 @@ export interface AIAgentDefinitionProjection {
   readonly kind: 'AIAgentDefinition';
   readonly fqn: string;
   readonly resource: ResourceRecord;
+  readonly messagePrefix: readonly AIAgentMessagePrefixItemProjection[];
+  /** Static compatibility view for legacy consumers during MessagePrefix adoption. */
   readonly messages: readonly AIAgentMessageProjection[];
+  readonly contextPipeline?: AIWorkflowTypedResourceRef;
   readonly inputSchema?: AIWorkflowMessageSchemaProjection;
   readonly outputSchema?: AIWorkflowMessageSchemaProjection;
   readonly tools: readonly AIWorkflowTypedResourceRef[];

@@ -7,6 +7,8 @@
     <Catalog #workflows { kind = "AICtrlWorkflow" shape = "single-file" root = "vfs://./Workflows/" }>
     <Catalog #data_workflows { kind = "AIDataWorkflow" shape = "single-file" root = "vfs://./DataWorkflows/" }>
     <Catalog #agents { kind = "AIAgentDefinition" shape = "single-file" root = "vfs://./Agents/" }>
+    <Catalog #agent_message_sources { kind = "AgentMessageSource" shape = "single-file" root = "vfs://./MessageSources/" }>
+    <Catalog #agent_context_pipelines { kind = "AgentContextPipeline" shape = "single-file" root = "vfs://./ContextPipelines/" }>
     <Catalog #prompts { kind = "Prompt" shape = "single-file" root = "vfs://./Prompts/" }>
     <Catalog #schemas { kind = "MessageSchema" shape = "single-file" root = "vfs://./Schemas/" }>
     <Catalog #tools { kind = "Tool" shape = "single-file" root = "vfs://./Tools/" }>

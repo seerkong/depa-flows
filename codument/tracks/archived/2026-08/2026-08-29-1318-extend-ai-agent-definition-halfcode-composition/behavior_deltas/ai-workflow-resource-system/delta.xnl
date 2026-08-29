@@ -1,0 +1,30 @@
+<BehaviorPatch #track.extend-ai-agent-definition-halfcode-composition.behavior_patch.ai-workflow-resource-system apiVersion="codument.tech/v1alpha1" version="1" { capability = "ai-workflow-resource-system" } (
+  <Mutations [
+    <Upsert { selector = "behavior://ai-workflow-resource-system/requirements/agent-message-composition-program" } (
+      <Requirement #agent-message-composition-program (
+        <Statement ?>AIAgentDefinition SHALL project an ordered heterogeneous MessagePrefix and an explicit ContextPipeline through one closed Halfcode dependency and freeze authority while preserving legacy Messages compatibility.</?>
+        <Suites [
+          <Suite #agent-message-composition-cases { name = "Agent message composition resources" } (
+            <Cases [
+              <Case #heterogeneous-prefix-splices [
+                <Given ?>An Agent declares static Message and typed MessageSource children in MessagePrefix.</?>
+                <When ?>The resource registry is projected.</?>
+                <Then ?>The projection SHALL preserve exact order, ids, typed dependencies and the complete static compatibility view.</?>
+              ]>
+              <Case #context-pipeline-freezes [
+                <Given ?>An Agent declares an AgentContextPipeline resource.</?>
+                <When ?>A Workflow run freezes the Agent resource closure.</?>
+                <Then ?>The pipeline and message-source resources SHALL enter dependency closure and semantic fingerprint.</?>
+              ]>
+              <Case #ambiguous-prefix-fails [
+                <Given ?>An Agent declares both Messages and MessagePrefix or an unsupported prefix child.</?>
+                <When ?>Projection runs.</?>
+                <Then ?>Projection SHALL fail closed with stable diagnostics.</?>
+              ]>
+            ]>
+          )>
+        ]>
+      )>
+    )>
+  ]>
+)>
