@@ -121,5 +121,60 @@
         )>
       ]>
     )>
+    <Requirement #cybernetic-control-protocol (
+      <Statement ?01M17H10HGFC7X2BWA6GYMGK15>
+      AI Data Workflow SHALL expose a provider-neutral observe-decide-admit protocol in which an Agent decision is a bounded proposal, a frozen capability catalog closes executable choices, and only the existing RunGraph owner can commit an admitted graph patch.
+      </?01M17H10HGFC7X2BWA6GYMGK15>
+      <Suites [
+        <Suite #autonomous-replanning { name = "Autonomous replanning" } (
+          <Cases [
+            <Case #successive-corrections (
+              <Given ?01M17H10HGFC7X2BWA6GYMGK16>
+              A canonical RunGraph, immutable goal, frozen capability catalog and remaining control budget exist.
+              </?01M17H10HGFC7X2BWA6GYMGK16>
+              <When ?01M17H10HGFC7X2BWA6GYMGK17>
+              A controller proposes two distinct valid corrections after successive observations.
+              </?01M17H10HGFC7X2BWA6GYMGK17>
+              <Then ?01M17H10HGFC7X2BWA6GYMGK18>
+              Admission SHALL produce two typed graph patches for consecutive generations without creating a controller-owned graph copy.
+              </?01M17H10HGFC7X2BWA6GYMGK18>
+            )>
+            <Case #reject-open-or-stale-decision (
+              <Given ?01M17H10HGFC7X2BWA6GYMGK19>
+              A controller decision names an undeclared capability, mismatches a port schema, targets a protected node or refers to a stale observation.
+              </?01M17H10HGFC7X2BWA6GYMGK19>
+              <When ?01M17H10HGFC7X2BWA6GYMGK1A>
+              The decision is admitted.
+              </?01M17H10HGFC7X2BWA6GYMGK1A>
+              <Then ?01M17H10HGFC7X2BWA6GYMGK1B>
+              The system SHALL return typed feedback, produce no patch and leave the canonical graph unchanged.
+              </?01M17H10HGFC7X2BWA6GYMGK1B>
+            )>
+            <Case #verifier-gated-completion (
+              <Given ?01M17H10HGFC7X2BWA6GYMGK1C>
+              The controller claims completion.
+              </?01M17H10HGFC7X2BWA6GYMGK1C>
+              <When ?01M17H10HGFC7X2BWA6GYMGK1D>
+              The latest matching verifier fact is absent or failed.
+              </?01M17H10HGFC7X2BWA6GYMGK1D>
+              <Then ?01M17H10HGFC7X2BWA6GYMGK1E>
+              Completion SHALL be rejected until an exact PASS verifier fact proves the required output contract.
+              </?01M17H10HGFC7X2BWA6GYMGK1E>
+            )>
+            <Case #bounded-termination (
+              <Given ?01M17H10HGFC7X2BWA6GYMGK1F>
+              Iteration, operation, no-progress, token or deadline budget is exhausted.
+              </?01M17H10HGFC7X2BWA6GYMGK1F>
+              <When ?01M17H10HGFC7X2BWA6GYMGK1G>
+              The controller requests another revision.
+              </?01M17H10HGFC7X2BWA6GYMGK1G>
+              <Then ?01M17H10HGFC7X2BWA6GYMGK1H>
+              Admission SHALL return a stable terminal code without provider-specific retry thresholds.
+              </?01M17H10HGFC7X2BWA6GYMGK1H>
+            )>
+          ]>
+        )>
+      ]>
+    )>
   ]>
 )>
