@@ -1,4 +1,4 @@
-<Track #add-ai-data-cybernetic-control-protocol apiVersion="codument.tech/v1alpha1" version="1" { status = "in_progress" goal = "Add a provider-neutral typed observe-decide-admit protocol that lets an AI controller replan an AI Data RunGraph without becoming a second graph authority." description = "Freeze controller-visible capabilities, derive bounded observations and admit typed decisions into existing graph patches with verifier and budget gates." question_mode = "decision-tree" question_severity = "auto" commit_mode = "manual" created_at = "2026-08-29T18:42:41.309Z" updated_at = "2026-08-29T19:02:59.511Z" modeling_base_commit = "7b146fc3f71b663e2ad8c3868c4e095aedaee0dc" engineering_base_commit = "7b146fc3f71b663e2ad8c3868c4e095aedaee0dc" } (
+<Track #add-ai-data-cybernetic-control-protocol apiVersion="codument.tech/v1alpha1" version="1" { status = "in_progress" goal = "Add a provider-neutral typed observe-decide-admit protocol that lets an AI controller replan an AI Data RunGraph without becoming a second graph authority." description = "Freeze controller-visible capabilities, derive bounded observations and admit typed decisions into existing graph patches with verifier and budget gates." question_mode = "decision-tree" question_severity = "auto" commit_mode = "manual" created_at = "2026-08-29T18:42:41.309Z" updated_at = "2026-08-29T19:38:34.162Z" modeling_base_commit = "7b146fc3f71b663e2ad8c3868c4e095aedaee0dc" engineering_base_commit = "7b146fc3f71b663e2ad8c3868c4e095aedaee0dc" } (
   <Ports { scope = "track" } (
     <Inputs [
       <Port #canonical-run-graph { role = "input" domain = "code" } ?01M17DRPAJM2J1NT9M6J5SSP7C>
@@ -92,7 +92,7 @@
           </?01M17DRPAKS2R3FWEWXKCTS29W>
         ]>
       )>
-      <TaskGroup #P3 { name = "Conformance and independent direction review" status = "ACTIVE" priority = "P1" order = 2 } (
+      <TaskGroup #P3 { name = "Conformance and independent direction review" status = "DONE" priority = "P1" order = 2 } (
         <Description ?01M17DRPAKS2R3FWEWXKCTS29X>
         Close package, behavior, regression and DEPA authority gates before handing the protocol to the Eidolon host Track.
         </?01M17DRPAKS2R3FWEWXKCTS29X>
@@ -114,9 +114,41 @@
           )>
         ]>
         <Gate [
-          <Criterion #P3-G1 { checked = false } ?01M17DRPAKS2R3FWEWXKCTS2A0>
+          <Criterion #P3-G1 { checked = true } ?01M17DRPAKS2R3FWEWXKCTS2A0>
           Independent direction review reports no P0/P1 authority, Data, Processor or bounded-control gap.
           </?01M17DRPAKS2R3FWEWXKCTS2A0>
+        ]>
+      )>
+      <TaskGroup #P4 { name = "Publish consumable control libraries" status = "NOT_STARTED" priority = "P0" order = 3 } (
+        <Description ?>
+        Release only the reusable contract and logic libraries required by the Eidolon host; no workflow application or server package is publishable from this phase.
+        </?>
+        <SubNodes [
+          <Task #P4-T1 { name = "Version and verify public package closure" status = "NOT_STARTED" priority = "P0" order = 0 } (
+            <Acceptance [
+              <Criterion #P4-T1-AC1 { checked = false } ?>
+              Contract and logic packages use new patch versions, and logic depends on the exact new contract version.
+              </?>
+              <Criterion #P4-T1-AC2 { checked = false } ?>
+              Packed artifacts contain the autonomous control exports and pass focused tests, typecheck and tarball smoke import.
+              </?>
+            ]>
+          )>
+          <Task #P4-T2 { name = "Publish and verify npm authority" status = "NOT_STARTED" priority = "P0" order = 1 } (
+            <Acceptance [
+              <Criterion #P4-T2-AC1 { checked = false } ?>
+              npm exposes the new contract and logic versions, while no Eidolon or upper-layer application package is published.
+              </?>
+              <Criterion #P4-T2-AC2 { checked = false } ?>
+              A clean temporary consumer installs the published versions and imports the schema marker plus observe/admit Processors.
+              </?>
+            ]>
+          )>
+        ]>
+        <Gate [
+          <Criterion #P4-G1 { checked = false } ?>
+          The Eidolon host can consume the protocol from registry artifacts without a source-tree link or unpublished dependency.
+          </?>
         ]>
       )>
     ]>
@@ -128,6 +160,9 @@
       ]>
       <Node #P3 [
         <After { ref = "P2" }>
+      ]>
+      <Node #P4 [
+        <After { ref = "P3" }>
       ]>
     ]>
   ]>
