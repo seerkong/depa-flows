@@ -1,0 +1,35 @@
+<BehaviorPatch #track.add-ai-data-cybernetic-control-protocol.behavior_patch.ai-data-workflow apiVersion="codument.tech/v1alpha1" version="1" { capability = "ai-data-workflow" } (
+  <Mutations [
+    <Upsert { selector = "behavior://ai-data-workflow/requirements/cybernetic-control-protocol" } (
+      <Requirement #cybernetic-control-protocol (
+        <Statement ?>AI Data Workflow SHALL expose a provider-neutral observe-decide-admit protocol in which an Agent decision is a bounded proposal, a frozen capability catalog closes executable choices, and only the existing RunGraph owner can commit an admitted graph patch.</?>
+        <Suites [
+          <Suite #autonomous-replanning { name = "Autonomous replanning" } (
+            <Cases [
+              <Case #successive-corrections (
+                <Given ?>A canonical RunGraph, immutable goal, frozen capability catalog and remaining control budget exist.</?>
+                <When ?>A controller proposes two distinct valid corrections after successive observations.</?>
+                <Then ?>Admission SHALL produce two typed graph patches for consecutive generations without creating a controller-owned graph copy.</?>
+              )>
+              <Case #reject-open-or-stale-decision (
+                <Given ?>A controller decision names an undeclared capability, mismatches a port schema, targets a protected node or refers to a stale observation.</?>
+                <When ?>The decision is admitted.</?>
+                <Then ?>The system SHALL return typed feedback, produce no patch and leave the canonical graph unchanged.</?>
+              )>
+              <Case #verifier-gated-completion (
+                <Given ?>The controller claims completion.</?>
+                <When ?>The latest matching verifier fact is absent or failed.</?>
+                <Then ?>Completion SHALL be rejected until an exact PASS verifier fact proves the required output contract.</?>
+              )>
+              <Case #bounded-termination (
+                <Given ?>Iteration, operation, no-progress, token or deadline budget is exhausted.</?>
+                <When ?>The controller requests another revision.</?>
+                <Then ?>Admission SHALL return a stable terminal code without provider-specific retry thresholds.</?>
+              )>
+            ]>
+          )>
+        ]>
+      )>
+    )>
+  ]>
+)>

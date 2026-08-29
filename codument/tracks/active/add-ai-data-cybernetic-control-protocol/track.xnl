@@ -1,0 +1,135 @@
+<Track #add-ai-data-cybernetic-control-protocol apiVersion="codument.tech/v1alpha1" version="1" { status = "in_progress" goal = "Add a provider-neutral typed observe-decide-admit protocol that lets an AI controller replan an AI Data RunGraph without becoming a second graph authority." description = "Freeze controller-visible capabilities, derive bounded observations and admit typed decisions into existing graph patches with verifier and budget gates." question_mode = "decision-tree" question_severity = "auto" commit_mode = "manual" created_at = "2026-08-29T18:42:41.309Z" updated_at = "2026-08-29T19:02:59.511Z" modeling_base_commit = "7b146fc3f71b663e2ad8c3868c4e095aedaee0dc" engineering_base_commit = "7b146fc3f71b663e2ad8c3868c4e095aedaee0dc" } (
+  <Ports { scope = "track" } (
+    <Inputs [
+      <Port #canonical-run-graph { role = "input" domain = "code" } ?01M17DRPAJM2J1NT9M6J5SSP7C>
+      Existing AIDataWorkflowRunGraph and graph-patch authority
+      </?01M17DRPAJM2J1NT9M6J5SSP7C>
+      <Port #agent-instance-reuse { role = "input" domain = "code" } ?01M17DRPAJM2J1NT9M6J5SSP7D>
+      Existing typed Agent invocation and exact instance selection contracts
+      </?01M17DRPAJM2J1NT9M6J5SSP7D>
+    ]>
+    <Outputs [
+      <Port #control-contracts { role = "output" domain = "code" } ?01M17DRPAKS2R3FWEWXKCTS29C>
+      Provider-neutral goal, observation, catalog, decision, admission and receipt contracts
+      </?01M17DRPAKS2R3FWEWXKCTS29C>
+      <Port #control-processors { role = "output" domain = "code" } ?01M17DRPAKS2R3FWEWXKCTS29D>
+      Pure observation and admission Processors
+      </?01M17DRPAKS2R3FWEWXKCTS29D>
+    ]>
+  )>
+  <TaskSpace #space_add-ai-data-cybernetic-control-protocol { name = "add-ai-data-cybernetic-control-protocol" version = "1" child_mode = "dag" } (
+    <SubNodes [
+      <TaskGroup #P1 { name = "Closed control contracts" status = "DONE" priority = "P0" order = 0 } (
+        <Description ?01M17DRPAKS2R3FWEWXKCTS29E>
+        Freeze the provider-neutral data vocabulary and anti-second-authority invariants before implementing control logic.
+        </?01M17DRPAKS2R3FWEWXKCTS29E>
+        <SubNodes [
+          <Task #P1-T1 { name = "Write RED contract and serializability tests" status = "DONE" priority = "P0" order = 0 } (
+            <Acceptance [
+              <Criterion #P1-T1-AC1 { checked = true } ?01M17DRPAKS2R3FWEWXKCTS29F>
+              Tests require closed goal, budget, verifier, capability catalog, observation, decision, admission and iteration-receipt unions.
+              </?01M17DRPAKS2R3FWEWXKCTS29F>
+              <Criterion #P1-T1-AC2 { checked = true } ?01M17DRPAKS2R3FWEWXKCTS29G>
+              The controller can reference only frozen capability ids and typed port bindings; it cannot provide code or Agent resource references.
+              </?01M17DRPAKS2R3FWEWXKCTS29G>
+              <Criterion #P1-T1-AC3 { checked = true } ?01M17DRPAKS2R3FWEWXKCTS29H>
+              All protocol facts survive a JSON round trip without functions, provider objects or host services.
+              </?01M17DRPAKS2R3FWEWXKCTS29H>
+            ]>
+          )>
+          <Task #P1-T2 { name = "Implement public protocol contracts" status = "DONE" priority = "P0" order = 1 } (
+            <Acceptance [
+              <Criterion #P1-T2-AC1 { checked = true } ?01M17DRPAKS2R3FWEWXKCTS29J>
+              The contract package exports the v1 schema marker and discriminated unions without importing host/provider implementations.
+              </?01M17DRPAKS2R3FWEWXKCTS29J>
+              <Criterion #P1-T2-AC2 { checked = true } ?01M17DRPAKS2R3FWEWXKCTS29K>
+              Catalog capabilities close implementation proofs and exact input/output schema references.
+              </?01M17DRPAKS2R3FWEWXKCTS29K>
+            ]>
+          )>
+        ]>
+        <Gate [
+          <Criterion #P1-G1 { checked = true } ?01M17DRPAKS2R3FWEWXKCTS29M>
+          Focused contract tests and package typecheck pass, and invalid open shapes fail at the type/normalization boundary.
+          </?01M17DRPAKS2R3FWEWXKCTS29M>
+        ]>
+      )>
+      <TaskGroup #P2 { name = "Observation and admission Processors" status = "DONE" priority = "P0" order = 1 } (
+        <Description ?01M17DRPAKS2R3FWEWXKCTS29N>
+        Implement deterministic projection and closed decision admission while leaving graph mutation to the existing owner.
+        </?01M17DRPAKS2R3FWEWXKCTS29N>
+        <SubNodes [
+          <Task #P2-T1 { name = "Write RED control-loop invariant tests" status = "DONE" priority = "P0" order = 0 } (
+            <Acceptance [
+              <Criterion #P2-T1-AC1 { checked = true } ?01M17DRPAKS2R3FWEWXKCTS29P>
+              Tests cover successive distinct revisions, stale decisions, frozen catalog enforcement, protected nodes and exact schema compatibility.
+              </?01M17DRPAKS2R3FWEWXKCTS29P>
+              <Criterion #P2-T1-AC2 { checked = true } ?01M17DRPAKS2R3FWEWXKCTS29Q>
+              Rejected decisions return typed feedback and leave the supplied graph byte-equivalent.
+              </?01M17DRPAKS2R3FWEWXKCTS29Q>
+              <Criterion #P2-T1-AC3 { checked = true } ?01M17DRPAKS2R3FWEWXKCTS29R>
+              Completion is rejected until the exact latest verifier fact is PASS.
+              </?01M17DRPAKS2R3FWEWXKCTS29R>
+            ]>
+          )>
+          <Task #P2-T2 { name = "Implement projection digest and admission" status = "DONE" priority = "P0" order = 1 } (
+            <Acceptance [
+              <Criterion #P2-T2-AC1 { checked = true } ?01M17DRPAKS2R3FWEWXKCTS29S>
+              Observation is a deterministic bounded projection of canonical graph, verifier facts, feedback and budget.
+              </?01M17DRPAKS2R3FWEWXKCTS29S>
+              <Criterion #P2-T2-AC2 { checked = true } ?01M17DRPAKS2R3FWEWXKCTS29T>
+              Admission resolves catalog operations into one existing AIDataWorkflowGraphPatch at current generation plus one.
+              </?01M17DRPAKS2R3FWEWXKCTS29T>
+              <Criterion #P2-T2-AC3 { checked = true } ?01M17DRPAKS2R3FWEWXKCTS29V>
+              Iteration, operation, no-progress, token and deadline limits terminate with stable typed codes rather than model-specific retry numbers.
+              </?01M17DRPAKS2R3FWEWXKCTS29V>
+            ]>
+          )>
+        ]>
+        <Gate [
+          <Criterion #P2-G1 { checked = true } ?01M17DRPAKS2R3FWEWXKCTS29W>
+          Focused runtime tests prove repeated observe/decide/admit cycles and reconstruction with no parallel graph authority.
+          </?01M17DRPAKS2R3FWEWXKCTS29W>
+        ]>
+      )>
+      <TaskGroup #P3 { name = "Conformance and independent direction review" status = "ACTIVE" priority = "P1" order = 2 } (
+        <Description ?01M17DRPAKS2R3FWEWXKCTS29X>
+        Close package, behavior, regression and DEPA authority gates before handing the protocol to the Eidolon host Track.
+        </?01M17DRPAKS2R3FWEWXKCTS29X>
+        <SubNodes [
+          <Task #P3-T1 { name = "Run focused and workspace verification" status = "DONE" priority = "P1" order = 0 } (
+            <Acceptance [
+              <Criterion #P3-T1-AC1 { checked = true } ?01M17DRPAKS2R3FWEWXKCTS29Y>
+              Focused tests, full workspace tests, typecheck and strict Codument validation pass.
+              </?01M17DRPAKS2R3FWEWXKCTS29Y>
+              <Criterion #P3-T1-AC2 { checked = true } ?01M17DRPAKS2R3FWEWXKCTS29Z>
+              Static review finds no provider/host import, implicit graph mutation, arbitrary executable reference or copied graph state.
+              </?01M17DRPAKS2R3FWEWXKCTS29Z>
+            ]>
+          )>
+        ]>
+        <Hooks [
+          <Hook { on = "phase:after" } (
+            <AttractorCheck { use = "coding" }>
+          )>
+        ]>
+        <Gate [
+          <Criterion #P3-G1 { checked = false } ?01M17DRPAKS2R3FWEWXKCTS2A0>
+          Independent direction review reports no P0/P1 authority, Data, Processor or bounded-control gap.
+          </?01M17DRPAKS2R3FWEWXKCTS2A0>
+        ]>
+      )>
+    ]>
+  )>
+  <Schedule [
+    <Dag { for = "space_add-ai-data-cybernetic-control-protocol" } [
+      <Node #P2 [
+        <After { ref = "P1" }>
+      ]>
+      <Node #P3 [
+        <After { ref = "P2" }>
+      ]>
+    ]>
+  ]>
+  <Hooks []>
+)>

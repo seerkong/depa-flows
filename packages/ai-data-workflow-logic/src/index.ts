@@ -62,6 +62,7 @@ import {
 import { assertFrozenAIAgentTaskBinding } from 'ai-workflow-logic/run-freeze';
 
 export * from './holon-task.js';
+export * from './autonomous-control.js';
 
 export interface CreateAIDataWorkflowCheckpointInput {
   readonly instanceId: string;
