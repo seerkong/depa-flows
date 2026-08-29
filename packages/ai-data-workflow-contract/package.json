@@ -1,6 +1,6 @@
 {
   "name": "ai-data-workflow-contract",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "private": false,
   "description": "AI Data Workflow RunGraph contracts backed by EagerDataFlow authoring plans",
   "type": "module",
