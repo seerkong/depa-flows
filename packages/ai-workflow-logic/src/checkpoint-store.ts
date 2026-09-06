@@ -399,7 +399,9 @@ function validateAIDataProfileTransition(
         throw new FlowRunCheckpointTransitionError(`AI Data patch operation ${operation.op} is unsupported.`);
       }
       for (const [field, expected] of Object.entries(operation.changes)) {
-        if (!sameClosedValue(candidate[field as keyof typeof candidate], expected)) {
+        const actual = (candidate as Readonly<Record<string, unknown>>)[field];
+        if (field === 'subflow' && expected === null && actual === undefined) continue;
+        if (!sameClosedValue(actual, expected)) {
           throw new FlowRunCheckpointTransitionError(`AI Data update-node ${nodeId} does not project declared ${field}.`);
         }
       }

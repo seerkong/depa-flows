@@ -4,10 +4,14 @@ import type {
   ResourceDependencySnapshot,
   ResourceRecord,
   ResourceRegistry,
-  ResourceTree,
+  AuthoredResourceTree,
+  ResolvedResourceTree,
   ResourceValue,
   Sha256Digest,
 } from 'halfcode-compiler.xnl/resource-core';
+import type {
+  ResourceAuthoringProposal,
+} from 'halfcode-compiler.xnl/authoring-runtime';
 import type {
   FlowBundleSpec,
   FlowClosedObject,
@@ -19,6 +23,8 @@ import type {
 } from 'work-ctrl-flow-contract';
 
 export * from './holon-task.js';
+export * from './resource-kind-contracts.js';
+export * from './agent-code.js';
 
 export {
   FLOW_INSTANCE_SCHEMA_VERSION,
@@ -145,7 +151,8 @@ export interface ProjectAIWorkflowAppBundlesOptions {
 }
 
 export interface LoadedAIWorkflowResourcePackage {
-  readonly tree: ResourceTree;
+  readonly authoredTree: AuthoredResourceTree;
+  readonly tree: ResolvedResourceTree;
   readonly appBundles: readonly AIWorkflowAppBundleProjection[];
 }
 
@@ -254,6 +261,7 @@ export interface MaterialBindingProjection {
 }
 
 export interface AIWorkflowAgentResourceProjection {
+  readonly codeResources?: readonly import('./agent-code.js').AIAgentCodeResourceProjection[];
   readonly agentDefinitions: readonly AIAgentDefinitionProjection[];
   readonly materialPorts: readonly MaterialPortProjection[];
   readonly materialBindings: readonly MaterialBindingProjection[];
@@ -261,6 +269,8 @@ export interface AIWorkflowAgentResourceProjection {
 }
 
 export interface AIWorkflowRunResourceFreezeReceipt {
+  readonly resourceResolutions?: readonly import('./agent-code.js').AIAgentResolvedResourceIdentity[];
+  readonly codeExecutions?: readonly import('./agent-code.js').AIAgentCodeExecutionIdentity[];
   readonly schemaVersion: 'ai-workflow.run-resource-freeze/v1';
   readonly task: AIWorkflowAgentTaskRef;
   readonly bindingResourceIds: readonly string[];
@@ -270,12 +280,183 @@ export interface AIWorkflowRunResourceFreezeReceipt {
 
 /** In-memory proof projected only from an admitted run-resource freeze receipt. */
 export interface FrozenAIAgentTaskBinding {
+  readonly resourceResolutions?: readonly import('./agent-code.js').AIAgentResolvedResourceIdentity[];
+  readonly codeExecutions?: readonly import('./agent-code.js').AIAgentCodeExecutionIdentity[];
   readonly schemaVersion: 'ai-workflow.frozen-agent-task-binding/v1';
   readonly task: AIWorkflowAgentTaskRef;
   readonly semanticFingerprint: Sha256Digest;
   readonly snapshotRevision: Sha256Digest;
   readonly closureResourceIds: readonly string[];
 }
+
+export const AI_AGENT_DEFINITION_SELECTION_SCHEMA_VERSION =
+  'ai-workflow.agent-definition-selection/v1' as const;
+
+export interface AIAgentTaskRequirement {
+  readonly schemaVersion: typeof AI_AGENT_DEFINITION_SELECTION_SCHEMA_VERSION;
+  readonly requirementId: string;
+  /** Audit/model evidence only. It is never a code-level routing input. */
+  readonly objective: string;
+  readonly inputSchemaRef?: `resource://${string}`;
+  readonly outputSchemaRef?: `resource://${string}`;
+  readonly requiredToolRefs: readonly `resource://${string}`[];
+  readonly requiredEffectPolicyRef?: `resource://${string}`;
+  readonly requiredToolMode?: AIWorkflowEffectToolMode;
+  readonly requiredMaterialPortRefs: readonly `resource://${string}`[];
+  readonly requiredContextPipelineRef?: `resource://${string}`;
+  readonly requiredMessageSourceRefs: readonly `resource://${string}`[];
+}
+
+export interface AIAgentTaskRequirementProjection {
+  readonly schemaVersion: typeof AI_AGENT_DEFINITION_SELECTION_SCHEMA_VERSION;
+  readonly requirement: AIAgentTaskRequirement;
+  readonly requirementDigest: Sha256Digest;
+}
+
+export interface AIAgentDefinitionCandidateContract {
+  readonly inputSchemaRef?: `resource://${string}`;
+  readonly outputSchemaRef?: `resource://${string}`;
+  readonly toolRefs: readonly `resource://${string}`[];
+  readonly effectPolicyRef?: `resource://${string}`;
+  readonly effectToolMode?: AIWorkflowEffectToolMode;
+  readonly materialPortRefs: readonly `resource://${string}`[];
+  readonly contextPipelineRef?: `resource://${string}`;
+  readonly messageSourceRefs: readonly `resource://${string}`[];
+}
+
+export interface AIAgentDefinitionAuthoringEvidence {
+  readonly schemaVersion: 'ai-workflow.agent-definition-authoring-evidence/v1';
+  readonly planDigest: Sha256Digest;
+  readonly transactionId: string;
+  readonly receiptDigest: Sha256Digest;
+  readonly revision?: {
+    readonly candidateRef: `resource://${string}`;
+    readonly candidateDigest: Sha256Digest;
+    readonly contentDigest: Sha256Digest;
+    readonly registryRevision: Sha256Digest;
+    readonly feedback: AIAgentDefinitionRevisionFeedback;
+  };
+}
+
+export interface AIAgentDefinitionCandidate {
+  readonly schemaVersion: typeof AI_AGENT_DEFINITION_SELECTION_SCHEMA_VERSION;
+  readonly agentDefinitionRef: `resource://${string}`;
+  readonly contentDigest: Sha256Digest;
+  readonly registryRevision: Sha256Digest;
+  readonly contract: AIAgentDefinitionCandidateContract;
+  readonly candidateDigest: Sha256Digest;
+  readonly authoringEvidence?: AIAgentDefinitionAuthoringEvidence;
+}
+
+export interface AIAgentDefinitionCandidateSet {
+  readonly schemaVersion: typeof AI_AGENT_DEFINITION_SELECTION_SCHEMA_VERSION;
+  readonly registryRevision: Sha256Digest;
+  readonly candidates: readonly AIAgentDefinitionCandidate[];
+  readonly candidateSetDigest: Sha256Digest;
+}
+
+interface AIAgentDefinitionSelectionDecisionBase {
+  readonly schemaVersion: typeof AI_AGENT_DEFINITION_SELECTION_SCHEMA_VERSION;
+  readonly requirementDigest: Sha256Digest;
+  readonly candidateSetDigest: Sha256Digest;
+  readonly reason: string;
+}
+
+export interface SelectExistingAIAgentDefinitionDecision
+  extends AIAgentDefinitionSelectionDecisionBase {
+  readonly mode: 'select-existing';
+  readonly candidateRef: `resource://${string}`;
+  readonly candidateDigest: Sha256Digest;
+}
+
+export interface AuthorNewAIAgentDefinitionDecision
+  extends AIAgentDefinitionSelectionDecisionBase {
+  readonly mode: 'author-new';
+  readonly agentDefinitionRef: `resource://${string}`;
+  readonly proposal: ResourceAuthoringProposal;
+}
+
+/** Upstream causal references, never diagnostic or publication authority. */
+export interface AIAgentDefinitionRevisionFeedback {
+  readonly observationRef: string;
+  readonly attemptRef: string;
+  readonly verificationRef: string;
+  readonly requirementDigest: Sha256Digest;
+  readonly candidateSetDigest: Sha256Digest;
+  readonly candidateDigest: Sha256Digest;
+  readonly previousExecutionFingerprint: Sha256Digest;
+}
+
+export interface ReviseExistingAIAgentDefinitionDecision
+  extends AIAgentDefinitionSelectionDecisionBase {
+  readonly mode: 'revise-existing';
+  readonly candidateRef: `resource://${string}`;
+  readonly candidateDigest: Sha256Digest;
+  readonly feedback: AIAgentDefinitionRevisionFeedback;
+  readonly proposal: ResourceAuthoringProposal;
+}
+
+export type AIAgentDefinitionSelectionDecision =
+  | SelectExistingAIAgentDefinitionDecision
+  | AuthorNewAIAgentDefinitionDecision
+  | ReviseExistingAIAgentDefinitionDecision;
+
+export type AIAgentDefinitionSelectionRejectionCode =
+  | 'decision-invalid'
+  | 'requirement-stale'
+  | 'candidate-set-stale'
+  | 'candidate-missing'
+  | 'candidate-digest-mismatch'
+  | 'candidate-incompatible'
+  | 'authoring-in-progress'
+  | 'selection-owner-required'
+  | 'selection-owner-mismatch'
+  | 'revision-feedback-invalid'
+  | 'authoring-proposal-invalid';
+
+export interface SelectedAIAgentDefinitionAdmission {
+  readonly schemaVersion: typeof AI_AGENT_DEFINITION_SELECTION_SCHEMA_VERSION;
+  readonly status: 'selected';
+  readonly requirementDigest: Sha256Digest;
+  readonly candidateSetDigest: Sha256Digest;
+  readonly candidate: AIAgentDefinitionCandidate;
+  readonly reason: string;
+}
+
+export interface AuthorNewAIAgentDefinitionAdmission {
+  readonly schemaVersion: typeof AI_AGENT_DEFINITION_SELECTION_SCHEMA_VERSION;
+  readonly status: 'authoring-request';
+  readonly requirementDigest: Sha256Digest;
+  readonly candidateSetDigest: Sha256Digest;
+  readonly agentDefinitionRef: `resource://${string}`;
+  readonly proposal: ResourceAuthoringProposal;
+  readonly reason: string;
+}
+
+export interface ReviseExistingAIAgentDefinitionAdmission {
+  readonly schemaVersion: typeof AI_AGENT_DEFINITION_SELECTION_SCHEMA_VERSION;
+  readonly status: 'revision-request';
+  readonly requirementDigest: Sha256Digest;
+  readonly candidateSetDigest: Sha256Digest;
+  readonly agentDefinitionRef: `resource://${string}`;
+  readonly candidate: AIAgentDefinitionCandidate;
+  readonly feedback: AIAgentDefinitionRevisionFeedback;
+  readonly proposal: ResourceAuthoringProposal;
+  readonly reason: string;
+}
+
+export interface RejectedAIAgentDefinitionAdmission {
+  readonly schemaVersion: typeof AI_AGENT_DEFINITION_SELECTION_SCHEMA_VERSION;
+  readonly status: 'rejected';
+  readonly code: AIAgentDefinitionSelectionRejectionCode;
+  readonly message: string;
+}
+
+export type AIAgentDefinitionSelectionAdmission =
+  | SelectedAIAgentDefinitionAdmission
+  | AuthorNewAIAgentDefinitionAdmission
+  | ReviseExistingAIAgentDefinitionAdmission
+  | RejectedAIAgentDefinitionAdmission;
 
 export type AIWorkflowNodeType =
   | 'agent'
@@ -429,8 +610,8 @@ export interface AIWorkflowExecutionReceipt {
 }
 
 export type AIAgentSelector =
-  | { readonly byInstanceId: string; readonly byInstanceName?: never }
-  | { readonly byInstanceName: string; readonly byInstanceId?: never };
+  | { readonly byId: string; readonly byName?: never }
+  | { readonly byName: string; readonly byId?: never };
 
 export interface AIAgentInvocation<Input extends FlowClosedValue = FlowClosedValue> {
   readonly kind: 'ai.agent';

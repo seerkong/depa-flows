@@ -1,4 +1,4 @@
-<MaterialBinding #depa.flows.test.Binding.KindMismatch apiVersion="depa.flows/v1" version="1.0.0" {
+<MaterialBinding #depa.flows.test.Binding.KindMismatch envelopeVersion="halfcode.resource-envelope/v1" specVersion=1 {
   lifecycle = "Active"
   description = "Material kind boundary fixture"
 } (

@@ -7,6 +7,7 @@ import type {
   AIDataControlGoal,
   AIDataControlIterationReceipt,
   AIDataControlObservation,
+  AIDataControlSubFlowCapability,
   AIDataControlVerifierFact,
 } from 'ai-data-workflow-contract';
 import { AI_DATA_CONTROL_SCHEMA_VERSION } from 'ai-data-workflow-contract';
@@ -84,6 +85,22 @@ const catalog: AIDataControlCapabilityCatalog = {
         kind: 'agent',
         agentDefinitionRef: 'resource://tests/agent/worker',
         taskProofRef: 'resource://tests/proofs/worker',
+      },
+    },
+    child: {
+      capabilityId: 'child',
+      tag: 'SubFlowNode',
+      nodeType: 'subflow',
+      inputSchemaRefs: { material: 'schema://tests/material/v1' },
+      outputSchemaRefs: { result: 'schema://tests/result/v1' },
+      fixedConfig: {},
+      implementation: {
+        kind: 'subflow',
+        definitionRef: 'resource://tests/flows/child',
+        flowRef: 'eager-data-flow://depa.flows.test.Child',
+        contractDigest: 'sha256:child-contract',
+        callGraphDigest: 'sha256:child-call-graph',
+        transitiveChildFlowRefs: [],
       },
     },
     consumeResult: {
@@ -212,6 +229,11 @@ describe('AI Data cybernetic control contracts', () => {
     expect(AI_DATA_CONTROL_SCHEMA_VERSION).toBe('depa.ai-data-control/v1');
     expect(catalog.capabilities.normalize.implementation.kind).toBe('code');
     expect(catalog.capabilities.inspect.implementation.kind).toBe('agent');
+    expect(catalog.capabilities.child).toMatchObject({
+      tag: 'SubFlowNode',
+      nodeType: 'subflow',
+      implementation: { kind: 'subflow', flowRef: 'eager-data-flow://depa.flows.test.Child' },
+    });
     expect(decision.operations[0]).toMatchObject({ capabilityId: 'normalize' });
     expect(receipt).toMatchObject({ admissionKind: 'patch', generationAfter: 1 });
   });
@@ -238,6 +260,30 @@ describe('AI Data cybernetic control contracts', () => {
       }],
     };
     expect(invalidDecision.kind).toBe('revise');
+  });
+
+  test('uses distinct closed operations for autonomous subflow composition', () => {
+    const subflowDecision: AIDataControlDecision = {
+      ...decision,
+      decisionId: 'decision-child',
+      operations: [{
+        op: 'add-subflow',
+        nodeId: 'child-1',
+        subflowCapabilityId: 'child',
+        inputs: {
+          material: {
+            kind: 'port',
+            nodeId: 'entry',
+            port: 'material',
+            schemaRef: 'schema://tests/material/v1',
+          },
+        },
+      }],
+    };
+    expect(subflowDecision.operations[0]).toMatchObject({
+      op: 'add-subflow',
+      subflowCapabilityId: 'child',
+    });
   });
 });
 
@@ -445,6 +491,122 @@ describe('AI Data cybernetic control Processors', () => {
     if (secondAdmission.kind !== 'patch') throw new Error('second decision was not admitted');
     expect(secondAdmission.patch).toMatchObject({ generation: 2, patchId: 'control:decision-inspect' });
     expect(secondAdmission.patch.operations).not.toEqual(firstAdmission.patch.operations);
+  });
+
+  test('admits a typed SubFlow patch with first-class child identity', () => {
+    const graph = createAIDataWorkflowRunGraph({ binding: controlBinding, runId: 'subflow-control-run' });
+    const current = observe(graph);
+    const proposed = reviseDecision(current, 'decision-child', {
+      op: 'add-subflow',
+      nodeId: 'child-1',
+      subflowCapabilityId: 'child',
+      inputs: {
+        material: {
+          kind: 'port', nodeId: 'entry', port: 'material', schemaRef: 'schema://tests/material/v1',
+        },
+      },
+    });
+    const admitted = admitAIDataControlDecision(controlRuntime, {
+      goal, budget, catalog: frozenCatalog, graph, verifier: current.verifier, observation: current, decision: proposed,
+    }, {});
+    expect(admitted).toMatchObject({
+      kind: 'patch',
+      patch: {
+        operations: [{
+          op: 'add-node',
+          node: {
+            id: 'child-1',
+            tag: 'SubFlowNode',
+            nodeType: 'subflow',
+            subflow: {
+              kind: 'autonomous',
+              capabilityId: 'child',
+              definitionRef: 'resource://tests/flows/child',
+              flowRef: 'eager-data-flow://depa.flows.test.Child',
+              contractDigest: 'sha256:child-contract',
+            },
+          },
+        }],
+      },
+    });
+    if (admitted.kind !== 'patch' || admitted.patch.operations[0]?.op !== 'add-node') {
+      throw new Error('subflow decision was not admitted');
+    }
+    expect(admitted.patch.operations[0].node.config).not.toHaveProperty('flow');
+    expect(applyAIDataWorkflowGraphPatch(graph, admitted.patch).nodes['child-1'].subflow)
+      .toEqual(admitted.patch.operations[0].node.subflow);
+  });
+
+  test('rejects operation-kind mismatch and direct or indirect recursive SubFlows', () => {
+    const graph = createAIDataWorkflowRunGraph({ binding: controlBinding, runId: 'subflow-rejection-run' });
+    const current = observe(graph);
+    const mismatched = reviseDecision(current, 'wrong-operation-kind', {
+      op: 'add-capability',
+      nodeId: 'child-as-code',
+      capabilityId: 'child',
+      inputs: {
+        material: {
+          kind: 'port', nodeId: 'entry', port: 'material', schemaRef: 'schema://tests/material/v1',
+        },
+      },
+    });
+    expect(admitAIDataControlDecision(controlRuntime, {
+      goal, budget, catalog: frozenCatalog, graph, verifier: current.verifier, observation: current, decision: mismatched,
+    }, {})).toMatchObject({ kind: 'rejected', feedback: [{ code: 'INVALID_DECISION' }] });
+
+    const childCapability = catalog.capabilities.child;
+    if (childCapability.implementation.kind !== 'subflow') throw new Error('child capability is not a subflow');
+    for (const [catalogId, flowRef, transitiveChildFlowRefs] of [
+      ['direct-recursion', 'eager-data-flow://depa.flows.test.CyberneticControl', []],
+      ['indirect-recursion', 'eager-data-flow://depa.flows.test.Child', ['eager-data-flow://depa.flows.test.CyberneticControl']],
+    ] as const) {
+      const recursiveCatalog = freezeAIDataControlCapabilityCatalog(controlRuntime, {
+        schemaVersion: AI_DATA_CONTROL_SCHEMA_VERSION,
+        catalogId,
+        foundationNodes: catalog.foundationNodes,
+        capabilities: {
+          recursive: {
+            capabilityId: 'recursive',
+            tag: 'SubFlowNode',
+            nodeType: 'subflow',
+            inputSchemaRefs: childCapability.inputSchemaRefs,
+            outputSchemaRefs: childCapability.outputSchemaRefs,
+            fixedConfig: childCapability.fixedConfig,
+            implementation: {
+              ...childCapability.implementation,
+              kind: 'subflow',
+              flowRef,
+              transitiveChildFlowRefs,
+            },
+          } satisfies AIDataControlSubFlowCapability,
+        },
+      }, {});
+      const recursiveObservation = projectAIDataControlObservation(controlRuntime, {
+        goal, budget, catalog: recursiveCatalog, graph, verifier: verifierFor(0), feedback: [],
+      }, { maxObservedNodes: 20 });
+      const recursiveDecision = {
+        ...reviseDecision(recursiveObservation, catalogId, {
+          op: 'add-subflow',
+          nodeId: catalogId,
+          subflowCapabilityId: 'recursive',
+          inputs: {
+            material: {
+              kind: 'port' as const, nodeId: 'entry', port: 'material', schemaRef: 'schema://tests/material/v1',
+            },
+          },
+        }),
+        catalogDigest: recursiveCatalog.digest,
+      };
+      expect(admitAIDataControlDecision(controlRuntime, {
+        goal,
+        budget,
+        catalog: recursiveCatalog,
+        graph,
+        verifier: recursiveObservation.verifier,
+        observation: recursiveObservation,
+        decision: recursiveDecision,
+      }, {})).toMatchObject({ kind: 'rejected', feedback: [{ code: 'RECURSIVE_SUBFLOW' }] });
+    }
   });
 
   test('rejects stale, open and schema-incompatible proposals without mutating the graph', () => {

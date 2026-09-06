@@ -1,4 +1,4 @@
-<AgentContextPipeline #depa.flows.test.ContextPipeline.Standard apiVersion="depa.flows/v1" version="1.0.0" {
+<AgentContextPipeline #depa.flows.test.ContextPipeline.Standard envelopeVersion="halfcode.resource-envelope/v1" specVersion=1 {
   lifecycle = "Active"
   description = "Standard dynamic context pipeline"
 } (

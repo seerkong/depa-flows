@@ -755,7 +755,10 @@ function normalizeAIDataRunGraph(value: unknown, runId: string, location: string
         'id', 'tag', 'nodeType', 'generation', 'status', 'declarationIndex', 'inputs',
         'outputs', 'config', 'dependsOn', 'dependents', 'reusePolicy',
       ],
-      ['semanticFingerprint', 'result', 'invalidatedBy'],
+      [
+        'subflow', 'childInvocation', 'childFreezeReceipt', 'childTerminalReceipt',
+        'semanticFingerprint', 'result', 'invalidatedBy',
+      ],
       nodeLocation,
     );
     const storedId = canonicalIdentity(dataField(node, 'id', `${nodeLocation}.id`), `${nodeLocation}.id`);
@@ -778,6 +781,46 @@ function normalizeAIDataRunGraph(value: unknown, runId: string, location: string
     normalizeAIDataInputs(dataField(node, 'inputs', `${nodeLocation}.inputs`), `${nodeLocation}.inputs`);
     uniqueIdentityArray(dataField(node, 'outputs', `${nodeLocation}.outputs`), `${nodeLocation}.outputs`);
     const config = plainRecord(dataField(node, 'config', `${nodeLocation}.config`), `${nodeLocation}.config`);
+    const tag = String(dataField(node, 'tag', `${nodeLocation}.tag`));
+    const hasSubflow = Object.prototype.hasOwnProperty.call(node, 'subflow');
+    if (tag === 'SubFlowNode' && !hasSubflow) {
+      invalid('AI_DATA_SUBFLOW_BINDING_MISSING', `${nodeLocation}.subflow`, 'SubFlowNode requires an exact durable child binding.');
+    }
+    if (tag !== 'SubFlowNode' && hasSubflow) {
+      invalid('AI_DATA_SUBFLOW_BINDING_INVALID', `${nodeLocation}.subflow`, 'Only SubFlowNode may carry a child binding.');
+    }
+    if (hasSubflow) normalizeAIDataSubflowBinding(dataField(node, 'subflow', `${nodeLocation}.subflow`), `${nodeLocation}.subflow`);
+    const hasChildInvocation = Object.prototype.hasOwnProperty.call(node, 'childInvocation');
+    const hasChildFreeze = Object.prototype.hasOwnProperty.call(node, 'childFreezeReceipt');
+    const hasChildTerminal = Object.prototype.hasOwnProperty.call(node, 'childTerminalReceipt');
+    if ((hasChildInvocation || hasChildFreeze || hasChildTerminal) && tag !== 'SubFlowNode') {
+      invalid('AI_DATA_CHILD_INVOCATION_NODE_INVALID', nodeLocation, 'Only SubFlowNode may carry child invocation facts.');
+    }
+    if ((hasChildFreeze || hasChildTerminal) && !hasChildInvocation) {
+      invalid('AI_DATA_CHILD_INVOCATION_IDENTITY_MISSING', nodeLocation, 'Child receipts require a reserved invocation identity.');
+    }
+    if (hasChildInvocation) {
+      const identity = normalizeAIDataChildInvocationIdentity(
+        dataField(node, 'childInvocation', `${nodeLocation}.childInvocation`),
+        graphRunId,
+        nodeId,
+        generation,
+        dataField(node, 'subflow', `${nodeLocation}.subflow`),
+        `${nodeLocation}.childInvocation`,
+      );
+      if (hasChildFreeze) normalizeAIDataChildFreezeReceipt(
+        dataField(node, 'childFreezeReceipt', `${nodeLocation}.childFreezeReceipt`),
+        identity,
+        `${nodeLocation}.childFreezeReceipt`,
+      );
+      if (hasChildTerminal) normalizeAIDataChildTerminalReceipt(
+        dataField(node, 'childTerminalReceipt', `${nodeLocation}.childTerminalReceipt`),
+        identity,
+        node,
+        String(status),
+        `${nodeLocation}.childTerminalReceipt`,
+      );
+    }
     const dependsOn = uniqueIdentityArray(dataField(node, 'dependsOn', `${nodeLocation}.dependsOn`), `${nodeLocation}.dependsOn`);
     const dependents = uniqueIdentityArray(dataField(node, 'dependents', `${nodeLocation}.dependents`), `${nodeLocation}.dependents`);
     normalizeReusePolicy(
@@ -811,6 +854,17 @@ function normalizeAIDataRunGraph(value: unknown, runId: string, location: string
         `${nodeLocation}.result`,
       );
       normalizeAIDataResultOutput(resultValue, node, String(status), bindingDefinition, `${nodeLocation}.result`);
+      if (hasChildTerminal) {
+        const childReceipt = plainRecord(
+          dataField(node, 'childTerminalReceipt', `${nodeLocation}.childTerminalReceipt`),
+          `${nodeLocation}.childTerminalReceipt`,
+        );
+        if (String(status) === 'Succeeded'
+          && JSON.stringify(dataField(childReceipt, 'output', `${nodeLocation}.childTerminalReceipt.output`))
+            !== JSON.stringify(dataField(plainRecord(resultValue, `${nodeLocation}.result`), 'output', `${nodeLocation}.result.output`))) {
+          invalid('AI_DATA_CHILD_PARENT_OUTPUT_MISMATCH', `${nodeLocation}.result.output`, 'Parent result must equal the accepted child output.');
+        }
+      }
     }
     const invalidationFacts: string[] = [];
     if (Object.prototype.hasOwnProperty.call(node, 'invalidatedBy')) {
@@ -988,11 +1042,175 @@ function normalizeInitialAIDataNodeProjection(
       ? dataField(definitionNode, 'config', `${location}.bindingNode.config`)
       : {},
     dependsOn: eagerDefinitionDependencies(definition, definitionNode, nodeId, location),
+    ...(dataField(definitionNode, 'tag', `${location}.bindingNode.tag`) === 'SubFlowNode'
+      ? {
+          subflow: {
+            kind: 'declared',
+            flowRef: dataField(definitionNode, 'flow', `${location}.bindingNode.flow`),
+          },
+        }
+      : {}),
   };
   for (const field of ['tag', 'declarationIndex', 'inputs', 'outputs', 'config', 'dependsOn'] as const) {
     if (JSON.stringify(dataField(node, field, `${location}.${field}`)) !== JSON.stringify(projected[field])) {
       invalid('AI_DATA_NODE_PROJECTION_MISMATCH', `${location}.${field}`, `Initial run node ${field} differs from its binding projection.`);
     }
+  }
+  if (Object.prototype.hasOwnProperty.call(projected, 'subflow')
+    && JSON.stringify(dataField(node, 'subflow', `${location}.subflow`)) !== JSON.stringify(projected.subflow)) {
+    invalid('AI_DATA_NODE_PROJECTION_MISMATCH', `${location}.subflow`, 'Initial run node subflow differs from its binding projection.');
+  }
+}
+
+function normalizeAIDataSubflowBinding(value: unknown, location: string): void {
+  const binding = plainRecord(value, location);
+  const kind = dataField(binding, 'kind', `${location}.kind`);
+  if (kind === 'declared') {
+    exactRecord(value, ['kind', 'flowRef'], [], location);
+  } else if (kind === 'autonomous') {
+    const autonomous = exactRecord(
+      value,
+      ['kind', 'schemaVersion', 'capabilityId', 'catalogDigest', 'definitionRef', 'flowRef', 'contractDigest'],
+      [],
+      location,
+    );
+    if (dataField(autonomous, 'schemaVersion', `${location}.schemaVersion`) !== 'depa.ai-data-subflow-binding/v1') {
+      invalid('AI_DATA_SUBFLOW_BINDING_VERSION_INVALID', `${location}.schemaVersion`, 'Unsupported autonomous child binding version.');
+    }
+    const definitionRef = canonicalIdentity(dataField(autonomous, 'definitionRef', `${location}.definitionRef`), `${location}.definitionRef`);
+    if (!definitionRef.startsWith('resource://')) {
+      invalid('AI_DATA_SUBFLOW_DEFINITION_REF_INVALID', `${location}.definitionRef`, 'Child definition must use resource:// identity.');
+    }
+    for (const field of ['capabilityId', 'catalogDigest', 'contractDigest'] as const) {
+      canonicalIdentity(dataField(autonomous, field, `${location}.${field}`), `${location}.${field}`);
+    }
+  } else {
+    invalid('AI_DATA_SUBFLOW_BINDING_KIND_INVALID', `${location}.kind`, 'Child binding kind must be declared or autonomous.');
+  }
+  const flowRef = canonicalIdentity(dataField(binding, 'flowRef', `${location}.flowRef`), `${location}.flowRef`);
+  if (!flowRef.startsWith('eager-data-flow://')) {
+    invalid('AI_DATA_SUBFLOW_FLOW_REF_INVALID', `${location}.flowRef`, 'Child flow must use eager-data-flow:// identity.');
+  }
+}
+
+interface NormalizedAIDataChildInvocationIdentity {
+  readonly invocationKey: string;
+  readonly childInstanceId: string;
+  readonly childRunId: string;
+  readonly definitionRef: string;
+  readonly flowRef: string;
+  readonly contractDigest: string;
+}
+
+function normalizeAIDataChildInvocationIdentity(
+  value: unknown,
+  parentRunId: string,
+  parentNodeId: string,
+  parentGeneration: number,
+  subflowValue: unknown,
+  location: string,
+): NormalizedAIDataChildInvocationIdentity {
+  const identity = exactRecord(value, [
+    'schemaVersion', 'invocationKey', 'parentInstanceId', 'parentRunId', 'parentNodeId', 'parentGeneration',
+    'childInstanceId', 'childRunId', 'subflow',
+  ], [], location);
+  if (dataField(identity, 'schemaVersion', `${location}.schemaVersion`) !== 'depa.ai-data-child-invocation/v1') {
+    invalid('AI_DATA_CHILD_INVOCATION_SCHEMA_INVALID', `${location}.schemaVersion`, 'Unsupported child invocation schema.');
+  }
+  canonicalIdentity(dataField(identity, 'parentInstanceId', `${location}.parentInstanceId`), `${location}.parentInstanceId`);
+  if (canonicalIdentity(dataField(identity, 'parentRunId', `${location}.parentRunId`), `${location}.parentRunId`) !== parentRunId
+    || canonicalIdentity(dataField(identity, 'parentNodeId', `${location}.parentNodeId`), `${location}.parentNodeId`) !== parentNodeId
+    || nonNegativeSafeInteger(dataField(identity, 'parentGeneration', `${location}.parentGeneration`), `${location}.parentGeneration`) !== parentGeneration) {
+    invalid('AI_DATA_CHILD_INVOCATION_PARENT_MISMATCH', location, 'Child invocation identity must bind the owning parent node generation.');
+  }
+  const subflow = dataField(identity, 'subflow', `${location}.subflow`);
+  normalizeAIDataSubflowBinding(subflow, `${location}.subflow`);
+  if (JSON.stringify(subflow) !== JSON.stringify(subflowValue)) {
+    invalid('AI_DATA_CHILD_INVOCATION_SUBFLOW_MISMATCH', `${location}.subflow`, 'Child invocation must bind the exact node subflow.');
+  }
+  const normalizedSubflow = plainRecord(subflow, `${location}.subflow`);
+  if (dataField(normalizedSubflow, 'kind', `${location}.subflow.kind`) !== 'autonomous') {
+    invalid('AI_DATA_CHILD_INVOCATION_SUBFLOW_INVALID', `${location}.subflow`, 'Durable child invocation requires an autonomous subflow binding.');
+  }
+  return {
+    invocationKey: canonicalIdentity(dataField(identity, 'invocationKey', `${location}.invocationKey`), `${location}.invocationKey`),
+    childInstanceId: canonicalIdentity(dataField(identity, 'childInstanceId', `${location}.childInstanceId`), `${location}.childInstanceId`),
+    childRunId: canonicalIdentity(dataField(identity, 'childRunId', `${location}.childRunId`), `${location}.childRunId`),
+    definitionRef: canonicalIdentity(dataField(normalizedSubflow, 'definitionRef', `${location}.subflow.definitionRef`), `${location}.subflow.definitionRef`),
+    flowRef: canonicalIdentity(dataField(normalizedSubflow, 'flowRef', `${location}.subflow.flowRef`), `${location}.subflow.flowRef`),
+    contractDigest: canonicalIdentity(dataField(normalizedSubflow, 'contractDigest', `${location}.subflow.contractDigest`), `${location}.subflow.contractDigest`),
+  };
+}
+
+function assertAIDataChildReceiptIdentity(
+  value: Record<string, unknown>,
+  identity: NormalizedAIDataChildInvocationIdentity,
+  location: string,
+): void {
+  for (const [field, expected] of Object.entries(identity)) {
+    if (field === 'definitionRef' || field === 'flowRef' || field === 'contractDigest'
+      || field === 'invocationKey' || field === 'childInstanceId' || field === 'childRunId') {
+      if (canonicalIdentity(dataField(value, field, `${location}.${field}`), `${location}.${field}`) !== expected) {
+        invalid('AI_DATA_CHILD_RECEIPT_IDENTITY_MISMATCH', `${location}.${field}`, 'Child receipt does not match the reserved invocation.');
+      }
+    }
+  }
+}
+
+function normalizeAIDataChildFreezeReceipt(
+  value: unknown,
+  identity: NormalizedAIDataChildInvocationIdentity,
+  location: string,
+): void {
+  const receipt = exactRecord(value, [
+    'schemaVersion', 'invocationKey', 'childInstanceId', 'childRunId', 'definitionRef', 'flowRef',
+    'contractDigest', 'definitionRevision', 'definitionDigest',
+  ], [], location);
+  if (dataField(receipt, 'schemaVersion', `${location}.schemaVersion`) !== 'depa.ai-data-child-invocation/v1') {
+    invalid('AI_DATA_CHILD_FREEZE_SCHEMA_INVALID', `${location}.schemaVersion`, 'Unsupported child freeze schema.');
+  }
+  assertAIDataChildReceiptIdentity(receipt, identity, location);
+  canonicalIdentity(dataField(receipt, 'definitionRevision', `${location}.definitionRevision`), `${location}.definitionRevision`);
+  canonicalIdentity(dataField(receipt, 'definitionDigest', `${location}.definitionDigest`), `${location}.definitionDigest`);
+}
+
+function normalizeAIDataChildTerminalReceipt(
+  value: unknown,
+  identity: NormalizedAIDataChildInvocationIdentity,
+  node: Record<string, unknown>,
+  nodeStatus: string,
+  location: string,
+): void {
+  const base = plainRecord(value, location);
+  const terminalStatus = dataField(base, 'status', `${location}.status`);
+  const receipt = exactRecord(value, [
+    'schemaVersion', 'invocationKey', 'childInstanceId', 'childRunId', 'definitionRef', 'flowRef',
+    'contractDigest', 'status', 'receiptDigest',
+    ...(terminalStatus === 'Succeeded' ? ['output'] : ['failureCode', 'failureMessage']),
+  ], [], location);
+  if (dataField(receipt, 'schemaVersion', `${location}.schemaVersion`) !== 'depa.ai-data-child-invocation/v1') {
+    invalid('AI_DATA_CHILD_TERMINAL_SCHEMA_INVALID', `${location}.schemaVersion`, 'Unsupported child terminal schema.');
+  }
+  if (terminalStatus !== 'Succeeded' && terminalStatus !== 'Failed') {
+    invalid('AI_DATA_CHILD_TERMINAL_STATUS_INVALID', `${location}.status`, 'Child terminal receipt must be Succeeded or Failed.');
+  }
+  if (terminalStatus !== nodeStatus) {
+    invalid('AI_DATA_CHILD_TERMINAL_PARENT_STATUS_MISMATCH', `${location}.status`, 'Child terminal status must equal its parent node status.');
+  }
+  assertAIDataChildReceiptIdentity(receipt, identity, location);
+  canonicalIdentity(dataField(receipt, 'receiptDigest', `${location}.receiptDigest`), `${location}.receiptDigest`);
+  if (terminalStatus === 'Succeeded') {
+    const output = plainRecord(dataField(receipt, 'output', `${location}.output`), `${location}.output`);
+    const expected = [...identityArray(
+      dataField(node, 'outputs', `${location}.nodeOutputs`),
+      `${location}.nodeOutputs`,
+    )].sort(compareCodeUnits);
+    if (JSON.stringify(stringDataKeys(output, `${location}.output`).sort(compareCodeUnits)) !== JSON.stringify(expected)) {
+      invalid('AI_DATA_CHILD_TERMINAL_OUTPUT_MISMATCH', `${location}.output`, 'Child output keys must equal the parent SubFlowNode ports.');
+    }
+  } else {
+    canonicalIdentity(dataField(receipt, 'failureCode', `${location}.failureCode`), `${location}.failureCode`);
+    canonicalIdentity(dataField(receipt, 'failureMessage', `${location}.failureMessage`), `${location}.failureMessage`);
   }
 }
 
@@ -1321,7 +1539,7 @@ function normalizeAIDataPatchNodeSpec(value: unknown, location: string): string 
   const spec = exactRecord(
     value,
     ['id'],
-    ['tag', 'nodeType', 'declarationIndex', 'inputs', 'outputs', 'config', 'dependsOn', 'reusePolicy'],
+    ['tag', 'nodeType', 'declarationIndex', 'inputs', 'outputs', 'config', 'subflow', 'dependsOn', 'reusePolicy'],
     location,
   );
   const nodeId = canonicalIdentity(dataField(spec, 'id', `${location}.id`), `${location}.id`);
@@ -1333,7 +1551,7 @@ function normalizeAIDataPatchNodeChanges(value: unknown, location: string): void
   const changes = exactRecord(
     value,
     [],
-    ['tag', 'nodeType', 'inputs', 'outputs', 'config', 'dependsOn', 'reusePolicy'],
+    ['tag', 'nodeType', 'inputs', 'outputs', 'config', 'subflow', 'dependsOn', 'reusePolicy'],
     location,
   );
   normalizeAIDataPatchNodeFields(changes, location);
@@ -1349,6 +1567,10 @@ function normalizeAIDataPatchNodeFields(record: Record<string, unknown>, locatio
     if (Object.prototype.hasOwnProperty.call(record, field)) uniqueIdentityArray(dataField(record, field, `${location}.${field}`), `${location}.${field}`);
   }
   if (Object.prototype.hasOwnProperty.call(record, 'config')) plainRecord(dataField(record, 'config', `${location}.config`), `${location}.config`);
+  if (Object.prototype.hasOwnProperty.call(record, 'subflow')) {
+    const value = dataField(record, 'subflow', `${location}.subflow`);
+    if (value !== null) normalizeAIDataSubflowBinding(value, `${location}.subflow`);
+  }
   if (Object.prototype.hasOwnProperty.call(record, 'reusePolicy')) {
     const reuse = exactRecord(dataField(record, 'reusePolicy', `${location}.reusePolicy`), ['policy', 'source', 'nodeType'], [], `${location}.reusePolicy`);
     canonicalIdentity(dataField(reuse, 'nodeType', `${location}.reusePolicy.nodeType`), `${location}.reusePolicy.nodeType`);

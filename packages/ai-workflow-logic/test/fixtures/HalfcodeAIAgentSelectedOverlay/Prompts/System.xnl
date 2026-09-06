@@ -1,4 +1,4 @@
-<Prompt #depa.flows.test.Prompt.System apiVersion="depa.flows/v1" version="1.0.0" {
+<Prompt #depa.flows.test.Prompt.System envelopeVersion="halfcode.resource-envelope/v1" specVersion=1 {
   lifecycle = "Active"
   description = "Changed selected system prompt"
   template = "Use the selected overlay prompt."

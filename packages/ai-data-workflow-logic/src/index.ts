@@ -11,6 +11,9 @@ import type {
   AIDataWorkflowRunNode,
   AIDataWorkflowRunNodeStatus,
   AIDataWorkflowSemanticInput,
+  AIDataWorkflowSubFlowBinding,
+  AIDataWorkflowChildInvocationIdentity,
+  AIDataWorkflowChildTerminalReceipt,
 } from 'ai-data-workflow-contract';
 import type {
   AIDataWorkflowDefinitionBinding,
@@ -63,6 +66,7 @@ import { assertFrozenAIAgentTaskBinding } from 'ai-workflow-logic/run-freeze';
 
 export * from './holon-task.js';
 export * from './autonomous-control.js';
+export * from './child-invocation.js';
 
 export interface CreateAIDataWorkflowCheckpointInput {
   readonly instanceId: string;
@@ -287,12 +291,20 @@ function cloneInvalidation(invalidation: AIDataWorkflowInvalidation): AIDataWork
   return { ...invalidation };
 }
 
+function cloneSubflow(binding: AIDataWorkflowSubFlowBinding): AIDataWorkflowSubFlowBinding {
+  return { ...binding };
+}
+
 function cloneNode(node: AIDataWorkflowRunNode): AIDataWorkflowRunNode {
   return {
     ...node,
     inputs: cloneRecord(node.inputs),
     outputs: [...node.outputs],
     config: cloneRecord(node.config),
+    ...(node.subflow ? { subflow: cloneSubflow(node.subflow) } : {}),
+    ...(node.childInvocation ? { childInvocation: cloneChildInvocation(node.childInvocation) } : {}),
+    ...(node.childFreezeReceipt ? { childFreezeReceipt: { ...node.childFreezeReceipt } } : {}),
+    ...(node.childTerminalReceipt ? { childTerminalReceipt: cloneChildTerminalReceipt(node.childTerminalReceipt) } : {}),
     dependsOn: [...node.dependsOn],
     dependents: [...node.dependents],
     reusePolicy: { ...node.reusePolicy },
@@ -300,6 +312,16 @@ function cloneNode(node: AIDataWorkflowRunNode): AIDataWorkflowRunNode {
     ...(node.result ? { result: cloneNodeResult(node.result) } : {}),
     ...(node.invalidatedBy ? { invalidatedBy: node.invalidatedBy.map(cloneInvalidation) } : {}),
   };
+}
+
+function cloneChildInvocation(identity: AIDataWorkflowChildInvocationIdentity): AIDataWorkflowChildInvocationIdentity {
+  return { ...identity, subflow: { ...identity.subflow } };
+}
+
+function cloneChildTerminalReceipt(receipt: AIDataWorkflowChildTerminalReceipt): AIDataWorkflowChildTerminalReceipt {
+  return receipt.status === 'Succeeded'
+    ? { ...receipt, output: { ...receipt.output } }
+    : { ...receipt };
 }
 
 function cloneNodeResult(result: AIWorkflowNodeResult): AIWorkflowNodeResult {
@@ -326,7 +348,27 @@ function cloneGraph(graph: AIDataWorkflowRunGraph): AIDataWorkflowRunGraph {
     declarationOrder: [...graph.declarationOrder],
     patchHistory: graph.patchHistory.map((record) => ({
       ...record,
-      operations: record.operations.map((operation) => ({ ...operation })),
+      operations: record.operations.map((operation) => {
+        if (operation.op === 'add-node') {
+          return {
+            ...operation,
+            node: {
+              ...operation.node,
+              ...(operation.node.subflow ? { subflow: cloneSubflow(operation.node.subflow) } : {}),
+            },
+          };
+        }
+        if (operation.op === 'update-node') {
+          return {
+            ...operation,
+            changes: {
+              ...operation.changes,
+              ...(operation.changes.subflow ? { subflow: cloneSubflow(operation.changes.subflow) } : {}),
+            },
+          };
+        }
+        return { ...operation };
+      }),
     })),
     invalidations: graph.invalidations.map(cloneInvalidation),
   };
@@ -352,6 +394,40 @@ function nodeOutputs(node: EagerDataFlowNodePlan): readonly string[] {
 function nodeConfig(node: EagerDataFlowNodePlan): AIDataWorkflowNodeConfig {
   if ('config' in node) return cloneRecord(node.config);
   return {};
+}
+
+function nodeSubflow(node: EagerDataFlowNodePlan): AIDataWorkflowSubFlowBinding | undefined {
+  if (node.tag !== 'SubFlowNode') return undefined;
+  return {
+    kind: 'declared',
+    flowRef: node.flow as `eager-data-flow://${string}`,
+  };
+}
+
+function assertSubflowBinding(
+  tag: AIDataWorkflowNodeTag,
+  binding: AIDataWorkflowSubFlowBinding | undefined,
+  nodeId: string,
+): void {
+  if (tag === 'SubFlowNode' && !binding) {
+    throw new AIDataWorkflowRunGraphError(`AI Data Workflow SubFlowNode ${nodeId} requires an exact subflow binding`);
+  }
+  if (tag !== 'SubFlowNode' && binding) {
+    throw new AIDataWorkflowRunGraphError(`AI Data Workflow node ${nodeId} cannot carry a subflow binding`);
+  }
+  if (!binding) return;
+  if (!binding.flowRef.startsWith('eager-data-flow://') || binding.flowRef.length === 'eager-data-flow://'.length) {
+    throw new AIDataWorkflowRunGraphError(`AI Data Workflow SubFlowNode ${nodeId} has an invalid flow reference`);
+  }
+  if (binding.kind === 'autonomous' && (
+    binding.schemaVersion !== 'depa.ai-data-subflow-binding/v1'
+    || !binding.capabilityId
+    || !binding.catalogDigest
+    || !binding.contractDigest
+    || !binding.definitionRef.startsWith('resource://')
+  )) {
+    throw new AIDataWorkflowRunGraphError(`AI Data Workflow SubFlowNode ${nodeId} has an invalid autonomous binding`);
+  }
 }
 
 function configReusePolicy(config: AIDataWorkflowNodeConfig): AIWorkflowReusePolicy | undefined {
@@ -548,10 +624,12 @@ export function createAIDataWorkflowRunGraph(
         inputs: nodeInputs(planNode),
         outputs: nodeOutputs(planNode),
         config,
+        ...(nodeSubflow(planNode) ? { subflow: nodeSubflow(planNode) } : {}),
         dependsOn: dependencies.get(planNode.id) ?? [],
         dependents: [],
         reusePolicy,
       };
+      assertSubflowBinding(runNode.tag, runNode.subflow, runNode.id);
       return [planNode.id, runNode];
     }),
   );
@@ -574,6 +652,96 @@ export function createAIDataWorkflowRunGraph(
   return graph;
 }
 
+function isRunGraphPortReference(value: AIDataWorkflowNodeInputs[string]): value is import('eager-data-flow-contract').FlowPortReference {
+  return Boolean(value && typeof value === 'object' && !Array.isArray(value)
+    && typeof (value as { ref?: unknown }).ref === 'string'
+    && typeof (value as { nodeId?: unknown }).nodeId === 'string'
+    && typeof (value as { port?: unknown }).port === 'string');
+}
+
+/** Projects the current admitted RunGraph, including autonomous nodes, into the canonical Eager executor plan. */
+export function projectAIDataWorkflowRunGraphPlan(graph: AIDataWorkflowRunGraph): EagerDataFlowAuthoringPlan {
+  const activeOrder = graph.declarationOrder.filter((nodeId) => graph.nodes[nodeId]?.status !== 'Removed');
+  const nodePlans = activeOrder.map((nodeId): EagerDataFlowNodePlan => {
+    const node = graph.nodes[nodeId];
+    const base = graph.binding.definition.nodeById[nodeId]
+      ?? graph.binding.definition.nodes.find((candidate) => candidate.id === nodeId);
+    const dataDependencies = new Set(Object.values(node.inputs).flatMap((binding) => (
+      isRunGraphPortReference(binding) ? [binding.nodeId] : []
+    )));
+    const waitFor = node.dependsOn
+      .filter((dependency) => !dataDependencies.has(dependency))
+      .map((dependency) => ({ ref: `flow-node://#${dependency}`, nodeId: dependency }));
+    const common = { id: node.id, declarationIndex: node.declarationIndex, waitFor };
+    if (node.tag === 'EntryNode') return { ...common, tag: 'EntryNode', outputs: [...node.outputs] };
+    if (node.tag === 'ReturnNode') {
+      return { ...common, tag: 'ReturnNode', inputs: { ...node.inputs } } as EagerDataFlowNodePlan;
+    }
+    if (node.tag === 'SubFlowNode') {
+      if (!node.subflow) throw new AIDataWorkflowRunGraphError(`SubFlowNode ${node.id} has no durable child binding.`);
+      return {
+        ...common,
+        tag: 'SubFlowNode',
+        flow: node.subflow.flowRef,
+        inputs: { ...node.inputs },
+        outputs: [...node.outputs],
+      } as EagerDataFlowNodePlan;
+    }
+    if (node.tag !== 'TransformNode' && node.tag !== 'SinkNode') {
+      throw new AIDataWorkflowRunGraphError(`RunGraph node ${node.id} has unsupported executable tag ${node.tag}.`);
+    }
+    const configuredSource = typeof node.config.src === 'string' ? node.config.src : undefined;
+    const configuredImpl = typeof node.config.impl === 'string' ? node.config.impl : undefined;
+    const baseExecutable = base && (base.tag === 'TransformNode' || base.tag === 'SinkNode') ? base : undefined;
+    const executable = {
+      ...(configuredSource ?? baseExecutable?.src ? { src: configuredSource ?? baseExecutable?.src } : {}),
+      ...(configuredImpl ?? baseExecutable?.impl ? { impl: configuredImpl ?? baseExecutable?.impl } : {}),
+    };
+    return {
+      ...common,
+      tag: node.tag,
+      inputs: { ...node.inputs },
+      ...(node.tag === 'TransformNode' ? { outputs: [...node.outputs] } : {}),
+      ...executable,
+      config: { ...node.config },
+    } as EagerDataFlowNodePlan;
+  });
+  const nodeById = Object.fromEntries(nodePlans.map((node) => [node.id, node]));
+  const dataEdges = nodePlans.flatMap((node) => node.tag === 'EntryNode' ? [] : Object.entries(node.inputs).flatMap(
+    ([input, binding]) => isRunGraphPortReference(binding) ? [{
+      kind: 'data' as const,
+      fromNodeId: binding.nodeId,
+      fromPort: binding.port,
+      toNodeId: node.id,
+      toInput: input,
+      ref: binding.ref,
+    }] : [],
+  ));
+  const waitForEdges = nodePlans.flatMap((node) => node.waitFor.map((reference) => ({
+    kind: 'waitFor' as const,
+    fromNodeId: reference.nodeId,
+    toNodeId: node.id,
+    ref: reference.ref,
+  })));
+  const subflowEdges = nodePlans.flatMap((node) => node.tag === 'SubFlowNode' ? [{
+    kind: 'subflow' as const,
+    fromFlowId: graph.binding.definition.fqn,
+    nodeId: node.id,
+    targetFlowId: node.flow.slice('eager-data-flow://'.length),
+    ref: node.flow,
+  }] : []);
+  return {
+    ...graph.binding.definition,
+    nodes: nodePlans,
+    nodeById,
+    declarationOrder: activeOrder,
+    dataEdges,
+    waitForEdges,
+    subflowEdges,
+    diagnostics: [],
+  };
+}
+
 function makePatchNode(
   spec: AIDataWorkflowGraphPatchNodeSpec,
   generation: number,
@@ -588,6 +756,8 @@ function makePatchNode(
     platformDefaultPolicy,
   });
   assertReusePolicyAuthority(reusePolicy, nodeType, config, platformDefaultPolicy, spec.id);
+  const subflow = spec.subflow ? cloneSubflow(spec.subflow) : undefined;
+  assertSubflowBinding(tag, subflow, spec.id);
   return {
     id: spec.id,
     tag,
@@ -598,6 +768,7 @@ function makePatchNode(
     inputs: cloneRecord(spec.inputs),
     outputs: [...(spec.outputs ?? [])],
     config,
+    ...(subflow ? { subflow } : {}),
     dependsOn: uniqueStrings(spec.dependsOn ?? []),
     dependents: [],
     reusePolicy,
@@ -663,6 +834,9 @@ function applyInvalidations(
       const {
         result: _staleResult,
         semanticFingerprint: _staleFingerprint,
+        childInvocation: _staleChildInvocation,
+        childFreezeReceipt: _staleChildFreezeReceipt,
+        childTerminalReceipt: _staleChildTerminalReceipt,
         ...currentFacts
       } = node;
       nextNodes = {
@@ -783,6 +957,13 @@ export function applyAIDataWorkflowGraphPatch(
         );
       }
       const config = operation.changes.config ? cloneRecord(operation.changes.config) : existing.config;
+      const tag = operation.changes.tag ?? existing.tag;
+      const subflow = Object.prototype.hasOwnProperty.call(operation.changes, 'subflow')
+        ? operation.changes.subflow === null || operation.changes.subflow === undefined
+          ? undefined
+          : cloneSubflow(operation.changes.subflow)
+        : existing.subflow;
+      assertSubflowBinding(tag, subflow, existing.id);
       const nodeType = operation.changes.nodeType ?? existing.nodeType;
       const dependsOn = operation.changes.dependsOn
         ? uniqueStrings(operation.changes.dependsOn)
@@ -798,17 +979,26 @@ export function applyAIDataWorkflowGraphPatch(
           : existing.reusePolicy
       );
       assertReusePolicyAuthority(reusePolicy, nodeType, config, graph.platformDefaultPolicy, existing.id);
+      const { subflow: _existingSubflow, ...existingWithoutSubflow } = existing;
+      const {
+        childInvocation: _staleChildInvocation,
+        childFreezeReceipt: _staleChildFreezeReceipt,
+        childTerminalReceipt: _staleChildTerminalReceipt,
+        ...existingWithoutChild
+      } = existingWithoutSubflow;
+      const { subflow: _changedSubflow, ...changesWithoutSubflow } = operation.changes;
       nodes = {
         ...nodes,
         [existing.id]: {
-          ...existing,
-          ...operation.changes,
-          tag: operation.changes.tag ?? existing.tag,
+          ...existingWithoutChild,
+          ...changesWithoutSubflow,
+          tag,
           nodeType,
           generation,
           inputs: operation.changes.inputs ? cloneRecord(operation.changes.inputs) : existing.inputs,
           outputs: operation.changes.outputs ? [...operation.changes.outputs] : existing.outputs,
           config,
+          ...(subflow ? { subflow } : {}),
           dependsOn,
           reusePolicy,
         },
@@ -834,6 +1024,9 @@ export function applyAIDataWorkflowGraphPatch(
       result: _staleResult,
       semanticFingerprint: _staleFingerprint,
       invalidatedBy: _activeInvalidation,
+      childInvocation: _staleChildInvocation,
+      childFreezeReceipt: _staleChildFreezeReceipt,
+      childTerminalReceipt: _staleChildTerminalReceipt,
       ...currentFacts
     } = existing;
     nodes = {

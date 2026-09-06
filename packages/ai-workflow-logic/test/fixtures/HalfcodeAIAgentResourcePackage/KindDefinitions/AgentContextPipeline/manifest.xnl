@@ -1,4 +1,21 @@
-<KindDefinition #depa.flows.kind.AgentContextPipeline apiVersion="halfcode.resources/v1" version="1.0.0" {
-  lifecycle = "Stable" resourceKind = "AgentContextPipeline" sourceShapes = ["single-file"]
-  currentApiVersion = "depa.flows/v1" supportedApiVersions = ["depa.flows/v1"]
-}>
+<KindDefinition #Depa.Flows.KindDefinition.AgentContextPipeline envelopeVersion="halfcode.resource-envelope/v1" specVersion=1 {
+  lifecycle = "Stable"
+  resourceKind = "AgentContextPipeline"
+  subjectFqn = "Depa.Flows.KindDefinition.AgentContextPipeline"
+  sourceShapes = ["single-file"]
+  documentCardinality = "one"
+  description = "Canonical depa-flows AgentContextPipeline resource contract."
+} (
+  <SpecRevisions [
+    <SpecRevision #v1 {
+      specVersion = 1
+      schemaRef = "vfs://./spec-v1.schema.json"
+      schemaFingerprint = "sha256:29ef0e740cf4b64a16a72a6ba4d2cb11ef419d4d7bc2e75f38878fd7b085b678"
+      contractFingerprint = "sha256:4dbd57579a67676cc5e4d566cd4f29875b75ea4fc5769226458653d523ea9c2d"
+      semanticValidatorFingerprint = "sha256:bc8b5b9c27cd35edd5fc96ba75b2a6f7b70466bdff04131cdccedc84f88a1d49"
+      referenceProjectionFingerprint = "sha256:f325dd85afd4ef0cf8e27f0c0c68e585ff7164a69aa110a7efc75f99e0591ba5"
+      compilerInputFingerprint = "sha256:ca98ba1de5f1d1f68f546a8dcdf74b9cfc88ffb9d9f40c279a551fb0c3a5b734"
+      stability = "stable"
+    }>
+  ]>
+)>

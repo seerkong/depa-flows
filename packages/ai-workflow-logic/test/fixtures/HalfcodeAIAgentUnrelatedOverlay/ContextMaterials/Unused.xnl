@@ -1,4 +1,4 @@
-<ContextMaterial #depa.flows.test.Material.Unused apiVersion="depa.flows/v1" version="1.0.0" {
+<ContextMaterial #depa.flows.test.Material.Unused envelopeVersion="halfcode.resource-envelope/v1" specVersion=1 {
   lifecycle = "Active"
   description = "Changed unreachable material"
   value = "unused-overlay"

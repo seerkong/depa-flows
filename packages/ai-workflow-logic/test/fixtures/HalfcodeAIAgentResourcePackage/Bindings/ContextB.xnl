@@ -1,4 +1,4 @@
-<MaterialBinding #depa.flows.test.Binding.Context.B apiVersion="depa.flows/v1" version="1.0.0" {
+<MaterialBinding #depa.flows.test.Binding.Context.B envelopeVersion="halfcode.resource-envelope/v1" specVersion=1 {
   lifecycle = "Active"
   description = "Context binding B"
 } (

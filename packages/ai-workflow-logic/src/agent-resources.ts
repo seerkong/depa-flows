@@ -25,6 +25,7 @@ import type {
 } from 'halfcode-compiler.xnl/resource-core';
 import { markAIWorkflowAgentResourceProjection } from './agent-resource-brand.js';
 import { AIWorkflowResourceProjectionError } from './errors.js';
+import { projectAIAgentCodeResources } from './agent-code-projection.js';
 
 const AGENT_SUBDOMAINS = Object.freeze([
   'Messages',
@@ -43,6 +44,7 @@ export function projectAIWorkflowAgentResources(
   const diagnostics: AIWorkflowResourceProjectionDiagnostic[] = [];
   const resources = buildResourceIndex(registry, diagnostics);
   const edges: ResourceDependencyEdge[] = [];
+  const codeResources = projectAIAgentCodeResources(resources, edges);
 
   const materialPorts = recordsForKind(registry, 'MaterialPort')
     .map((resource) => projectMaterialPort(resource, resources, edges, diagnostics))
@@ -60,6 +62,7 @@ export function projectAIWorkflowAgentResources(
 
   if (diagnostics.length > 0) throwProjectionError(diagnostics);
   return markAIWorkflowAgentResourceProjection(Object.freeze({
+    codeResources,
     agentDefinitions: Object.freeze(agentDefinitions),
     materialPorts: Object.freeze(materialPorts),
     materialBindings: Object.freeze(materialBindings),

@@ -2,7 +2,13 @@ import { describe, expect, test } from 'bun:test';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import type { AIWorkflowStateProjection } from 'ai-workflow-contract';
+import type {
+  AIDataWorkflowAutonomousSubFlowBinding,
+  AIDataWorkflowChildInvocationIdentity,
+  AIDataWorkflowChildInvocationRuntimePort,
+} from 'ai-data-workflow-contract';
+import type { AIWorkflowStateProjection, FlowClosedObject } from 'ai-workflow-contract';
+import type { EagerDataFlowExecutable } from 'eager-data-flow-contract';
 import { freezeAIWorkflowRunResourcesFromDirectory, projectFrozenAIAgentTaskBinding } from 'ai-workflow-logic/run-freeze';
 import { FilesystemFlowRunCheckpointStore } from 'ai-workflow-logic/checkpoint-filesystem';
 import { createInitialRunStepExtensions, mutateRunStepExtension } from 'ai-workflow-logic';
@@ -339,6 +345,536 @@ describe('materialized AI Data canonical execution', () => {
     await expect(loadMaterializedAIDataWorkflowRun(runtime, {
       instanceId: 'data-instance', runId: 'data-run',
     })).rejects.toMatchObject({ code: 'flow-run-checkpoint-invalid' });
+  });
+
+  test('converges competing fresh resumes on one autonomous child and accepted effect', async () => {
+    const supportRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-data-autonomous-child-'));
+    const source = path.join(supportRoot, 'source');
+    fs.mkdirSync(source);
+    const manifest = `<AIDataWorkflow #depa.flows.test.AutonomousParent apiVersion="depa.flows/v1" version="1" (
+      <FlowContract #depa.flows.test.AutonomousParent { inputPorts = ["value"] outputPorts = ["result"] }>
+    ) [
+      <EntryNode #entry>
+      <TransformNode #prepare {
+        inputs = { value = "flow-port://#entry/value" }
+        outputs = ["result"]
+        src = "vfs://./flow-code.ts#prepare"
+      }>
+      <ReturnNode #return { inputs = { result = "flow-port://#prepare/result" } }>
+    ]>`;
+    fs.writeFileSync(path.join(source, 'manifest.xnl'), manifest);
+    fs.writeFileSync(path.join(source, 'flow-code.ts'), 'export function prepare(runtime, input) { return { result: input.value }; }\n');
+    const instance = materializeFlowInstance({
+      definitionDir: source,
+      instancesDir: path.join(supportRoot, 'instances'),
+      instanceId: 'autonomous-parent-instance',
+      source: {
+        revision: 'parent-r1',
+        provenance: { authority: 'resource-package', artifactRef: 'resource://depa.flows.test.AutonomousParent' },
+      },
+      validateDefinition: () => undefined,
+    });
+    const loaded = loadAIDataWorkflowSources({ 'manifest.xnl': manifest });
+    if (!loaded.binding) throw new Error('autonomous parent fixture did not load');
+    const baseGraph = createAIDataWorkflowRunGraph({ binding: loaded.binding, runId: 'autonomous-parent-run' });
+    const subflow = {
+      kind: 'autonomous' as const,
+      schemaVersion: 'depa.ai-data-subflow-binding/v1' as const,
+      capabilityId: 'child-capability',
+      catalogDigest: 'sha256:catalog',
+      definitionRef: 'resource://depa.flows.test.Child' as const,
+      flowRef: 'eager-data-flow://depa.flows.test.Child' as const,
+      contractDigest: 'sha256:child-contract',
+    };
+    const revisedGraph = applyAIDataWorkflowGraphPatch(baseGraph, {
+      patchId: 'add-autonomous-child',
+      generation: 1,
+      operations: [{
+        op: 'add-node',
+        node: {
+          id: 'child', tag: 'SubFlowNode', nodeType: 'subflow', subflow,
+          inputs: { value: { ref: 'flow-port://#entry/value', nodeId: 'entry', port: 'value' } },
+          outputs: ['result'], dependsOn: ['entry'],
+        },
+      }, {
+        op: 'update-node',
+        nodeId: 'return',
+        changes: {
+          inputs: { result: { ref: 'flow-port://#child/result', nodeId: 'child', port: 'result' } },
+          dependsOn: ['child'],
+        },
+      }],
+    });
+    const profileAuthority = createMaterializedAIDataWorkflowProfileAuthority({ supportRoot });
+    const checkpointStore = new FilesystemFlowRunCheckpointStore({ storeRoot: supportRoot, profileAuthority });
+    const { baseUri: _baseUri, definitionStepForest: _forest, ...definition } = baseGraph.binding.definition;
+    const durableBase = { ...baseGraph, binding: { ...baseGraph.binding, definition } };
+    const v0 = await createAIDataWorkflowCheckpoint({ checkpointStore }, {
+      instanceId: 'autonomous-parent-instance',
+      definition: instance.descriptor.definition,
+      graph: durableBase,
+      input: { value: 'subject' }, config: {}, state: { status: 'Pending', generation: 0 }, output: null,
+      controllerSidecars: { status: 'Pending' },
+      nodeSidecars: Object.fromEntries(baseGraph.declarationOrder.map((nodeId) => [nodeId, { status: 'Pending', generation: 0 }])),
+      ai: { schemaVersion: 'depa.ai-agent-state/v1', instancesById: {}, instanceIdByName: {}, invocationsByKey: {} },
+    });
+    const { baseUri: _revisedBaseUri, definitionStepForest: _revisedForest, ...revisedDefinition } = revisedGraph.binding.definition;
+    const durableRevised = { ...revisedGraph, binding: { ...revisedGraph.binding, definition: revisedDefinition } };
+    await commitAIDataWorkflowCheckpoint({ checkpointStore }, {
+      expectedVersion: v0.version,
+      checkpoint: {
+        ...v0,
+        version: 1,
+        state: { status: 'Pending', generation: 1 },
+        nodeSidecars: Object.fromEntries(revisedGraph.declarationOrder.map((nodeId) => [nodeId, {
+          status: revisedGraph.nodes[nodeId].status,
+          generation: revisedGraph.nodes[nodeId].generation,
+        }])),
+        profile: { ...v0.profile, runGraph: durableRevised },
+      },
+    });
+
+    const childPlan = {
+      form: 'EagerDataFlow' as const,
+      fqn: 'depa.flows.test.Child', apiVersion: 'depa.flows/v1', version: '1', sourceNames: ['child.xnl'],
+      contract: { id: 'depa.flows.test.Child', inputPorts: ['value'], outputPorts: ['result'] },
+      nodes: [], nodeById: {}, declarationOrder: [], dataEdges: [], waitForEdges: [], subflowEdges: [], diagnostics: [],
+    };
+    const childExecutable: EagerDataFlowExecutable = {
+      plan: childPlan,
+      async invoke() { throw new Error('autonomous child must execute through its durable invocation port'); },
+    };
+    const childInput = new Map<string, string>();
+    const childStatus = new Map<string, 'Running' | 'Succeeded'>();
+    const calls = { freeze: 0, start: 0, load: 0, settle: 0 };
+    let acceptedEffects = 0;
+    let allowCompletion = false;
+    const childInvocations: AIDataWorkflowChildInvocationRuntimePort = {
+      async resolveAndFreeze({ identity }) {
+        calls.freeze += 1;
+        return {
+          schemaVersion: 'depa.ai-data-child-invocation/v1', invocationKey: identity.invocationKey,
+          childInstanceId: identity.childInstanceId, childRunId: identity.childRunId,
+          definitionRef: identity.subflow.definitionRef, flowRef: identity.subflow.flowRef,
+          contractDigest: identity.subflow.contractDigest,
+          definitionRevision: 'child-r1', definitionDigest: 'sha256:child-definition',
+        };
+      },
+      async startOrContinue({ identity, input }) {
+        calls.start += 1;
+        if (!childStatus.has(identity.invocationKey)) {
+          childInput.set(identity.invocationKey, String(input.value));
+          childStatus.set(identity.invocationKey, 'Running');
+          acceptedEffects += 1;
+        }
+        if (allowCompletion) {
+          childStatus.set(identity.invocationKey, 'Succeeded');
+        }
+        return {
+          schemaVersion: 'depa.ai-data-child-invocation/v1', invocationKey: identity.invocationKey,
+          childInstanceId: identity.childInstanceId, childRunId: identity.childRunId,
+          status: childStatus.get(identity.invocationKey)!,
+        };
+      },
+      async load({ identity }) {
+        calls.load += 1;
+        return {
+          schemaVersion: 'depa.ai-data-child-invocation/v1', invocationKey: identity.invocationKey,
+          childInstanceId: identity.childInstanceId, childRunId: identity.childRunId,
+          status: childStatus.get(identity.invocationKey)!,
+        };
+      },
+      async settle({ identity }) {
+        calls.settle += 1;
+        return {
+          schemaVersion: 'depa.ai-data-child-invocation/v1', invocationKey: identity.invocationKey,
+          childInstanceId: identity.childInstanceId, childRunId: identity.childRunId,
+          definitionRef: identity.subflow.definitionRef, flowRef: identity.subflow.flowRef,
+          contractDigest: identity.subflow.contractDigest, status: 'Succeeded',
+          output: { result: `child:${childInput.get(identity.invocationKey)}` },
+          receiptDigest: `sha256:receipt:${identity.invocationKey}`,
+        };
+      },
+    };
+    const stateProjection: AIWorkflowStateProjection = { async loadRunState() { return undefined; } };
+    const runtime = {
+      supportRoot,
+      workflow: {
+        ai: {
+          roots: { globalRoot: 'vfs://global', workspaceRoot: 'vfs://workspace' },
+          effects: { async invoke<Input, Output>(): Promise<Output> { return undefined as Output; } },
+          stateStore: stateProjection,
+        },
+      },
+      importModule: async () => ({ prepare: (_runtime: unknown, input: { value: string }) => ({ result: input.value }) }),
+      childFlows: {
+        'depa.flows.test.Child': {
+          definitionRef: subflow.definitionRef,
+          contractDigest: subflow.contractDigest,
+          executable: childExecutable,
+        },
+      },
+      childInvocations,
+    } as const;
+    const runKey = {
+      instanceId: 'autonomous-parent-instance', runId: 'autonomous-parent-run',
+    } as const;
+    await expect(continueMaterializedAIDataWorkflow({
+      ...runtime,
+      checkpointObserver({ checkpoint, nodeId, phase }) {
+        const child = checkpoint.profile.runGraph.nodes.child;
+        if (nodeId === 'child' && phase === 'before' && child.childInvocation && !child.childFreezeReceipt) {
+          throw new Error('crash-after-parent-reservation');
+        }
+      },
+    }, runKey, {})).rejects.toThrow('crash-after-parent-reservation');
+    const reservedOnly = await loadMaterializedAIDataWorkflowRun(runtime, runKey);
+    expect(reservedOnly?.graph.nodes.child.childInvocation).toBeDefined();
+    expect(reservedOnly?.graph.nodes.child.childFreezeReceipt).toBeUndefined();
+    expect(calls.start).toBe(0);
+
+    await expect(continueMaterializedAIDataWorkflow({
+      ...runtime,
+      checkpointObserver({ checkpoint, nodeId, phase }) {
+        const child = checkpoint.profile.runGraph.nodes.child;
+        if (nodeId === 'child' && phase === 'before' && child.childFreezeReceipt
+          && !child.childTerminalReceipt) {
+          throw new Error('crash-after-child-freeze');
+        }
+      },
+    }, runKey, {})).rejects.toThrow('crash-after-child-freeze');
+    const frozenOnly = await loadMaterializedAIDataWorkflowRun(runtime, runKey);
+    expect(frozenOnly?.graph.nodes.child.childFreezeReceipt?.definitionRevision).toBe('child-r1');
+    expect(calls.start).toBe(0);
+
+    const competing = await Promise.allSettled([
+      continueMaterializedAIDataWorkflow(runtime, runKey, {}),
+      continueMaterializedAIDataWorkflow({ ...runtime }, runKey, {}),
+    ]);
+    expect(competing.every((attempt) => attempt.status === 'rejected')).toBe(true);
+    expect(competing.some((attempt) => attempt.status === 'rejected'
+      && String(attempt.reason).includes('version conflict'))).toBe(false);
+    const suspended = await loadMaterializedAIDataWorkflowRun(runtime, runKey);
+    const reservedChildRunId = suspended?.graph.nodes.child.childInvocation?.childRunId;
+    expect(reservedChildRunId).toContain('--child-');
+    expect(suspended?.graph.nodes.child.childFreezeReceipt?.definitionRevision).toBe('child-r1');
+    expect(childStatus.size).toBe(1);
+    expect(acceptedEffects).toBe(1);
+
+    allowCompletion = true;
+    await expect(continueMaterializedAIDataWorkflow({
+      ...runtime,
+      childInvocationObserver() {
+        throw new Error('crash-after-child-terminal-before-parent-accept');
+      },
+    }, runKey, {})).rejects.toThrow('crash-after-child-terminal-before-parent-accept');
+    const terminalBeforeParentAccept = await loadMaterializedAIDataWorkflowRun(runtime, runKey);
+    expect(terminalBeforeParentAccept?.graph.nodes.child.status).toBe('Running');
+    expect(terminalBeforeParentAccept?.graph.nodes.child.childTerminalReceipt).toBeUndefined();
+    expect(childStatus.get(terminalBeforeParentAccept!.graph.nodes.child.childInvocation!.invocationKey)).toBe('Succeeded');
+
+    await expect(continueMaterializedAIDataWorkflow({
+      ...runtime,
+      checkpointObserver({ checkpoint, nodeId, phase }) {
+        if (nodeId === 'child' && phase === 'after'
+          && checkpoint.profile.runGraph.nodes.child.childTerminalReceipt) {
+          throw new Error('crash-after-parent-accept');
+        }
+      },
+    }, runKey, {})).rejects.toThrow('crash-after-parent-accept');
+
+    const reused = await continueMaterializedAIDataWorkflow({ ...runtime }, runKey, {});
+    expect(reused.checkpoint.output).toEqual({ result: 'child:subject' });
+    expect(reused.graph.nodes.child.childInvocation?.childRunId).toBe(reservedChildRunId);
+    expect(reused.graph.nodes.child.childTerminalReceipt?.status).toBe('Succeeded');
+    expect(calls.freeze).toBeGreaterThanOrEqual(1);
+    expect(calls.start).toBeGreaterThanOrEqual(3);
+    expect(calls.load).toBeGreaterThanOrEqual(1);
+    expect(calls.settle).toBe(2);
+    expect(acceptedEffects).toBe(1);
+  });
+
+  test('executes A to B to C through recursive materialized subflow checkpoints', async () => {
+    const supportRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-data-recursive-subflow-'));
+    const sourceFor = (name: 'A' | 'B' | 'C'): string => {
+      const source = path.join(supportRoot, `source-${name.toLowerCase()}`);
+      fs.mkdirSync(source);
+      const fqn = `depa.flows.test.Recursive${name}`;
+      fs.writeFileSync(path.join(source, 'manifest.xnl'), `<AIDataWorkflow #${fqn} apiVersion="depa.flows/v1" version="1" (
+        <FlowContract #${fqn} { inputPorts = ["value"] outputPorts = ["result"] }>
+      ) [
+        <EntryNode #entry>
+        <TransformNode #prepare {
+          inputs = { value = "flow-port://#entry/value" }
+          outputs = ["result"]
+          src = "vfs://./flow-code.ts#prepare"
+        }>
+        <ReturnNode #return { inputs = { result = "flow-port://#prepare/result" } }>
+      ]>`);
+      fs.writeFileSync(path.join(source, 'flow-code.ts'), 'export function prepare(runtime, input) { return { result: input.value }; }\n');
+      return source;
+    };
+    const sourceA = sourceFor('A');
+    const sourceB = sourceFor('B');
+    const sourceC = sourceFor('C');
+    const bindingFor = (name: 'B' | 'C'): AIDataWorkflowAutonomousSubFlowBinding => ({
+      kind: 'autonomous',
+      schemaVersion: 'depa.ai-data-subflow-binding/v1',
+      capabilityId: `recursive-${name.toLowerCase()}`,
+      catalogDigest: 'sha256:recursive-catalog',
+      definitionRef: `resource://depa.flows.test.Recursive${name}`,
+      flowRef: `eager-data-flow://depa.flows.test.Recursive${name}`,
+      contractDigest: `sha256:recursive-${name.toLowerCase()}-contract`,
+    });
+    const bindingB = bindingFor('B');
+    const bindingC = bindingFor('C');
+    const profileAuthority = createMaterializedAIDataWorkflowProfileAuthority({ supportRoot });
+    const checkpointStore = new FilesystemFlowRunCheckpointStore({ storeRoot: supportRoot, profileAuthority });
+    const admitAutonomousParent = async (input: {
+      readonly source: string;
+      readonly instanceId: string;
+      readonly runId: string;
+      readonly value: string;
+      readonly child: AIDataWorkflowAutonomousSubFlowBinding;
+    }): Promise<void> => {
+      const manifest = fs.readFileSync(path.join(input.source, 'manifest.xnl'), 'utf8');
+      const instance = materializeFlowInstance({
+        definitionDir: input.source,
+        instancesDir: path.join(supportRoot, 'instances'),
+        instanceId: input.instanceId,
+        source: {
+          revision: `recursive-${input.instanceId}-r1`,
+          provenance: { authority: 'resource-package', artifactRef: `resource://${input.instanceId}` },
+        },
+        validateDefinition: () => undefined,
+      });
+      const loaded = loadAIDataWorkflowSources({ 'manifest.xnl': manifest });
+      if (!loaded.binding) throw new Error(`recursive fixture ${input.instanceId} did not load`);
+      const baseGraph = createAIDataWorkflowRunGraph({ binding: loaded.binding, runId: input.runId });
+      const revisedGraph = applyAIDataWorkflowGraphPatch(baseGraph, {
+        patchId: `add-${input.child.capabilityId}`,
+        generation: 1,
+        operations: [{
+          op: 'add-node',
+          node: {
+            id: 'child', tag: 'SubFlowNode', nodeType: 'subflow', subflow: input.child,
+            inputs: { value: { ref: 'flow-port://#entry/value', nodeId: 'entry', port: 'value' } },
+            outputs: ['result'], dependsOn: ['entry'],
+          },
+        }, {
+          op: 'update-node',
+          nodeId: 'return',
+          changes: {
+            inputs: { result: { ref: 'flow-port://#child/result', nodeId: 'child', port: 'result' } },
+            dependsOn: ['child'],
+          },
+        }],
+      });
+      const { baseUri: _baseUri, definitionStepForest: _forest, ...definition } = baseGraph.binding.definition;
+      const v0 = await createAIDataWorkflowCheckpoint({ checkpointStore }, {
+        instanceId: input.instanceId,
+        definition: instance.descriptor.definition,
+        graph: { ...baseGraph, binding: { ...baseGraph.binding, definition } },
+        input: { value: input.value }, config: {},
+        state: { status: 'Pending', generation: 0 }, output: null,
+        controllerSidecars: { status: 'Pending' },
+        nodeSidecars: Object.fromEntries(baseGraph.declarationOrder.map((nodeId) => [nodeId, {
+          status: 'Pending', generation: 0,
+        }])),
+        ai: { schemaVersion: 'depa.ai-agent-state/v1', instancesById: {}, instanceIdByName: {}, invocationsByKey: {} },
+      });
+      const { baseUri: _revisedBaseUri, definitionStepForest: _revisedForest, ...revisedDefinition } = revisedGraph.binding.definition;
+      await commitAIDataWorkflowCheckpoint({ checkpointStore }, {
+        expectedVersion: v0.version,
+        checkpoint: {
+          ...v0,
+          version: v0.version + 1,
+          state: { status: 'Pending', generation: revisedGraph.currentGeneration },
+          nodeSidecars: Object.fromEntries(revisedGraph.declarationOrder.map((nodeId) => [nodeId, {
+            status: revisedGraph.nodes[nodeId].status,
+            generation: revisedGraph.nodes[nodeId].generation,
+          }])),
+          profile: {
+            ...v0.profile,
+            runGraph: { ...revisedGraph, binding: { ...revisedGraph.binding, definition: revisedDefinition } },
+          },
+        },
+      });
+    };
+    await admitAutonomousParent({
+      source: sourceA,
+      instanceId: 'recursive-a-instance',
+      runId: 'recursive-a-run',
+      value: 'subject',
+      child: bindingB,
+    });
+
+    const planFor = (name: 'B' | 'C') => ({
+      form: 'EagerDataFlow' as const,
+      fqn: `depa.flows.test.Recursive${name}`,
+      apiVersion: 'depa.flows/v1', version: '1', sourceNames: [`recursive-${name}.xnl`],
+      contract: {
+        id: `depa.flows.test.Recursive${name}`,
+        inputPorts: ['value'], outputPorts: ['result'],
+      },
+      nodes: [], nodeById: {}, declarationOrder: [], dataEdges: [], waitForEdges: [], subflowEdges: [], diagnostics: [],
+    });
+    const executableFor = (name: 'B' | 'C'): EagerDataFlowExecutable => ({
+      plan: planFor(name),
+      async invoke() { throw new Error(`recursive ${name} must execute through its durable invocation port`); },
+    });
+    const terminalOutput = new Map<string, FlowClosedObject>();
+    const identityByFlow = new Map<string, AIDataWorkflowChildInvocationIdentity>();
+    const started = new Set<string>();
+    const dispatchOrder: string[] = [];
+    let recursiveRuntime!: Parameters<typeof continueMaterializedAIDataWorkflow>[0];
+    const childInvocations: AIDataWorkflowChildInvocationRuntimePort = {
+      async resolveAndFreeze({ identity }) {
+        const flowId = identity.subflow.flowRef.slice('eager-data-flow://'.length);
+        identityByFlow.set(flowId, identity);
+        dispatchOrder.push(`freeze:${flowId}`);
+        return {
+          schemaVersion: 'depa.ai-data-child-invocation/v1',
+          invocationKey: identity.invocationKey,
+          childInstanceId: identity.childInstanceId,
+          childRunId: identity.childRunId,
+          definitionRef: identity.subflow.definitionRef,
+          flowRef: identity.subflow.flowRef,
+          contractDigest: identity.subflow.contractDigest,
+          definitionRevision: `${flowId}-r1`,
+          definitionDigest: `sha256:${flowId}-definition`,
+        };
+      },
+      async startOrContinue({ identity, input }) {
+        const flowId = identity.subflow.flowRef.slice('eager-data-flow://'.length);
+        dispatchOrder.push(`start:${flowId}`);
+        if (!terminalOutput.has(identity.invocationKey)) {
+          let childResult;
+          if (flowId === 'depa.flows.test.RecursiveB') {
+            if (!started.has(identity.invocationKey)) {
+              await admitAutonomousParent({
+                source: sourceB,
+                instanceId: identity.childInstanceId,
+                runId: identity.childRunId,
+                value: String(input.value),
+                child: bindingC,
+              });
+              started.add(identity.invocationKey);
+            }
+            childResult = await continueMaterializedAIDataWorkflow(recursiveRuntime, {
+              instanceId: identity.childInstanceId,
+              runId: identity.childRunId,
+            }, {});
+          } else if (flowId === 'depa.flows.test.RecursiveC') {
+            childResult = await startMaterializedAIDataWorkflow(recursiveRuntime, {
+              instanceId: identity.childInstanceId,
+              runId: identity.childRunId,
+              bundleDir: sourceC,
+              source: {
+                revision: 'recursive-c-r1',
+                provenance: { authority: 'resource-package', artifactRef: bindingC.definitionRef },
+              },
+              input,
+            }, {
+              checkpointConfig: {},
+              platformDefaultPolicy: 'never',
+              durableAI: {
+                schemaVersion: 'depa.ai-agent-state/v1', instancesById: {}, instanceIdByName: {}, invocationsByKey: {},
+              },
+            });
+          } else {
+            throw new Error(`unexpected recursive child ${flowId}`);
+          }
+          terminalOutput.set(identity.invocationKey, childResult.checkpoint.output as FlowClosedObject);
+        }
+        return {
+          schemaVersion: 'depa.ai-data-child-invocation/v1',
+          invocationKey: identity.invocationKey,
+          childInstanceId: identity.childInstanceId,
+          childRunId: identity.childRunId,
+          status: 'Succeeded',
+        };
+      },
+      async load({ identity }) {
+        return {
+          schemaVersion: 'depa.ai-data-child-invocation/v1',
+          invocationKey: identity.invocationKey,
+          childInstanceId: identity.childInstanceId,
+          childRunId: identity.childRunId,
+          status: terminalOutput.has(identity.invocationKey) ? 'Succeeded' : 'Running',
+        };
+      },
+      async settle({ identity }) {
+        const output = terminalOutput.get(identity.invocationKey);
+        if (!output) throw new Error(`recursive child ${identity.invocationKey} has no terminal output`);
+        return {
+          schemaVersion: 'depa.ai-data-child-invocation/v1',
+          invocationKey: identity.invocationKey,
+          childInstanceId: identity.childInstanceId,
+          childRunId: identity.childRunId,
+          definitionRef: identity.subflow.definitionRef,
+          flowRef: identity.subflow.flowRef,
+          contractDigest: identity.subflow.contractDigest,
+          status: 'Succeeded',
+          output,
+          receiptDigest: `sha256:receipt:${identity.invocationKey}`,
+        };
+      },
+    };
+    const executedModules: string[] = [];
+    recursiveRuntime = {
+      supportRoot,
+      workflow: {
+        ai: {
+          roots: { globalRoot: 'vfs://global', workspaceRoot: 'vfs://workspace' },
+          effects: { async invoke<Input, Output>(): Promise<Output> { return undefined as Output; } },
+          stateStore: { async loadRunState() { return undefined; } },
+        },
+      },
+      importModule: async (specifier) => ({
+        prepare: (_runtime: unknown, input: { value: string }) => {
+          executedModules.push(specifier);
+          return { result: input.value };
+        },
+      }),
+      childFlows: {
+        'depa.flows.test.RecursiveB': {
+          definitionRef: bindingB.definitionRef,
+          contractDigest: bindingB.contractDigest,
+          executable: executableFor('B'),
+        },
+        'depa.flows.test.RecursiveC': {
+          definitionRef: bindingC.definitionRef,
+          contractDigest: bindingC.contractDigest,
+          executable: executableFor('C'),
+        },
+      },
+      childInvocations,
+    };
+
+    const completedA = await continueMaterializedAIDataWorkflow(recursiveRuntime, {
+      instanceId: 'recursive-a-instance', runId: 'recursive-a-run',
+    }, {});
+    expect(completedA.checkpoint.output).toEqual({ result: 'subject' });
+    expect(dispatchOrder).toEqual([
+      'freeze:depa.flows.test.RecursiveB',
+      'start:depa.flows.test.RecursiveB',
+      'freeze:depa.flows.test.RecursiveC',
+      'start:depa.flows.test.RecursiveC',
+    ]);
+    expect(executedModules).toHaveLength(3);
+    const identityB = identityByFlow.get('depa.flows.test.RecursiveB')!;
+    const identityC = identityByFlow.get('depa.flows.test.RecursiveC')!;
+    const completedB = await loadMaterializedAIDataWorkflowRun(recursiveRuntime, {
+      instanceId: identityB.childInstanceId, runId: identityB.childRunId,
+    });
+    const completedC = await loadMaterializedAIDataWorkflowRun(recursiveRuntime, {
+      instanceId: identityC.childInstanceId, runId: identityC.childRunId,
+    });
+    expect(completedA.graph.nodes.child.childTerminalReceipt?.status).toBe('Succeeded');
+    expect(completedB?.graph.nodes.child.childTerminalReceipt?.status).toBe('Succeeded');
+    expect(completedB?.checkpoint.state).toMatchObject({ status: 'Succeeded' });
+    expect(completedC?.checkpoint.state).toMatchObject({ status: 'Succeeded' });
   });
 
   test('continues a reconstructed version-zero run once and reuses its terminal checkpoint', async () => {

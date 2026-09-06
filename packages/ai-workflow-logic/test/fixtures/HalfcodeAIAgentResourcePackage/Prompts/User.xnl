@@ -1,4 +1,4 @@
-<Prompt #depa.flows.test.Prompt.User apiVersion="depa.flows/v1" version="1.0.0" {
+<Prompt #depa.flows.test.Prompt.User envelopeVersion="halfcode.resource-envelope/v1" specVersion=1 {
   lifecycle = "Active"
   description = "User prompt"
   template = "Process the request material."

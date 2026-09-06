@@ -1,0 +1,78 @@
+<BehaviorPatch #track.migrate-depa-ai-resource-kinds-to-halfcode-03.behavior_patch.ai-workflow-resource-system apiVersion="codument.tech/v1alpha1" version="1" { capability = "ai-workflow-resource-system" } (
+  <Mutations [
+    <Upsert { selector = "behavior://ai-workflow-resource-system/requirements/halfcode-03-kind-authority" } (
+      <Requirement #halfcode-03-kind-authority (
+        <Statement ?>The system SHALL expose one exact Halfcode 0.3 owner, SpecRevision and reader catalog for the complete public AI Agent, Workflow and Material resource closure while leaving generic envelope and resolution authority in Halfcode.</?>
+        <Suites [
+          <Suite #exact-contract-admission { name = "Exact contract admission" } (
+            <Cases [
+              <Case #resolve-canonical-ai-package (
+                <Given ?>A canonical 0.3 ResourcePackage describes depa AI KindDefinitions whose source and revision fingerprints match the exported catalog.</?>
+                <When ?>The package is loaded and resolved with the depa reader profile.</?>
+                <Then ?>Every AI record SHALL carry an exact resolution receipt and reader value before workflow-domain projection.</?>
+              )>
+              <Case #reject-forged-or-legacy-contract (
+                <Given ?>A package uses a legacy envelope, unknown specVersion, unregistered subject, or altered schema, semantic, source or owner fingerprint.</?>
+                <When ?>The package is admitted.</?>
+                <Then ?>Resolution SHALL fail closed before any app, Agent, Material or run-freeze projection is returned.</?>
+              )>
+            ]>
+          )>
+        ]>
+      )>
+    )>
+    <Upsert { selector = "behavior://ai-workflow-resource-system/requirements/halfcode-03-resolved-consumer" } (
+      <Requirement #halfcode-03-resolved-consumer (
+        <Statement ?>Workflow projection and run freeze SHALL consume Halfcode 0.3 resolved trees and preserve the existing dependency closure, semantic fingerprint, browser boundary and immutable run proof.</?>
+        <Suites [
+          <Suite #resolved-runtime-boundary { name = "Resolved runtime boundary" } (
+            <Cases [
+              <Case #freeze-from-resolved-closure (
+                <Given ?>A 0.3 authored tree has been resolved through the exact depa Kind catalog and reader profile.</?>
+                <When ?>An AI Agent task is projected and frozen.</?>
+                <Then ?>The system SHALL validate domain relations, delegate closure proof to Halfcode and return the same stable domain semantic identity for equivalent authored semantics.</?>
+              )>
+              <Case #isolated-public-package-consumer (
+                <Given ?>The exact AI Workflow/Ctrl/Data package closure is packed with Halfcode 0.3 and required Holarchy 0.2 contracts.</?>
+                <When ?>A fresh Bun consumer installs and imports every declared entry.</?>
+                <Then ?>It SHALL load, resolve, project and freeze a canonical resource package without workspace or file dependencies.</?>
+              )>
+            ]>
+          )>
+        ]>
+      )>
+    )>
+    <Upsert { selector = "behavior://ai-workflow-resource-system/requirements/halfcode-03-flow-dsl-reference-module" } (
+      <Requirement #halfcode-03-flow-dsl-reference-module (
+        <Statement ?>The shared Flow DSL reference module consumed by Eidolon system-skill assembly SHALL be generated and published by depa-flows with the Halfcode 0.3 envelope and exact Halfcode dependency, without an Eidolon-owned copy.</?>
+        <Suites [
+          <Suite #flow-dsl-reference-03 { name = "Flow DSL reference 0.3 module" } (
+            <Cases [
+              <Case #compose-packed-reference-module (
+                <Given ?>A fresh consumer installs the Halfcode 0.3 and Flow DSL reference candidates.</?>
+                <When ?>It loads the reference module and composes it with the Halfcode Resource DSL module.</?>
+                <Then ?>All generated resources SHALL use the 0.3 envelope and the assembly SHALL expose the complete WikiPage closure without workspace links.</?>
+              )>
+            ]>
+          )>
+        ]>
+      )>
+    )>
+    <Upsert { selector = "behavior://ai-workflow-resource-system/requirements/halfcode-03-workflow-profile-source-admission" } (
+      <Requirement #halfcode-03-workflow-profile-source-admission (
+        <Statement ?>Ctrl and Data workflow source loaders SHALL directly admit exact Halfcode 0.3 resource-envelope roots and project their existing depa.flows/v1 semantic identity without requiring a host to synthesize legacy metadata.</?>
+        <Suites [
+          <Suite #workflow-profile-source-admission { name = "Workflow profile source admission" } (
+            <Cases [
+              <Case #load-resource-envelope-profile (
+                <Given ?>A Ctrl or Data profile root declares halfcode.resource-envelope/v1 and specVersion 1.</?>
+                <When ?>The depa source loader compiles the profile.</?>
+                <Then ?>It SHALL produce the same depa.flows/v1 semantic binding as the standalone source form and reject unknown or incomplete envelope revisions.</?>
+              )>
+            ]>
+          )>
+        ]>
+      )>
+    )>
+  ]>
+)>

@@ -1,4 +1,4 @@
-<ResourcePackage #depa.flows.test.agent_unrelated_overlay apiVersion="halfcode.resources/v1" version="1.0.0" {
+<ResourcePackage #depa.flows.test.agent_unrelated_overlay envelopeVersion="halfcode.resource-envelope/v1" specVersion=1 {
   lifecycle = "Active"
   description = "Unrelated material overlay"
 } (

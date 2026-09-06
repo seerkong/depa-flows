@@ -10,7 +10,7 @@
   }>
   <Run #refine-context {
     src = "vfs://./flow-code/agent.ts#refineContext"
-    config = { agent = { agentDefinitionRef = "resource://depa.examples.Agent.Support" selector = { byInstanceName = "support-reviewer" } } }
+    config = { agent = { agentDefinitionRef = "resource://depa.examples.Agent.Support" selector = { byName = "support-reviewer" } } }
   }>
   <ExternalJob #agent-review {
     signalKind = "ai.agent.reviewed"

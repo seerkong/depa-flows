@@ -73,6 +73,8 @@ export interface FlowBundleSpec {
   dir: string;
   /** 产品根 [] 中按声明顺序保存的 canonical CtrlFlow statements */
   statements: FlowNodeSpec[];
+  /** Flow-local reusable statements, executed in the caller context. */
+  blocks?: Record<string, FlowNodeSpec[]>;
   /** Frozen modular definition authority; absent for inline authoring. */
   definitionStepForest?: DefinitionStepForest;
   /** Unique FlowContract child domain; it describes the static callable boundary. */

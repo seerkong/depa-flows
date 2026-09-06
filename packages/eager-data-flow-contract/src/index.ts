@@ -201,6 +201,13 @@ export interface EagerDataFlowInvocationOptions<Runtime = unknown> {
   bindSignal?: (runtime: Runtime, signal: AbortSignal) => Runtime;
   /** Derives the explicit Processor runtime for one ordinary node invocation. */
   bindNode?: (runtime: Runtime, identity: { readonly nodeId: string }) => Runtime;
+  /** Node-addressed SubFlow dispatch seam; the admitted registry remains keyed by exact child Flow identity. */
+  invokeSubFlow?: (
+    runtime: Runtime,
+    identity: { readonly nodeId: string; readonly flowRef: string },
+    input: Readonly<EagerDataFlowRecord>,
+    options: { readonly signal: AbortSignal },
+  ) => Promise<EagerDataFlowRecord>;
   onCancel?: (reason: unknown) => void;
   /** Previously accepted node settlements used to reconstruct scheduler ports without replay. */
   completedNodes?: Readonly<Record<string, EagerDataFlowDurableNodeState>>;

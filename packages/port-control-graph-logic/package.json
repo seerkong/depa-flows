@@ -1,0 +1,1 @@
+{"name":"port-control-graph-logic","version":"0.1.0","type":"module","exports":{".":"./src/index.ts"},"files":["src"],"dependencies":{"port-control-graph-contract":"0.1.0","depa-processor":"0.1.1"}}

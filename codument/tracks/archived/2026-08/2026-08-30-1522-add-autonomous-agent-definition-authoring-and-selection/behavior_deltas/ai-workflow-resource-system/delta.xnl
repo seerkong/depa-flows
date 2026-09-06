@@ -1,0 +1,55 @@
+<BehaviorPatch #track.add-autonomous-agent-definition-authoring-and-selection.behavior_patch.ai-workflow-resource-system apiVersion="codument.tech/v1alpha1" version="1" { capability = "ai-workflow-resource-system" } (
+  <Mutations [
+    <Upsert { selector = "behavior://ai-workflow-resource-system/requirements/autonomous-agent-definition-authoring-selection" } (
+      <Requirement #autonomous-agent-definition-authoring-selection (
+        <Statement ?>
+        AI Workflow SHALL project Halfcode-managed AIAgentDefinition resources into exact typed candidates, admit Controller selection or author-new requests against a typed task requirement, and freeze every executable selection through the existing dependency authority without creating a second catalog or resource owner.
+        </?>
+        <Suites [
+          <Suite #typed-selection { name = "Typed AgentDefinition selection" } (
+            <Cases [
+              <Case #select-compatible-existing (
+                <Given ?>The current Halfcode effective registry contains at least two Agent definitions with different schema, tool, effect or context facts</?>
+                <When ?>A Controller selects one exact candidate for a typed task requirement</?>
+                <Then ?>Admission SHALL accept only a candidate whose detached typed facts satisfy every requirement and whose resource/content/candidate digests match the current projection</?>
+              )>
+              <Case #reject-fuzzy-selection (
+                <Given ?>An Agent name or prompt resembles the objective but its typed contract is incompatible</?>
+                <When ?>Selection admission evaluates the decision</?>
+                <Then ?>It SHALL reject the candidate without name or prompt heuristics and SHALL leave every resource authority unchanged</?>
+              )>
+            ]>
+          )>
+          <Suite #author-new { name = "Halfcode author-new lifecycle" } (
+            <Cases [
+              <Case #request-author-new (
+                <Given ?>No current candidate satisfies the typed requirement</?>
+                <When ?>The Controller submits an author-new decision containing a standard Halfcode create proposal for AIAgentDefinition</?>
+                <Then ?>Admission SHALL return an auditable authoring request but SHALL NOT fabricate a candidate, receipt, registry revision or executable proof</?>
+              )>
+              <Case #reconcile-authored-definition (
+                <Given ?>Halfcode has applied the proposal and returned a receipt plus the refreshed effective registry</?>
+                <When ?>AI Workflow reconciles the authored definition</?>
+                <Then ?>It SHALL verify exact receipt, content identity, effective origin and registry revision before projecting the new definition as an ordinary selectable candidate</?>
+              )>
+              <Case #reject-invalid-authoring-evidence (
+                <Given ?>A receipt is forged, stale, wrong-kind, wrong-content, wrong-origin or not present in the current effective registry</?>
+                <When ?>AI Workflow reconciles it</?>
+                <Then ?>Reconciliation SHALL fail closed and SHALL produce no candidate or frozen task proof</?>
+              )>
+            ]>
+          )>
+          <Suite #exact-task-freeze { name = "Exact selected task freeze" } (
+            <Cases [
+              <Case #freeze-selected-definition (
+                <Given ?>An existing or newly authored candidate has one accepted exact selection admission</?>
+                <When ?>The workflow binds it to one workflow node task</?>
+                <Then ?>The existing run-resource freeze authority SHALL create the dependency receipt and authentic FrozenAIAgentTaskBinding without modifying the parent definition snapshot</?>
+              )>
+            ]>
+          )>
+        ]>
+      )>
+    )>
+  ]>
+)>

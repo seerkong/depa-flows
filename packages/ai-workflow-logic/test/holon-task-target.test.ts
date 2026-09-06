@@ -127,7 +127,7 @@ describe('Holon task target and TaskSpace snapshot admission', () => {
     const accessor = { ...target() } as Record<string, unknown>;
     Object.defineProperty(accessor, 'agentSelector', {
       enumerable: true,
-      get() { calls += 1; return { byInstanceName: 'reviewer' }; },
+      get() { calls += 1; return { byName: 'reviewer' }; },
     });
     expect(() => normalizeHolonTaskTarget(accessor)).toThrow('accessor');
     expect(calls).toBe(0);
@@ -502,7 +502,7 @@ function resourceRecord(resourceId: string, kind: string): ResourceRecord {
   return {
     resourceId,
     kind,
-    metadata: { apiVersion: 'eidolon.ai/v1', version: '1.0.0' },
+    metadata: { envelopeVersion: 'halfcode.resource-envelope/v1', specVersion: 1 },
     sourceShape: 'single-file',
     logicalPath: `${resourceId}.xnl`,
     documentUri: `vfs://@/${resourceId}.xnl`,

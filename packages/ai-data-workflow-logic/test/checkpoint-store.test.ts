@@ -3,13 +3,17 @@ import type { FlowRunCheckpointRuntime } from 'ai-workflow-contract';
 import type { EagerDataFlowAuthoringPlan, EagerDataFlowNodePlan } from 'eager-data-flow-contract';
 import {
   applyAIDataWorkflowGraphPatch,
+  acceptAIDataWorkflowChildTerminalReceipt,
   commitAIDataWorkflowCheckpoint,
+  createAIDataWorkflowChildInvocationIdentity,
   createAIDataWorkflowCheckpoint,
   createAIDataWorkflowRunGraph,
   defineEagerBackedAIDataWorkflow,
   invalidateAIDataWorkflowNode,
   loadAIDataWorkflowCheckpoint,
   recordAIDataWorkflowNodeResult,
+  reserveAIDataWorkflowChildInvocation,
+  recordAIDataWorkflowChildFreezeReceipt,
 } from 'ai-data-workflow-logic';
 import { FlowRunCheckpointTransitionError, InMemoryFlowRunCheckpointStore } from 'ai-workflow-logic';
 
@@ -107,7 +111,7 @@ describe('AI Data canonical checkpoint adapter', () => {
     })).toBeUndefined();
   });
 
-  test('accepts exact additive update and retained removal projections', async () => {
+  test('accepts exact additive, cleared SubFlow and retained removal projections', async () => {
     const runtime: FlowRunCheckpointRuntime = { checkpointStore: new InMemoryFlowRunCheckpointStore() };
     const binding = defineEagerBackedAIDataWorkflow(plan);
     const baseGraph = createAIDataWorkflowRunGraph({ binding, runId: 'exact-patch-run' });
@@ -133,21 +137,165 @@ describe('AI Data canonical checkpoint adapter', () => {
         profile: { ...created.profile, runGraph: added },
       },
     });
-    const removed = applyAIDataWorkflowGraphPatch(added, {
+    const clearedSubflow = applyAIDataWorkflowGraphPatch(added, {
+      patchId: 'normalize-cleared-subflow',
+      operations: [{
+        op: 'update-node',
+        nodeId: 'side-note',
+        changes: { config: { mode: 'rewired' }, subflow: null },
+      }],
+    });
+    const acceptedClear = await commitAIDataWorkflowCheckpoint(runtime, {
+      expectedVersion: acceptedAdd.version,
+      checkpoint: {
+        ...acceptedAdd, version: acceptedAdd.version + 1,
+        state: { status: 'Pending', generation: clearedSubflow.currentGeneration },
+        nodeSidecars: projectNodeSidecars(clearedSubflow),
+        profile: { ...acceptedAdd.profile, runGraph: clearedSubflow },
+      },
+    });
+    expect(acceptedClear.profile.runGraph.nodes['side-note'].subflow).toBeUndefined();
+    const removed = applyAIDataWorkflowGraphPatch(clearedSubflow, {
       patchId: 'remove-side-note',
       operations: [{ op: 'remove-node', nodeId: 'side-note' }],
     });
     const acceptedRemove = await commitAIDataWorkflowCheckpoint(runtime, {
-      expectedVersion: acceptedAdd.version,
+      expectedVersion: acceptedClear.version,
       checkpoint: {
-        ...acceptedAdd, version: acceptedAdd.version + 1,
+        ...acceptedClear, version: acceptedClear.version + 1,
         state: { status: 'Pending', generation: removed.currentGeneration },
         nodeSidecars: projectNodeSidecars(removed),
-        profile: { ...acceptedAdd.profile, runGraph: removed },
+        profile: { ...acceptedClear.profile, runGraph: removed },
       },
     });
     expect(acceptedRemove.profile.runGraph.nodes['side-note'].status).toBe('Removed');
     expect(acceptedRemove.profile.runGraph.declarationOrder).toContain('side-note');
+  });
+
+  test('round-trips an autonomous SubFlow binding through the strict checkpoint codec', async () => {
+    const runtime: FlowRunCheckpointRuntime = { checkpointStore: new InMemoryFlowRunCheckpointStore() };
+    const binding = defineEagerBackedAIDataWorkflow(plan);
+    const baseGraph = createAIDataWorkflowRunGraph({ binding, runId: 'subflow-checkpoint-run' });
+    const created = await createAIDataWorkflowCheckpoint(runtime, {
+      instanceId: 'subflow-checkpoint-instance', definition, graph: baseGraph,
+      input: { value: 'subject' }, config: {}, state: { status: 'Pending', generation: 0 }, output: null,
+      controllerSidecars: { status: 'Pending' }, nodeSidecars: projectNodeSidecars(baseGraph),
+      ai: { schemaVersion: 'depa.ai-agent-state/v1', instancesById: {}, instanceIdByName: {}, invocationsByKey: {} },
+    });
+    const subflow = {
+      kind: 'autonomous' as const,
+      schemaVersion: 'depa.ai-data-subflow-binding/v1' as const,
+      capabilityId: 'child-capability',
+      catalogDigest: 'sha256:catalog',
+      definitionRef: 'resource://depa.flows.test.Child' as const,
+      flowRef: 'eager-data-flow://depa.flows.test.Child' as const,
+      contractDigest: 'sha256:contract',
+    };
+    const patched = applyAIDataWorkflowGraphPatch(baseGraph, {
+      patchId: 'checkpoint-child',
+      operations: [{
+        op: 'add-node',
+        node: {
+          id: 'child', tag: 'SubFlowNode', nodeType: 'subflow', subflow,
+          inputs: { value: { ref: 'flow-port://#entry/value', nodeId: 'entry', port: 'value' } },
+          outputs: ['result'], dependsOn: ['entry'],
+        },
+      }],
+    });
+    const childInvocation = createAIDataWorkflowChildInvocationIdentity({
+      graph: patched,
+      parentInstanceId: 'subflow-checkpoint-instance',
+      nodeId: 'child',
+    });
+    const graph = reserveAIDataWorkflowChildInvocation({ graph: patched, identity: childInvocation });
+    const reservationCommit = {
+      expectedVersion: created.version,
+      checkpoint: {
+        ...created, version: 1,
+        state: { status: 'Running', generation: 1 },
+        controllerSidecars: { status: 'Running' },
+        nodeSidecars: projectNodeSidecars(graph),
+        profile: { ...created.profile, runGraph: graph },
+      },
+    } as const;
+    const competing = await Promise.allSettled([
+      commitAIDataWorkflowCheckpoint(runtime, reservationCommit),
+      commitAIDataWorkflowCheckpoint(runtime, reservationCommit),
+    ]);
+    expect(competing.filter((attempt) => attempt.status === 'fulfilled')).toHaveLength(1);
+    expect(competing.filter((attempt) => attempt.status === 'rejected')).toHaveLength(1);
+    const accepted = competing.find((attempt) => attempt.status === 'fulfilled')!.value;
+    expect(accepted.profile.runGraph.nodes.child.subflow).toEqual(subflow);
+    expect(accepted.profile.runGraph.nodes.child.childInvocation).toEqual(childInvocation);
+    expect((await loadAIDataWorkflowCheckpoint(runtime, {
+      instanceId: 'subflow-checkpoint-instance', runId: 'subflow-checkpoint-run',
+    }))?.profile.runGraph.nodes.child.subflow).toEqual(subflow);
+
+    const frozenGraph = recordAIDataWorkflowChildFreezeReceipt({
+      graph: accepted.profile.runGraph,
+      nodeId: 'child',
+      receipt: {
+        schemaVersion: 'depa.ai-data-child-invocation/v1',
+        invocationKey: childInvocation.invocationKey,
+        childInstanceId: childInvocation.childInstanceId,
+        childRunId: childInvocation.childRunId,
+        definitionRef: childInvocation.subflow.definitionRef,
+        flowRef: childInvocation.subflow.flowRef,
+        contractDigest: childInvocation.subflow.contractDigest,
+        definitionRevision: 'child-r1',
+        definitionDigest: 'sha256:child-definition',
+      },
+    });
+    const settledGraph = acceptAIDataWorkflowChildTerminalReceipt({
+      graph: frozenGraph,
+      nodeId: 'child',
+      receipt: {
+        schemaVersion: 'depa.ai-data-child-invocation/v1',
+        invocationKey: childInvocation.invocationKey,
+        childInstanceId: childInvocation.childInstanceId,
+        childRunId: childInvocation.childRunId,
+        definitionRef: childInvocation.subflow.definitionRef,
+        flowRef: childInvocation.subflow.flowRef,
+        contractDigest: childInvocation.subflow.contractDigest,
+        status: 'Succeeded',
+        output: { result: 'child-output' },
+        receiptDigest: 'sha256:child-terminal',
+      },
+    });
+    const settled = await commitAIDataWorkflowCheckpoint(runtime, {
+      expectedVersion: accepted.version,
+      checkpoint: {
+        ...accepted,
+        version: accepted.version + 1,
+        state: { status: 'Pending', generation: 1 },
+        controllerSidecars: { status: 'Pending' },
+        nodeSidecars: projectNodeSidecars(settledGraph),
+        profile: { ...accepted.profile, runGraph: settledGraph },
+      },
+    });
+    expect((await loadAIDataWorkflowCheckpoint(runtime, {
+      instanceId: 'subflow-checkpoint-instance', runId: 'subflow-checkpoint-run',
+    }))?.profile.runGraph.nodes.child.childTerminalReceipt).toEqual(settledGraph.nodes.child.childTerminalReceipt);
+
+    const { subflow: _removedSubflow, ...childWithoutSubflow } = settled.profile.runGraph.nodes.child;
+    const forged = {
+      ...settled,
+      version: settled.version + 1,
+      profile: {
+        ...settled.profile,
+        runGraph: {
+          ...settled.profile.runGraph,
+          nodes: {
+            ...settled.profile.runGraph.nodes,
+            child: childWithoutSubflow,
+          },
+        },
+      },
+    };
+    await expect(commitAIDataWorkflowCheckpoint(runtime, {
+      expectedVersion: settled.version,
+      checkpoint: forged,
+    })).rejects.toThrow('SubFlowNode requires an exact durable child binding');
   });
 
   test('rejects unexplained structural projections and disappearing accepted nodes', async () => {

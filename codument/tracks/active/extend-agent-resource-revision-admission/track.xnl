@@ -1,0 +1,96 @@
+<Track #extend-agent-resource-revision-admission apiVersion="codument.tech/v1alpha1" version="1" { status = "completed" goal = "接纳反馈驱动的原生 Agent 修订并冻结代码执行身份" description = "复用 Halfcode update/CAS/receipt 和 CodeBinding 闭包，保留 create/select 与旧 run" question_mode = "decision-tree" question_severity = "auto" commit_mode = "manual" created_at = "2026-09-05T19:35:27.616Z" updated_at = "2026-09-05T20:56:32.074Z" modeling_base_commit = "014128da802c8ed3e4d8fa58520e42cd64b76b9c" engineering_base_commit = "014128da802c8ed3e4d8fa58520e42cd64b76b9c" gap_round = 2 } (
+  <Ports { scope = "track" }>
+  <TaskSpace #space_extend-agent-resource-revision-admission { name = "extend-agent-resource-revision-admission" version = "1" } (
+    <SubNodes [
+      <TaskGroup #P1 { name = "原生协议扩展" status = "DONE" order = 0 child_mode = "dag" } (
+        <SubNodes [
+          <Task #P1-T1 { name = "TDD 修订 admission 与 receipt reconciliation" status = "DONE" order = 0 } (
+            <Description ?01M1SHBB9KFK8MNV2QXZ508CQT>
+            在当前 selection owner 增加 closed revise-existing，使用原生 update/present、真实 authority digest 与 durable receipt；typed feedback 只保留因果引用。保留 create/select，旧 authoring evidence 不能绕过 pending revision。
+            </?01M1SHBB9KFK8MNV2QXZ508CQT>
+            <Acceptance [
+              <Criterion #P1-T1-AC1 { checked = true } ?01M1SHBB9KFK8MNV2QXZ508CQV>
+              真实 update 后 reconcile/select/freeze 成功；stale CAS、伪造/foreign receipt、错反馈/候选和 pending bypass 拒绝；原 create/select 测试通过。
+              </?01M1SHBB9KFK8MNV2QXZ508CQV>
+            ]>
+          )>
+          <Task #P1-T2 { name = "TDD 代码 Kind 投影与闭包执行" status = "DONE" order = 1 } (
+            <Description ?01M1SHBB9KFK8MNV2QXZ508CQW>
+            AgentContextPipeline/AgentMessageSource 增加原生 CodeBinding spec revision，保留 v1 reader；使用 Halfcode 公开 capture/validate/bind，声明依赖边和真实执行摘要，不复制 bundler。
+            </?01M1SHBB9KFK8MNV2QXZ508CQW>
+            <Acceptance [
+              <Criterion #P1-T2-AC1 { checked = true } ?01M1SHBB9KFK8MNV2QXZ508CQX>
+              CodeBinding 配方可从冻结内容执行；非法配置拒绝；代码改变而 Agent bytes 不变仍改变执行身份；纯 browser 投影不引入执行器；v1 reader 兼容。
+              </?01M1SHBB9KFK8MNV2QXZ508CQX>
+            ]>
+          )>
+        ]>
+      )>
+      <TaskGroup #P2 { name = "集成恢复与兼容验收" status = "DONE" order = 1 } (
+        <SubNodes [
+          <Task #P2-T1 { name = "旧新资源执行与 authentic proof 恢复回归" status = "DONE" order = 0 } (
+            <Acceptance [
+              <Criterion #P2-T1-AC1 { checked = true } ?01M1SHBB9KFK8MNV2QXZ508CQY>
+              V1 冻结后修改/删除 live、发布 V2，fresh runtime 从冻结资源经公开 API 重建真实 proof 并执行 V1，新任务执行 V2；闭包/环境篡改拒绝；相关全测试及类型检查通过。
+              </?01M1SHBB9KFK8MNV2QXZ508CQY>
+            ]>
+          )>
+        ]>
+        <Gate [
+          <Criterion #P2-G1 { checked = true } ?01M1SHBB9KFK8MNV2QXZ508CQZ>
+          原生 admission/代码闭包/恢复兼容测试、strict validation、fresh GapLoop 和 DEPA 方向复核通过。
+          </?01M1SHBB9KFK8MNV2QXZ508CQZ>
+        ]>
+        <Hooks [
+          <Hook { on = "phase:after" } (
+            <GapLoop { max_rounds = 5 on_exhausted = "block" verify_round = true }>
+          )>
+          <Hook { on = "phase:after" } (
+            <AttractorCheck { use = "coding" }>
+          )>
+        ]>
+      )>
+      <TaskGroup #P3 { name = "原生发布与 resolved 执行桥接" status = "DONE" order = 2 } (
+        <SubNodes [
+          <Task #P3-T1 { name = "TDD 实现 reader-bound execution observation" status = "DONE" order = 0 } (
+            <Description ?01M1SMC89VSA2S512M6EDGXAFF>
+            从 authentic authored layers 和每层完整 reader context 经原 resolver/composer 派生 execution observation；桥接 selection 与 freeze，保留 native CAS；reader resolution facts 进入 artifact 和执行指纹。
+            </?01M1SMC89VSA2S512M6EDGXAFF>
+            <Acceptance [
+              <Criterion #P3-T1-AC1 { checked = true } ?01M1SMC89VSA2S512M6EDGXAFG>
+              真实原生 create/update 与 resolved code compile/freeze 联通；更换 reader 改变执行身份；foreign/stale/copy 拒绝，保留层级 tombstone 与旧无 bridge 兼容。
+              </?01M1SMC89VSA2S512M6EDGXAFG>
+            ]>
+          )>
+          <Task #P3-T2 { name = "独立进程恢复及完整公开入口验收" status = "DONE" order = 1 } (
+            <Acceptance [
+              <Criterion #P3-T2-AC1 { checked = true } ?01M1SMC89VSA2S512M6EDGXAFH>
+              旧 reader 加旧代码从冻结资源在独立 OS 进程恢复，reader 漂移拒绝；全套测试、类型、strict 与 fresh 检查通过。
+              </?01M1SMC89VSA2S512M6EDGXAFH>
+            ]>
+          )>
+        ]>
+        <Gate [
+          <Criterion #P3-G1 { checked = true } ?01M1SMC89VSA2S512M6EDGXAFJ>
+          authored publication 与 resolved execution 的 owner 边界及 reader 身份闭包完成，Eidolon 可经公开 API 接入。
+          </?01M1SMC89VSA2S512M6EDGXAFJ>
+        ]>
+        <Hooks [
+          <Hook { on = "phase:after" } (
+            <GapLoop { max_rounds = 5 on_exhausted = "block" verify_round = true }>
+          )>
+          <Hook { on = "phase:after" } (
+            <AttractorCheck { use = "coding" }>
+          )>
+        ]>
+      )>
+    ]>
+  )>
+  <Schedule { max_concurrent = 2 spot_check = true } [
+    <Dag { for = "P1" } [
+      <Node #P1-T1 []>
+      <Node #P1-T2 []>
+    ]>
+  ]>
+  <Hooks []>
+)>

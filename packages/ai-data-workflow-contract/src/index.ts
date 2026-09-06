@@ -9,6 +9,7 @@ import type {
   AIWorkflowRunRef,
   AIWorkflowRunStatus,
   AIWorkflowSemanticFingerprint,
+  FlowClosedObject,
   FlowRunCheckpoint,
 } from 'ai-workflow-contract';
 import type {
@@ -44,6 +45,136 @@ export interface AIDataWorkflowInvalidation {
   readonly atMs?: number;
 }
 
+export interface AIDataWorkflowDeclaredSubFlowBinding {
+  readonly kind: 'declared';
+  readonly flowRef: `eager-data-flow://${string}`;
+}
+
+export interface AIDataWorkflowAutonomousSubFlowBinding {
+  readonly kind: 'autonomous';
+  readonly schemaVersion: 'depa.ai-data-subflow-binding/v1';
+  readonly capabilityId: string;
+  readonly catalogDigest: string;
+  readonly definitionRef: `resource://${string}`;
+  readonly flowRef: `eager-data-flow://${string}`;
+  readonly contractDigest: string;
+}
+
+export type AIDataWorkflowSubFlowBinding =
+  | AIDataWorkflowDeclaredSubFlowBinding
+  | AIDataWorkflowAutonomousSubFlowBinding;
+
+export const AI_DATA_CHILD_INVOCATION_SCHEMA_VERSION = 'depa.ai-data-child-invocation/v1' as const;
+
+export interface AIDataWorkflowChildInvocationIdentity {
+  readonly schemaVersion: typeof AI_DATA_CHILD_INVOCATION_SCHEMA_VERSION;
+  readonly invocationKey: string;
+  readonly parentInstanceId: string;
+  readonly parentRunId: string;
+  readonly parentNodeId: string;
+  readonly parentGeneration: number;
+  readonly childInstanceId: string;
+  readonly childRunId: string;
+  readonly subflow: AIDataWorkflowAutonomousSubFlowBinding;
+}
+
+/** Immutable proof that the exact child resource closure was resolved before dispatch. */
+export interface AIDataWorkflowChildFreezeReceipt {
+  readonly schemaVersion: typeof AI_DATA_CHILD_INVOCATION_SCHEMA_VERSION;
+  readonly invocationKey: string;
+  readonly childInstanceId: string;
+  readonly childRunId: string;
+  readonly definitionRef: `resource://${string}`;
+  readonly flowRef: `eager-data-flow://${string}`;
+  readonly contractDigest: string;
+  readonly definitionRevision: string;
+  readonly definitionDigest: string;
+}
+
+export type AIDataWorkflowChildInvocationStatus =
+  | 'Reserved'
+  | 'Running'
+  | 'Succeeded'
+  | 'Failed';
+
+/** Read-only child-owner projection. The parent never writes child lifecycle state. */
+export interface AIDataWorkflowChildInvocationObservation {
+  readonly schemaVersion: typeof AI_DATA_CHILD_INVOCATION_SCHEMA_VERSION;
+  readonly invocationKey: string;
+  readonly childInstanceId: string;
+  readonly childRunId: string;
+  readonly status: AIDataWorkflowChildInvocationStatus;
+}
+
+export interface AIDataWorkflowChildSucceededReceipt {
+  readonly schemaVersion: typeof AI_DATA_CHILD_INVOCATION_SCHEMA_VERSION;
+  readonly invocationKey: string;
+  readonly childInstanceId: string;
+  readonly childRunId: string;
+  readonly definitionRef: `resource://${string}`;
+  readonly flowRef: `eager-data-flow://${string}`;
+  readonly contractDigest: string;
+  readonly status: 'Succeeded';
+  readonly output: FlowClosedObject;
+  readonly receiptDigest: string;
+}
+
+export interface AIDataWorkflowChildFailedReceipt {
+  readonly schemaVersion: typeof AI_DATA_CHILD_INVOCATION_SCHEMA_VERSION;
+  readonly invocationKey: string;
+  readonly childInstanceId: string;
+  readonly childRunId: string;
+  readonly definitionRef: `resource://${string}`;
+  readonly flowRef: `eager-data-flow://${string}`;
+  readonly contractDigest: string;
+  readonly status: 'Failed';
+  readonly failureCode: string;
+  readonly failureMessage: string;
+  readonly receiptDigest: string;
+}
+
+export type AIDataWorkflowChildTerminalReceipt =
+  | AIDataWorkflowChildSucceededReceipt
+  | AIDataWorkflowChildFailedReceipt;
+
+export interface AIDataWorkflowResolveAndFreezeChildRequest {
+  readonly identity: AIDataWorkflowChildInvocationIdentity;
+}
+
+export interface AIDataWorkflowStartOrContinueChildRequest {
+  readonly identity: AIDataWorkflowChildInvocationIdentity;
+  readonly freeze: AIDataWorkflowChildFreezeReceipt;
+  readonly input: FlowClosedObject;
+}
+
+export interface AIDataWorkflowLoadChildRequest {
+  readonly identity: AIDataWorkflowChildInvocationIdentity;
+  readonly freeze: AIDataWorkflowChildFreezeReceipt;
+}
+
+export interface AIDataWorkflowSettleChildRequest extends AIDataWorkflowLoadChildRequest {
+  readonly terminalStatus: 'Succeeded' | 'Failed';
+}
+
+/**
+ * Narrow child-owner port. Every operation is idempotent for one deterministic identity;
+ * startOrContinue must continue an existing child rather than create a successor.
+ */
+export interface AIDataWorkflowChildInvocationRuntimePort {
+  resolveAndFreeze(
+    request: AIDataWorkflowResolveAndFreezeChildRequest,
+  ): Promise<AIDataWorkflowChildFreezeReceipt>;
+  startOrContinue(
+    request: AIDataWorkflowStartOrContinueChildRequest,
+  ): Promise<AIDataWorkflowChildInvocationObservation>;
+  load(
+    request: AIDataWorkflowLoadChildRequest,
+  ): Promise<AIDataWorkflowChildInvocationObservation>;
+  settle(
+    request: AIDataWorkflowSettleChildRequest,
+  ): Promise<AIDataWorkflowChildTerminalReceipt>;
+}
+
 export interface AIDataWorkflowRunNode {
   readonly id: string;
   readonly tag: AIDataWorkflowNodeTag;
@@ -54,6 +185,10 @@ export interface AIDataWorkflowRunNode {
   readonly inputs: AIDataWorkflowNodeInputs;
   readonly outputs: readonly string[];
   readonly config: AIDataWorkflowNodeConfig;
+  readonly subflow?: AIDataWorkflowSubFlowBinding;
+  readonly childInvocation?: AIDataWorkflowChildInvocationIdentity;
+  readonly childFreezeReceipt?: AIDataWorkflowChildFreezeReceipt;
+  readonly childTerminalReceipt?: AIDataWorkflowChildTerminalReceipt;
   readonly dependsOn: readonly string[];
   readonly dependents: readonly string[];
   readonly reusePolicy: AIWorkflowEffectiveReusePolicy;
@@ -70,6 +205,7 @@ export interface AIDataWorkflowGraphPatchNodeSpec {
   readonly inputs?: AIDataWorkflowNodeInputs;
   readonly outputs?: readonly string[];
   readonly config?: AIDataWorkflowNodeConfig;
+  readonly subflow?: AIDataWorkflowSubFlowBinding;
   readonly dependsOn?: readonly string[];
   readonly reusePolicy?: AIWorkflowEffectiveReusePolicy;
 }
@@ -80,6 +216,7 @@ export interface AIDataWorkflowGraphPatchNodeChanges {
   readonly inputs?: AIDataWorkflowNodeInputs;
   readonly outputs?: readonly string[];
   readonly config?: AIDataWorkflowNodeConfig;
+  readonly subflow?: AIDataWorkflowSubFlowBinding | null;
   readonly dependsOn?: readonly string[];
   readonly reusePolicy?: AIWorkflowEffectiveReusePolicy;
 }
@@ -230,19 +367,41 @@ export interface AIDataControlAgentCapabilityImplementation {
   readonly taskProofRef: `resource://${string}`;
 }
 
-export type AIDataControlCapabilityImplementation =
+export interface AIDataControlSubFlowCapabilityImplementation {
+  readonly kind: 'subflow';
+  readonly definitionRef: `resource://${string}`;
+  readonly flowRef: `eager-data-flow://${string}`;
+  readonly contractDigest: string;
+  readonly callGraphDigest: string;
+  readonly transitiveChildFlowRefs: readonly `eager-data-flow://${string}`[];
+}
+
+export type AIDataControlExecutableCapabilityImplementation =
   | AIDataControlCodeCapabilityImplementation
   | AIDataControlAgentCapabilityImplementation;
 
-export interface AIDataControlCapability {
+export interface AIDataControlCapabilityBase {
   readonly capabilityId: string;
-  readonly tag: 'TransformNode' | 'SinkNode';
-  readonly nodeType: AIWorkflowNodeType;
   readonly inputSchemaRefs: Readonly<Record<string, string>>;
   readonly outputSchemaRefs: Readonly<Record<string, string>>;
   readonly fixedConfig: AIDataWorkflowNodeConfig;
-  readonly implementation: AIDataControlCapabilityImplementation;
 }
+
+export interface AIDataControlExecutableCapability extends AIDataControlCapabilityBase {
+  readonly tag: 'TransformNode' | 'SinkNode';
+  readonly nodeType: AIWorkflowNodeType;
+  readonly implementation: AIDataControlExecutableCapabilityImplementation;
+}
+
+export interface AIDataControlSubFlowCapability extends AIDataControlCapabilityBase {
+  readonly tag: 'SubFlowNode';
+  readonly nodeType: 'subflow';
+  readonly implementation: AIDataControlSubFlowCapabilityImplementation;
+}
+
+export type AIDataControlCapability =
+  | AIDataControlExecutableCapability
+  | AIDataControlSubFlowCapability;
 
 export interface AIDataControlCapabilityCatalog {
   readonly schemaVersion: AIDataControlSchemaVersion;
@@ -303,6 +462,7 @@ export type AIDataControlFeedbackCode =
   | 'UNKNOWN_NODE'
   | 'INPUT_CONTRACT_MISMATCH'
   | 'OUTPUT_CONTRACT_MISMATCH'
+  | 'RECURSIVE_SUBFLOW'
   | 'NO_PROGRESS'
   | 'VERIFIER_REQUIRED'
   | 'VERIFIER_MISMATCH'
@@ -361,6 +521,22 @@ export interface AIDataControlRewireCapabilityOperation {
   readonly dependsOn?: readonly string[];
 }
 
+export interface AIDataControlAddSubFlowOperation {
+  readonly op: 'add-subflow';
+  readonly nodeId: string;
+  readonly subflowCapabilityId: string;
+  readonly inputs: Readonly<Record<string, AIDataControlInputBinding>>;
+  readonly dependsOn?: readonly string[];
+}
+
+export interface AIDataControlRewireSubFlowOperation {
+  readonly op: 'rewire-subflow';
+  readonly nodeId: string;
+  readonly subflowCapabilityId: string;
+  readonly inputs: Readonly<Record<string, AIDataControlInputBinding>>;
+  readonly dependsOn?: readonly string[];
+}
+
 export interface AIDataControlRemoveNodeOperation {
   readonly op: 'remove-node';
   readonly nodeId: string;
@@ -369,6 +545,8 @@ export interface AIDataControlRemoveNodeOperation {
 export type AIDataControlRevisionOperation =
   | AIDataControlAddCapabilityOperation
   | AIDataControlRewireCapabilityOperation
+  | AIDataControlAddSubFlowOperation
+  | AIDataControlRewireSubFlowOperation
   | AIDataControlRemoveNodeOperation;
 
 interface AIDataControlDecisionBase {

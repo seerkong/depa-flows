@@ -1,0 +1,19 @@
+<Track #add-port-control-graph-compiler apiVersion="codument.tech/v1alpha1" version="1" {
+  status = "in_progress"
+  goal = "To be authored by codument-plan-track."
+  description = "To be authored by codument-plan-track."
+  question_mode = "decision-tree"
+  question_severity = "auto"
+  commit_mode = "manual"
+  created_at = "2026-10-05T17:01:48.065Z"
+  updated_at = "2026-10-05T17:01:48.065Z"
+  modeling_base_commit = "0e91384b47fbd160e803af71662c2905e305af2b"
+  engineering_base_commit = "0e91384b47fbd160e803af71662c2905e305af2b"
+} (
+  <Ports { scope = "track" }>
+  <TaskSpace #space_add-port-control-graph-compiler { name = "add-port-control-graph-compiler" version = "1" } (
+    <SubNodes []>
+  )>
+  <Schedule []>
+  <Hooks []>
+)>

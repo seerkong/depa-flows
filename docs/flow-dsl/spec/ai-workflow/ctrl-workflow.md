@@ -43,7 +43,7 @@ export function draftContext(runtime: AICtrlRuntime, input: SupportReviewInput, 
 }
 ```
 
-普通 `Run` 节点可通过exact frozen Agent task binding调用typed Agent Processor。底层只提供runtime-first `runAgent(agentRuntime, input, config)`与`runTargetedAgent(agentRuntime, selector, invocation, config)`；组合边界提供同名 `runtime.ai.effects` bound facade。selector只能是exact `{byInstanceId}`或`{byInstanceName}`，resolved identity与receipt随WorkCtrl snapshot进入同一canonical checkpoint；authored surface不暴露generic `invoke`。
+普通 `Run` 节点可通过exact frozen Agent task binding调用typed Agent Processor。底层只提供runtime-first `runAgent(agentRuntime, input, config)`与`runTargetedAgent(agentRuntime, selector, invocation, config)`；组合边界提供同名 `runtime.ai.effects` bound facade。selector只能是exact `{byId}`或`{byName}`，旧的instance-prefixed keys fail closed；resolved identity与receipt随WorkCtrl snapshot进入同一canonical checkpoint；authored surface不暴露generic `invoke`。
 
 ## State and recovery
 

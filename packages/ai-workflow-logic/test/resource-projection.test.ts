@@ -19,6 +19,10 @@ describe('Halfcode-backed AI workflow resource projection', () => {
   test('loads the ResourcePackage through Halfcode and projects ordered workflow bindings', async () => {
     const loaded = await loadAIWorkflowResourcePackage({ rootDir: fixtureRoot });
 
+    expect(loaded.authoredTree.stage).toBe('authored');
+    expect(loaded.tree.stage).toBe('resolved');
+    expect(loaded.tree.readerProfileId).toBe('depa.flows.ai-resources.v1');
+    expect(loaded.tree.receipts).toHaveLength(7);
     expect(loaded.tree.manifest.kind).toBe('ResourcePackage');
     expect(loaded.tree.manifest.resourceId).toBe('depa.flows.test.resource_package');
     expect(loaded.appBundles).toHaveLength(1);
@@ -39,6 +43,7 @@ describe('Halfcode-backed AI workflow resource projection', () => {
     expect(loaded.appBundles[0]?.entrypoints.map((binding) => binding.id)).toEqual(['primary']);
     expect(Object.isFrozen(loaded.appBundles)).toBe(true);
     expect(Object.isFrozen(loaded.appBundles[0]?.workflowBindings)).toBe(true);
+    expect((loaded.appBundles[0]?.resource as { stage?: string } | undefined)?.stage).toBe('resolved');
   });
 
   test('surfaces Halfcode loader diagnostics instead of applying a depa fallback policy', async () => {
@@ -190,7 +195,7 @@ function record(
     kind,
     fqn: resourceId,
     resourceId,
-    metadata: { apiVersion: 'depa.flows/v1', version: '1.0.0' },
+    metadata: { envelopeVersion: 'halfcode.resource-envelope/v1', specVersion: 1 },
     sourceShape: 'single-file',
     logicalPath: `${kind}/${resourceId}.xnl`,
     documentUri: `vfs://@/${kind}/${resourceId}.xnl`,

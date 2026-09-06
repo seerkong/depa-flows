@@ -1,4 +1,4 @@
-<AICtrlWorkflow #depa.flows.test.SupportAgent.Workflow apiVersion="depa.flows/v1" version="1.0.0" {
+<AICtrlWorkflow #depa.flows.test.SupportAgent.Workflow envelopeVersion="halfcode.resource-envelope/v1" specVersion=1 {
   lifecycle = "Active"
   description = "Control workflow fixture"
 }>

@@ -121,8 +121,8 @@ function reserveName(ai: AIWorkflowProfileDurableState, receipt: AIAgentInvocati
 }
 
 function resolveSelector(ai: AIWorkflowProfileDurableState, selector: AIAgentSelector, config: AIAgentEffectConfig): AIAgentInstanceReference {
-  const instanceId = 'byInstanceId' in selector ? selector.byInstanceId : ai.instanceIdByName[selector.byInstanceName];
-  if (instanceId === undefined) fail('AI_AGENT_INSTANCE_NAME_NOT_FOUND', 'selector.byInstanceName', 'Named Agent instance does not exist.');
+  const instanceId = 'byId' in selector ? selector.byId : ai.instanceIdByName[selector.byName];
+  if (instanceId === undefined) fail('AI_AGENT_INSTANCE_NAME_NOT_FOUND', 'selector.byName', 'Named Agent instance does not exist.');
   const instance = ai.instancesById[instanceId];
   if (!instance) fail('AI_AGENT_INSTANCE_ID_NOT_FOUND', 'selector', 'Agent instance does not exist.');
   if (instance.instanceName !== undefined && ai.instanceIdByName[instance.instanceName] !== instance.instanceId) fail('AI_AGENT_INSTANCE_INDEX_CONFLICT', 'checkpoint.profile.ai', 'Agent instance indexes are not reciprocal.');

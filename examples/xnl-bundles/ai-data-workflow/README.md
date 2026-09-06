@@ -16,6 +16,6 @@ record、所属 leaf 与 Merkle path，不建立第二个 checkpoint authority�
 
 新的 generation 或 transitive invalidation 不能写回 [`manifest.xnl`](manifest.xnl)，也不能进入平行的 graph-state store。events 和 index 是可重建投影；fresh process 只从 frozen definition 与 checkpoint 恢复。
 
-本示例的普通 `TransformNode` 保持 `output = fn(runtime, input, config)`。`retrieve` 返回稳定 `instance` port；`summarize` 从前驱port构造 exact `{byInstanceId}` 并调用同名 bound `runTargetedAgent`。static selector也可用 `{byInstanceName}`，但运行输出不得写回Definition config。authored surface没有generic `invoke`或runtime-less shortcut。
+本示例的普通 `TransformNode` 保持 `output = fn(runtime, input, config)`。`retrieve` 返回稳定 `instance` port；`summarize` 从前驱port构造 exact `{byId}` 并调用同名 bound `runTargetedAgent`。static selector也可用 `{byName}`，但运行输出不得写回Definition config。authored surface没有generic `invoke`或runtime-less shortcut。
 
 物理目录和 CAS 约束见 [Definition、Instance 与 Run](../../../docs/flow-dsl/spec/flow-core/instance-run.md)。

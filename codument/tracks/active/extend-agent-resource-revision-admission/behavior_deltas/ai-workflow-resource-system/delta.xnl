@@ -1,0 +1,26 @@
+<BehaviorPatch #track.extend-agent-resource-revision-admission.behavior_patch.ai-workflow-resource-system apiVersion="codument.tech/v1alpha1" version="1" { capability = "ai-workflow-resource-system" } (
+  <Mutations [
+    <Upsert { selector = "behavior://ai-workflow-resource-system/requirements/feedback-resource-revision" } (
+      <Requirement #feedback-resource-revision (
+        <Statement ?>系统 SHALL 通过原生 Halfcode update 接纳反馈驱动 Agent 修订，校验真实 CAS 和持久 receipt；旧 frozen run 不隐式升级。</?>
+        <Suites [<Suite #revision { name = "修订与选择" } (<Cases [
+          <Case #revise (<Given ?>旧候选和反馈身份准确，原生 update/present 成功。</?> <When ?>reconcile 持久 receipt 后选择。</?> <Then ?>产生新候选及新运行身份，原 create/select 仍可用。</?>)>
+          <Case #reject (<Given ?>CAS、候选、反馈或 receipt 不匹配，或修订尚 pending。</?> <When ?>接纳或选择。</?> <Then ?>拒绝，不以旧 evidence 绕过 publication，不改旧 frozen task。</?>)>
+          <Case #owner-isolation (<Given ?>两个独立 resource host 使用各自显式 selection owner，即使资源与 receipt 摘要相同。</?> <When ?>A 创建或修订并跨 registry refresh，B 独立选择或 authoring。</?> <Then ?>pending 与 superseded observation 只约束原 owner；缺 owner 的 authoring、owner-bound registry 移除或替换 owner、foreign-owner admission 或 receipt authority 拒绝。</?>)>
+        ]>)>]>
+      )>
+    )>
+    <Upsert { selector = "behavior://ai-workflow-resource-system/requirements/native-agent-code-closure" } (
+      <Requirement #native-agent-code-closure (
+        <Statement ?>系统 SHALL 为 Agent 代码 Kind 投影原生 CodeBinding，冻结真实代码及配置身份，并从旧材料恢复 authentic proof 和原执行行为。</?>
+        <Suites [<Suite #execution { name = "代码执行身份" } (<Cases [
+          <Case #code-change (<Given ?>Agent 文档不变、Context 内部 helper 变化。</?> <When ?>新任务准备闭包。</?> <Then ?>执行输出与 semantic identity 随代码变化，原任务仍执行旧闭包。</?>)>
+          <Case #recovery (<Given ?>V1 已冻结，live 更新为 V2 后被删除。</?> <When ?>fresh runtime 用持久冻结资源与可信摘要恢复。</?> <Then ?>经公开投影/freeze 取得 authentic proof 并执行 V1，不读取 latest；篡改或环境不匹配拒绝。</?>)>
+          <Case #legacy (<Given ?>现存 spec1 Content 或新 spec2 CodeBinding 配方。</?> <When ?>按对应 reader/兼容 resolver 编译执行。</?> <Then ?>走同一 Halfcode 闭包链路，未知 descriptor 拒绝，不给 browser 投影引入执行器。</?>)>
+          <Case #resolved-execution-bridge (<Given ?>原生 authored publication authority 和显式完整 reader contexts。</?> <When ?>owner 派生 execution observation 并经 selection、compile、freeze。</?> <Then ?>文档 CAS 保持 authored，执行使用 exact resolved projection；闭包内 reader resolution facts 进入 artifact 和执行指纹，foreign/copied/stale 桥接拒绝，tombstone 不复活。</?>)>
+          <Case #reader-pinned-recovery (<Given ?>文档与代码相同但 reader implementation identity 已变。</?> <When ?>创建新执行或恢复旧执行。</?> <Then ?>新执行 identity 不同，旧 artifact 在新 reader 下拒绝；原 exact reader 加冻结代码可在独立 OS 进程恢复 V1，无 bridge 的旧调用保持兼容。</?>)>
+        ]>)>]>
+      )>
+    )>
+  ]>
+)>

@@ -1,4 +1,4 @@
-<AIAgentDefinition #depa.flows.test.Agent.Support apiVersion="depa.flows/v1" version="1.0.0" {
+<AIAgentDefinition #depa.flows.test.Agent.Support envelopeVersion="halfcode.resource-envelope/v1" specVersion=1 {
   lifecycle = "Active"
   description = "Support Agent definition"
 } (

@@ -93,7 +93,7 @@
               a canonical run profile contains one mutually consistent id index and name index
               </?01M0QP09MAYK46QAXWRKDF883N>
               <When ?01M0QP09MAYK46QAXWRKDF883P>
-              `runTargetedAgent` receives exactly `{byInstanceId}` or exactly `{byInstanceName}`
+              `runTargetedAgent` receives exactly `{byId}` or exactly `{byName}`; legacy instance-prefixed keys are rejected
               </?01M0QP09MAYK46QAXWRKDF883P>
               <Then ?01M0QP09MAYK46QAXWRKDF883Q>
               it SHALL resolve the existing instance and dispatch the invocation to that instance without creating another instance

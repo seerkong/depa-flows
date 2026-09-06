@@ -1,0 +1,120 @@
+<Track #migrate-depa-ai-resource-kinds-to-halfcode-03 apiVersion="codument.tech/v1alpha1" version="1" { status = "completed" goal = "Make depa-flows the exact Halfcode 0.3 Kind authority for the complete public AI Agent, Workflow and Material resource closure consumed by Eidolon." description = "Register versioned owners, schemas, semantic contracts and readers for every depa-flows resource Kind; migrate authors, loaders and run-freeze consumers to the Halfcode 0.3 authored/resolved boundary; prepare an exact public tarball closure without publishing it." question_mode = "decision-tree" question_severity = "auto" commit_mode = "manual" created_at = "2026-09-04T10:25:49.902Z" updated_at = "2026-09-04T13:12:04.467Z" modeling_base_commit = "014128da802c8ed3e4d8fa58520e42cd64b76b9c" engineering_base_commit = "014128da802c8ed3e4d8fa58520e42cd64b76b9c" } (
+  <Ports { scope = "track" }>
+  <TaskSpace #space_migrate-depa-ai-resource-kinds-to-halfcode-03 { name = "migrate-depa-ai-resource-kinds-to-halfcode-03" version = "1" child_mode = "dag" } (
+    <SubNodes [
+      <TaskGroup #P1 { name = "Versioned AI resource Kind authority" status = "DONE" order = 0 } (
+        <SubNodes [
+          <Task #P1-T1 { name = "register the complete owner schema semantic-contract and exact-reader catalog" status = "DONE" order = 0 } (
+            <Acceptance [
+              <Criterion #P1-T1-AC1 { checked = true } ?01M1NZQHB0BQDKGAQGHTE5BJMA>
+              One exported catalog owns AIAgentDefinition, AgentMessageSource, AgentContextPipeline, Prompt, Tool, MessageSchema, EffectPolicy, MaterialPort, MaterialBinding, RequestMaterial, ContextMaterial, AIWorkflowAppBundle, AICtrlWorkflow and AIDataWorkflow through exact Halfcode 0.3 owner, SpecRevision and reader registrations.
+              </?01M1NZQHB0BQDKGAQGHTE5BJMA>
+              <Criterion #P1-T1-AC2 { checked = true } ?01M1NZQHB0BQDKGAQGHTE5BJMB>
+              Owner, schema, semantic and reader implementation fingerprints are derived from canonical facts; forged KindDefinition fingerprints, unregistered revisions and legacy envelopes fail closed.
+              </?01M1NZQHB0BQDKGAQGHTE5BJMB>
+              <Criterion #P1-T1-AC3 { checked = true } ?01M1NZQHB0BQDKGAQGHTE5BJMC>
+              Halfcode remains the generic envelope, catalog, schema and resolution authority while depa-flows remains the only authority for AI resource grammar and semantic projection.
+              </?01M1NZQHB0BQDKGAQGHTE5BJMC>
+            ]>
+          )>
+          <Task #P1-T2 { name = "migrate canonical package fixtures and authoring output to the 0.3 envelope" status = "DONE" order = 1 } (
+            <Acceptance [
+              <Criterion #P1-T2-AC1 { checked = true } ?01M1NZQHB0BQDKGAQGHTE5BJMD>
+              Canonical ResourcePackage, KindDefinition and AI resource sources use envelopeVersion halfcode.resource-envelope/v1 with numeric specVersion and contain no legacy apiVersion/version envelope fields.
+              </?01M1NZQHB0BQDKGAQGHTE5BJMD>
+              <Criterion #P1-T2-AC2 { checked = true } ?01M1NZQHB0BQDKGAQGHTE5BJME>
+              KindDefinition sources are rendered or verified against the exported registrations rather than acting as independent fingerprint authority.
+              </?01M1NZQHB0BQDKGAQGHTE5BJME>
+            ]>
+          )>
+        ]>
+      )>
+      <TaskGroup #P2 { name = "Resolved consumer and run-freeze migration" status = "DONE" order = 1 } (
+        <SubNodes [
+          <Task #P2-T1 { name = "move projection and freeze boundaries onto Halfcode authored and resolved trees" status = "DONE" order = 0 } (
+            <Acceptance [
+              <Criterion #P2-T1-AC1 { checked = true } ?01M1NZQHB0BQDKGAQGHTE5BJMF>
+              Filesystem loading returns an authored tree and explicit depa reader profile resolution produces the tree accepted by workflow projection and run-freeze; no legacy permissive load path bypasses exact contract admission.
+              </?01M1NZQHB0BQDKGAQGHTE5BJMF>
+              <Criterion #P2-T1-AC2 { checked = true } ?01M1NZQHB0BQDKGAQGHTE5BJMG>
+              Existing dependency closure, authentic projection brand, semantic fingerprint and frozen-run receipts remain behaviorally stable after the migration.
+              </?01M1NZQHB0BQDKGAQGHTE5BJMG>
+              <Criterion #P2-T1-AC3 { checked = true } ?01M1NZQHB0BQDKGAQGHTE5BJMH>
+              Root/browser projection entry points remain free of Node filesystem and runtime-loader dependencies; filesystem and run-freeze stay explicit server subpaths.
+              </?01M1NZQHB0BQDKGAQGHTE5BJMH>
+            ]>
+          )>
+          <Task #P2-T2 { name = "migrate Ctrl Data and public package dependency closure to exact 0.3 contracts" status = "DONE" order = 1 } (
+            <Acceptance [
+              <Criterion #P2-T2-AC1 { checked = true } ?01M1NZQHB0BQDKGAQGHTE5BJMJ>
+              AI Workflow, Ctrl Workflow and Data Workflow contract/logic packages consume one exact compatible version closure including halfcode-compiler.xnl 0.3.0 and holarchy-core-contract 0.2.0 where required.
+              </?01M1NZQHB0BQDKGAQGHTE5BJMJ>
+              <Criterion #P2-T2-AC2 { checked = true } ?01M1NZQHB0BQDKGAQGHTE5BJMK>
+              Existing public DTOs and runtime behavior remain additive/source-compatible except for the intentional authored-versus-resolved Halfcode type boundary.
+              </?01M1NZQHB0BQDKGAQGHTE5BJMK>
+            ]>
+          )>
+        ]>
+      )>
+      <TaskGroup #P3 { name = "Physical release-candidate verification" status = "DONE" order = 2 } (
+        <SubNodes [
+          <Task #P3-T1 { name = "pack and consume the public 0.3 dependency closure in an isolated Bun process" status = "DONE" order = 0 } (
+            <Acceptance [
+              <Criterion #P3-T1-AC1 { checked = true } ?01M1NZQHB0BQDKGAQGHTE5BJMM>
+              Focused and full tests, typecheck, package metadata checks and an isolated tarball consumer prove exact resolution, projection, Ctrl/Data loading and run-freeze from a fresh process.
+              </?01M1NZQHB0BQDKGAQGHTE5BJMM>
+              <Criterion #P3-T1-AC2 { checked = true } ?01M1NZQHB0BQDKGAQGHTE5BJMN>
+              Candidate tarballs, checksums and dependency order are recorded; registry preflight uses /Users/kongweixian/.npmrc_official and no npm publish occurs in this Track.
+              </?01M1NZQHB0BQDKGAQGHTE5BJMN>
+            ]>
+          )>
+        ]>
+      )>
+      <TaskGroup #P4 { name = "Eidolon-consumed Flow DSL reference module migration" status = "DONE" order = 3 } (
+        <SubNodes [
+          <Task #P4-T1 { name = "migrate and pack ai-workflow-flow-dsl-reference on the Halfcode 0.3 envelope" status = "DONE" order = 0 } (
+            <Acceptance [
+              <Criterion #P4-T1-AC1 { checked = true } ?J75FB2TYJ3QRS4WYXTRMSWM3ND>
+              The public Flow DSL reference module emits only halfcode.resource-envelope/v1 plus numeric specVersion resources, reuses the Halfcode-owned WikiPage KindDefinition, and declares halfcode-compiler.xnl 0.3.0 exactly.
+              </?J75FB2TYJ3QRS4WYXTRMSWM3ND>
+              <Criterion #P4-T1-AC2 { checked = true } ?DPYMG4VCZDC0FTW68FFMZXRDXN>
+              A packed candidate is consumed with the Halfcode 0.3 candidate by a fresh process and composes into the same system-skill assembly boundary without workspace or file dependencies; no publish occurs.
+              </?DPYMG4VCZDC0FTW68FFMZXRDXN>
+            ]>
+          )>
+        ]>
+      )>
+      <TaskGroup #P5 { name = "Halfcode resource-envelope workflow source admission" status = "DONE" order = 4 } (
+        <SubNodes [
+          <Task #P5-T1 { name = "admit Ctrl and Data workflow roots from the Halfcode 0.3 envelope" status = "DONE" order = 0 } (
+            <Acceptance [
+              <Criterion #P5-T1-AC1 { checked = true } ?7SAK3FEADNFGDP5J03RHSJG10M>
+              Ctrl and Data source loaders accept an exact halfcode.resource-envelope/v1 plus numeric specVersion profile root, project depa.flows/v1 semantic identity deterministically, and retain the existing standalone depa.flows/v1 source form without accepting unknown envelopes or missing revisions.
+              </?7SAK3FEADNFGDP5J03RHSJG10M>
+              <Criterion #P5-T1-AC2 { checked = true } ?H4YJZW8VG2RDS4P9N5BBE7QK6C>
+              Focused and full tests pass, changed logic candidates are repacked and an isolated tarball consumer loads real Ctrl and Data roots from the 0.3 envelope; registry preflight remains read-only and no publish occurs.
+              </?H4YJZW8VG2RDS4P9N5BBE7QK6C>
+            ]>
+          )>
+        ]>
+      )>
+    ]>
+  )>
+  <Schedule [
+    <Dag { for = "space_migrate-depa-ai-resource-kinds-to-halfcode-03" } [
+      <Node #P2 [
+        <After { ref = "P1" }>
+      ]>
+      <Node #P3 [
+        <After { ref = "P2" }>
+      ]>
+      <Node #P4 [
+        <After { ref = "P3" }>
+      ]>
+      <Node #P5 [
+        <After { ref = "P4" }>
+      ]>
+    ]>
+  ]>
+  <Hooks []>
+)>

@@ -1,176 +1,235 @@
 <Behavior #ai-data-workflow apiVersion="codument.tech/v1alpha1" version="1" (
   <Requirements [
     <Requirement #eager-data-flow-substrate (
-      <Statement ?01M0QP09M7QPJZVJ5YY375CHDS>
+      <Statement ?01M1A0DRBDFMSCKRBX40E9NNJC>
       The system SHALL implement AI Data Workflow as an EagerDataFlow-backed RunGraph layer.
-      </?01M0QP09M7QPJZVJ5YY375CHDS>
+      </?01M1A0DRBDFMSCKRBX40E9NNJC>
       <Suites [
         <Suite #run-graph { name = "RunGraph" } (
           <Cases [
             <Case #derive-from-eager-plan (
-              <Given ?01M0QP09M7QPJZVJ5YY375CHDT>
+              <Given ?01M1A0DRBDFMSCKRBX40E9NNJD>
               An EagerDataFlowAuthoringPlan exists
-              </?01M0QP09M7QPJZVJ5YY375CHDT>
-              <When ?01M0QP09M7QPJZVJ5YY375CHDV>
+              </?01M1A0DRBDFMSCKRBX40E9NNJD>
+              <When ?01M1A0DRBDFMSCKRBX40E9NNJE>
               An AI Data Workflow run graph is created
-              </?01M0QP09M7QPJZVJ5YY375CHDV>
-              <Then ?01M0QP09M7QPJZVJ5YY375CHDW>
+              </?01M1A0DRBDFMSCKRBX40E9NNJE>
+              <Then ?01M1A0DRBDFMSCKRBX40E9NNJF>
               The graph SHALL preserve nodes, input/output config and dependency edges from the EagerDataFlow plan
-              </?01M0QP09M7QPJZVJ5YY375CHDW>
+              </?01M1A0DRBDFMSCKRBX40E9NNJF>
             )>
             <Case #invalidate-downstream (
-              <Given ?01M0QP09M7QPJZVJ5YY375CHDX>
+              <Given ?01M1A0DRBDFMSCKRBX40E9NNJG>
               A completed node is modified by a graph patch
-              </?01M0QP09M7QPJZVJ5YY375CHDX>
-              <When ?01M0QP09M7QPJZVJ5YY375CHDY>
+              </?01M1A0DRBDFMSCKRBX40E9NNJG>
+              <When ?01M1A0DRBDFMSCKRBX40E9NNJH>
               The patch is applied
-              </?01M0QP09M7QPJZVJ5YY375CHDY>
-              <Then ?01M0QP09M7QPJZVJ5YY375CHDZ>
+              </?01M1A0DRBDFMSCKRBX40E9NNJH>
+              <Then ?01M1A0DRBDFMSCKRBX40E9NNJJ>
               The system SHALL create a new generation and invalidate downstream nodes without deleting prior records
-              </?01M0QP09M7QPJZVJ5YY375CHDZ>
+              </?01M1A0DRBDFMSCKRBX40E9NNJJ>
             )>
             <Case #run-local-reuse (
-              <Given ?01M0QP09M7QPJZVJ5YY375CHE0>
+              <Given ?01M1A0DRBDFMSCKRBX40E9NNJK>
               A new generation has an invalidated node with an unchanged semantic fingerprint
-              </?01M0QP09M7QPJZVJ5YY375CHE0>
-              <When ?01M0QP09M7QPJZVJ5YY375CHE1>
+              </?01M1A0DRBDFMSCKRBX40E9NNJK>
+              <When ?01M1A0DRBDFMSCKRBX40E9NNJM>
               The node reuse policy is semantic-hash
-              </?01M0QP09M7QPJZVJ5YY375CHE1>
-              <Then ?01M0QP09M7QPJZVJ5YY375CHE2>
+              </?01M1A0DRBDFMSCKRBX40E9NNJM>
+              <Then ?01M1A0DRBDFMSCKRBX40E9NNJN>
               The system SHALL allow run-local reuse of the previous result
-              </?01M0QP09M7QPJZVJ5YY375CHE2>
+              </?01M1A0DRBDFMSCKRBX40E9NNJN>
             )>
           ]>
         )>
       ]>
     )>
     <Requirement #step-space-sidecar-runtime (
-      <Statement ?01M0QP09M7QPJZVJ5YY375CHE3>
+      <Statement ?01M1A0DRBDFMSCKRBX40E9NNJP>
       AIDataWorkflow SHALL assemble StepSpace steps into its existing dependency graph and SHALL persist each node/result/fingerprint/invalidation projection through the canonical step record codec while retaining binding, generation and patch authority in the accepted checkpoint root.
-      </?01M0QP09M7QPJZVJ5YY375CHE3>
+      </?01M1A0DRBDFMSCKRBX40E9NNJP>
       <Suites [
         <Suite #data-step-recovery { name = "Data step-local recovery" } (
           <Cases [
             <Case #accepted-node-not-replayed (
-              <Given ?01M0QP09M7QPJZVJ5YY375CHE4>
+              <Given ?01M1A0DRBDFMSCKRBX40E9NNJQ>
               one effectful Data step result is accepted and a later step is waiting
-              </?01M0QP09M7QPJZVJ5YY375CHE4>
-              <When ?01M0QP09M7QPJZVJ5YY375CHE5>
+              </?01M1A0DRBDFMSCKRBX40E9NNJQ>
+              <When ?01M1A0DRBDFMSCKRBX40E9NNJR>
               a fresh process reconstructs the run from checkpoint head and step records
-              </?01M0QP09M7QPJZVJ5YY375CHE5>
-              <Then ?01M0QP09M7QPJZVJ5YY375CHE6>
+              </?01M1A0DRBDFMSCKRBX40E9NNJR>
+              <Then ?01M1A0DRBDFMSCKRBX40E9NNJS>
               the accepted step SHALL not execute again and the later step SHALL continue with the exact reconstructed output
-              </?01M0QP09M7QPJZVJ5YY375CHE6>
+              </?01M1A0DRBDFMSCKRBX40E9NNJS>
             )>
           ]>
         )>
       ]>
     )>
     <Requirement #typed-agent-task-binding (
-      <Statement ?01M0QP09M7QPJZVJ5YY375CHE7>
+      <Statement ?01M1A0DRBDFMSCKRBX40E9NNJT>
       AIDataWorkflow SHALL execute typed Agent tasks through ordinary EagerDataFlow processor nodes, with selectors supplied by static config or typed predecessor data.
-      </?01M0QP09M7QPJZVJ5YY375CHE7>
+      </?01M1A0DRBDFMSCKRBX40E9NNJT>
       <Suites [
         <Suite #data-agent-reuse { name = "Data Agent instance reuse" } (
           <Cases [
             <Case #create-and-reuse-through-port (
-              <Given ?01M0QP09M7QPJZVJ5YY375CHE8>
+              <Given ?01M1A0DRBDFMSCKRBX40E9NNJV>
               an Agent processor node returns output plus a stable instance identity on declared ports
-              </?01M0QP09M7QPJZVJ5YY375CHE8>
-              <When ?01M0QP09M7QPJZVJ5YY375CHE9>
-              a dependent processor builds `{byInstanceId}` from that port and calls `runTargetedAgent`
-              </?01M0QP09M7QPJZVJ5YY375CHE9>
-              <Then ?01M0QP09M7QPJZVJ5YY375CHEA>
+              </?01M1A0DRBDFMSCKRBX40E9NNJV>
+              <When ?01M1A0DRBDFMSCKRBX40E9NNJW>
+              a dependent processor builds `{byId}` from that port and calls `runTargetedAgent`
+              </?01M1A0DRBDFMSCKRBX40E9NNJW>
+              <Then ?01M1A0DRBDFMSCKRBX40E9NNJX>
               the dependent node SHALL use the same Agent instance and preserve RunGraph data dependencies
-              </?01M0QP09M7QPJZVJ5YY375CHEA>
+              </?01M1A0DRBDFMSCKRBX40E9NNJX>
             )>
             <Case #reuse-authored-name (
-              <Given ?01M0QP09M7QPJZVJ5YY375CHEB>
+              <Given ?01M1A0DRBDFMSCKRBX40E9NNJY>
               an earlier Agent node created a unique authored instance name in the same Flow run
-              </?01M0QP09M7QPJZVJ5YY375CHEB>
-              <When ?01M0QP09M7QPJZVJ5YY375CHEC>
-              a later processor uses the exact constant `{byInstanceName}` selector
-              </?01M0QP09M7QPJZVJ5YY375CHEC>
-              <Then ?01M0QP09M7QPJZVJ5YY375CHED>
+              </?01M1A0DRBDFMSCKRBX40E9NNJY>
+              <When ?01M1A0DRBDFMSCKRBX40E9NNJZ>
+              a later processor uses the exact constant `{byName}` selector
+              </?01M1A0DRBDFMSCKRBX40E9NNJZ>
+              <Then ?01M1A0DRBDFMSCKRBX40E9NNK0>
               the selector SHALL resolve through checkpoint AI profile state and SHALL NOT create another instance
-              </?01M0QP09M7QPJZVJ5YY375CHED>
+              </?01M1A0DRBDFMSCKRBX40E9NNK0>
             )>
             <Case #fresh-run-graph-recovery (
-              <Given ?01M0QP09M7QPJZVJ5YY375CHEE>
+              <Given ?01M1A0DRBDFMSCKRBX40E9NNK1>
               a Data node's Agent completion and output are accepted in the canonical checkpoint
-              </?01M0QP09M7QPJZVJ5YY375CHEE>
-              <When ?01M0QP09M7QPJZVJ5YY375CHEF>
+              </?01M1A0DRBDFMSCKRBX40E9NNK1>
+              <When ?01M1A0DRBDFMSCKRBX40E9NNK2>
               a fresh scheduler reconstructs the RunGraph
-              </?01M0QP09M7QPJZVJ5YY375CHEF>
-              <Then ?01M0QP09M7QPJZVJ5YY375CHEG>
+              </?01M1A0DRBDFMSCKRBX40E9NNK2>
+              <Then ?01M1A0DRBDFMSCKRBX40E9NNK3>
               it SHALL restore the output and instance identity as durable ports and SHALL NOT replay the completed Agent invocation
-              </?01M0QP09M7QPJZVJ5YY375CHEG>
+              </?01M1A0DRBDFMSCKRBX40E9NNK3>
             )>
             <Case #ordinary-node-grammar (
-              <Given ?01M0QP09M7QPJZVJ5YY375CHEH>
+              <Given ?01M1A0DRBDFMSCKRBX40E9NNK4>
               an AIData definition declares Agent task config on a standard processor node
-              </?01M0QP09M7QPJZVJ5YY375CHEH>
-              <When ?01M0QP09M7QPJZVJ5YY375CHEJ>
+              </?01M1A0DRBDFMSCKRBX40E9NNK4>
+              <When ?01M1A0DRBDFMSCKRBX40E9NNK5>
               the loader proves the workflow/node/Agent resource tuple
-              </?01M0QP09M7QPJZVJ5YY375CHEJ>
-              <Then ?01M0QP09M7QPJZVJ5YY375CHEK>
+              </?01M1A0DRBDFMSCKRBX40E9NNK5>
+              <Then ?01M1A0DRBDFMSCKRBX40E9NNK6>
               it SHALL bind typed Agent semantics without introducing an `AgentTask` node or guessing from prose
-              </?01M0QP09M7QPJZVJ5YY375CHEK>
+              </?01M1A0DRBDFMSCKRBX40E9NNK6>
             )>
           ]>
         )>
       ]>
     )>
     <Requirement #cybernetic-control-protocol (
-      <Statement ?01M17H10HGFC7X2BWA6GYMGK15>
+      <Statement ?01M1A0DRBDFMSCKRBX40E9NNK7>
       AI Data Workflow SHALL expose a provider-neutral observe-decide-admit protocol in which an Agent decision is a bounded proposal, a frozen capability catalog closes executable choices, and only the existing RunGraph owner can commit an admitted graph patch.
-      </?01M17H10HGFC7X2BWA6GYMGK15>
+      </?01M1A0DRBDFMSCKRBX40E9NNK7>
       <Suites [
         <Suite #autonomous-replanning { name = "Autonomous replanning" } (
           <Cases [
             <Case #successive-corrections (
-              <Given ?01M17H10HGFC7X2BWA6GYMGK16>
+              <Given ?01M1A0DRBE1WTXFJ5GT984RGC7>
               A canonical RunGraph, immutable goal, frozen capability catalog and remaining control budget exist.
-              </?01M17H10HGFC7X2BWA6GYMGK16>
-              <When ?01M17H10HGFC7X2BWA6GYMGK17>
+              </?01M1A0DRBE1WTXFJ5GT984RGC7>
+              <When ?01M1A0DRBE1WTXFJ5GT984RGC8>
               A controller proposes two distinct valid corrections after successive observations.
-              </?01M17H10HGFC7X2BWA6GYMGK17>
-              <Then ?01M17H10HGFC7X2BWA6GYMGK18>
+              </?01M1A0DRBE1WTXFJ5GT984RGC8>
+              <Then ?01M1A0DRBE1WTXFJ5GT984RGC9>
               Admission SHALL produce two typed graph patches for consecutive generations without creating a controller-owned graph copy.
-              </?01M17H10HGFC7X2BWA6GYMGK18>
+              </?01M1A0DRBE1WTXFJ5GT984RGC9>
             )>
             <Case #reject-open-or-stale-decision (
-              <Given ?01M17H10HGFC7X2BWA6GYMGK19>
+              <Given ?01M1A0DRBE1WTXFJ5GT984RGCA>
               A controller decision names an undeclared capability, mismatches a port schema, targets a protected node or refers to a stale observation.
-              </?01M17H10HGFC7X2BWA6GYMGK19>
-              <When ?01M17H10HGFC7X2BWA6GYMGK1A>
+              </?01M1A0DRBE1WTXFJ5GT984RGCA>
+              <When ?01M1A0DRBE1WTXFJ5GT984RGCB>
               The decision is admitted.
-              </?01M17H10HGFC7X2BWA6GYMGK1A>
-              <Then ?01M17H10HGFC7X2BWA6GYMGK1B>
+              </?01M1A0DRBE1WTXFJ5GT984RGCB>
+              <Then ?01M1A0DRBE1WTXFJ5GT984RGCC>
               The system SHALL return typed feedback, produce no patch and leave the canonical graph unchanged.
-              </?01M17H10HGFC7X2BWA6GYMGK1B>
+              </?01M1A0DRBE1WTXFJ5GT984RGCC>
             )>
             <Case #verifier-gated-completion (
-              <Given ?01M17H10HGFC7X2BWA6GYMGK1C>
+              <Given ?01M1A0DRBE1WTXFJ5GT984RGCD>
               The controller claims completion.
-              </?01M17H10HGFC7X2BWA6GYMGK1C>
-              <When ?01M17H10HGFC7X2BWA6GYMGK1D>
+              </?01M1A0DRBE1WTXFJ5GT984RGCD>
+              <When ?01M1A0DRBE1WTXFJ5GT984RGCE>
               The latest matching verifier fact is absent or failed.
-              </?01M17H10HGFC7X2BWA6GYMGK1D>
-              <Then ?01M17H10HGFC7X2BWA6GYMGK1E>
+              </?01M1A0DRBE1WTXFJ5GT984RGCE>
+              <Then ?01M1A0DRBE1WTXFJ5GT984RGCF>
               Completion SHALL be rejected until an exact PASS verifier fact proves the required output contract.
-              </?01M17H10HGFC7X2BWA6GYMGK1E>
+              </?01M1A0DRBE1WTXFJ5GT984RGCF>
             )>
             <Case #bounded-termination (
-              <Given ?01M17H10HGFC7X2BWA6GYMGK1F>
+              <Given ?01M1A0DRBE1WTXFJ5GT984RGCG>
               Iteration, operation, no-progress, token or deadline budget is exhausted.
-              </?01M17H10HGFC7X2BWA6GYMGK1F>
-              <When ?01M17H10HGFC7X2BWA6GYMGK1G>
+              </?01M1A0DRBE1WTXFJ5GT984RGCG>
+              <When ?01M1A0DRBE1WTXFJ5GT984RGCH>
               The controller requests another revision.
-              </?01M17H10HGFC7X2BWA6GYMGK1G>
-              <Then ?01M17H10HGFC7X2BWA6GYMGK1H>
+              </?01M1A0DRBE1WTXFJ5GT984RGCH>
+              <Then ?01M1A0DRBE1WTXFJ5GT984RGCJ>
               Admission SHALL return a stable terminal code without provider-specific retry thresholds.
-              </?01M17H10HGFC7X2BWA6GYMGK1H>
+              </?01M1A0DRBE1WTXFJ5GT984RGCJ>
+            )>
+          ]>
+        )>
+      ]>
+    )>
+    <Requirement #autonomous-subflow-composition (
+      <Statement ?01M1A0DRBE1WTXFJ5GT984RGCK>
+      AI Data autonomous control SHALL compose hierarchical goals through canonical SubFlowNode patches and durable child invocation receipts, without introducing a GoalGraph or a second graph authority.
+      </?01M1A0DRBE1WTXFJ5GT984RGCK>
+      <Suites [
+        <Suite #subflow-admission { name = "Autonomous subflow admission" } (
+          <Cases [
+            <Case #closed-child-capability (
+              <Given ?01M1A0DRBE1WTXFJ5GT984RGCM>
+              A frozen catalog projects an exact child EagerDataFlow identity and FlowContract.
+              </?01M1A0DRBE1WTXFJ5GT984RGCM>
+              <When ?01M1A0DRBE1WTXFJ5GT984RGCN>
+              The controller proposes adding or rewiring a SubFlowNode.
+              </?01M1A0DRBE1WTXFJ5GT984RGCN>
+              <Then ?01M1A0DRBE1WTXFJ5GT984RGCP>
+              Admission SHALL validate exact ports, contract digest, protection and acyclic call topology, then lower the decision to the existing RunGraph patch owner.
+              </?01M1A0DRBE1WTXFJ5GT984RGCP>
+            )>
+            <Case #invalid-child-no-mutation (
+              <Given ?01M1A0DRBE1WTXFJ5GT984RGCQ>
+              A child reference is missing, stale, contract-incompatible, protected or recursive.
+              </?01M1A0DRBE1WTXFJ5GT984RGCQ>
+              <When ?01M1A0DRBE1WTXFJ5GT984RGCR>
+              The proposal is admitted.
+              </?01M1A0DRBE1WTXFJ5GT984RGCR>
+              <Then ?01M1A0DRBE1WTXFJ5GT984RGCS>
+              The system SHALL return typed feedback and leave the canonical graph bytes unchanged.
+              </?01M1A0DRBE1WTXFJ5GT984RGCS>
+            )>
+          ]>
+        )>
+        <Suite #durable-child-invocation { name = "Durable child invocation" } (
+          <Cases [
+            <Case #reserve-before-dispatch (
+              <Given ?01M1A0DRBE1WTXFJ5GT984RGCT>
+              A parent SubFlowNode becomes ready.
+              </?01M1A0DRBE1WTXFJ5GT984RGCT>
+              <When ?01M1A0DRBE1WTXFJ5GT984RGCV>
+              The child is started or resumed.
+              </?01M1A0DRBE1WTXFJ5GT984RGCV>
+              <Then ?01M1A0DRBE1WTXFJ5GT984RGCW>
+              The parent SHALL first reserve one deterministic child invocation binding and SHALL use explicit runtime ports to start-or-continue that same child.
+              </?01M1A0DRBE1WTXFJ5GT984RGCW>
+            )>
+            <Case #fresh-recovery-exactly-once (
+              <Given ?01M1A0DRBE1WTXFJ5GT984RGCX>
+              A process stops after reservation, child creation, accepted child effect or child terminal commit.
+              </?01M1A0DRBE1WTXFJ5GT984RGCX>
+              <When ?01M1A0DRBE1WTXFJ5GT984RGCY>
+              A fresh runtime continues the parent run.
+              </?01M1A0DRBE1WTXFJ5GT984RGCY>
+              <Then ?01M1A0DRBE1WTXFJ5GT984RGCZ>
+              It SHALL recover the same child invocation, SHALL NOT replay accepted child effects and SHALL accept output only from its exact terminal receipt.
+              </?01M1A0DRBE1WTXFJ5GT984RGCZ>
             )>
           ]>
         )>

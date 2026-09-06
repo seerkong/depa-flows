@@ -21,6 +21,7 @@ import {
   type AIDataWorkflowNodeInputs,
   type AIDataWorkflowRunGraph,
   type AIDataWorkflowRunNode,
+  type AIDataWorkflowSubFlowBinding,
 } from 'ai-data-workflow-contract';
 import type { EagerDataFlowValue } from 'eager-data-flow-contract';
 
@@ -239,13 +240,20 @@ function assertResourceRef(value: unknown, location: string): void {
   }
 }
 
+function assertEagerDataFlowRef(value: unknown, location: string): void {
+  assertNonEmptyString(value, location);
+  if (!value.startsWith('eager-data-flow://') || value.length === 'eager-data-flow://'.length) {
+    fail('AI_DATA_CONTROL_FLOW_REF', `${location} must be an exact eager-data-flow:// reference.`);
+  }
+}
+
 function assertCapability(capability: AIDataControlCapability, key: string): void {
   assertNonEmptyString(capability.capabilityId, `capabilities.${key}.capabilityId`);
   if (capability.capabilityId !== key) {
     fail('AI_DATA_CONTROL_CAPABILITY_ID', `Capability key ${key} must equal capabilityId ${capability.capabilityId}.`);
   }
-  if (capability.tag !== 'TransformNode' && capability.tag !== 'SinkNode') {
-    fail('AI_DATA_CONTROL_CAPABILITY_TAG', `Capability ${key} must use TransformNode or SinkNode.`);
+  if (capability.tag !== 'TransformNode' && capability.tag !== 'SinkNode' && capability.tag !== 'SubFlowNode') {
+    fail('AI_DATA_CONTROL_CAPABILITY_TAG', `Capability ${key} must use TransformNode, SinkNode or SubFlowNode.`);
   }
   assertNonEmptyString(capability.nodeType, `capabilities.${key}.nodeType`);
   assertSchemaMap(capability.inputSchemaRefs, `capabilities.${key}.inputSchemaRefs`);
@@ -260,10 +268,36 @@ function assertCapability(capability: AIDataControlCapability, key: string): voi
     fail('AI_DATA_CONTROL_CAPABILITY_CONFIG', `Capability ${key} fixedConfig uses reserved control keys.`);
   }
   if (capability.implementation.kind === 'code') {
+    if (capability.tag === 'SubFlowNode') {
+      fail('AI_DATA_CONTROL_CAPABILITY_IMPLEMENTATION', `SubFlow capability ${key} must use a subflow implementation.`);
+    }
     assertResourceRef(capability.implementation.codeRef, `capabilities.${key}.implementation.codeRef`);
   } else if (capability.implementation.kind === 'agent') {
+    if (capability.tag === 'SubFlowNode') {
+      fail('AI_DATA_CONTROL_CAPABILITY_IMPLEMENTATION', `SubFlow capability ${key} must use a subflow implementation.`);
+    }
     assertResourceRef(capability.implementation.agentDefinitionRef, `capabilities.${key}.implementation.agentDefinitionRef`);
     assertResourceRef(capability.implementation.taskProofRef, `capabilities.${key}.implementation.taskProofRef`);
+  } else if (capability.implementation.kind === 'subflow') {
+    if (capability.tag !== 'SubFlowNode' || capability.nodeType !== 'subflow') {
+      fail('AI_DATA_CONTROL_CAPABILITY_IMPLEMENTATION', `Subflow implementation ${key} requires SubFlowNode/subflow.`);
+    }
+    assertResourceRef(capability.implementation.definitionRef, `capabilities.${key}.implementation.definitionRef`);
+    assertEagerDataFlowRef(capability.implementation.flowRef, `capabilities.${key}.implementation.flowRef`);
+    assertNonEmptyString(capability.implementation.contractDigest, `capabilities.${key}.implementation.contractDigest`);
+    assertNonEmptyString(capability.implementation.callGraphDigest, `capabilities.${key}.implementation.callGraphDigest`);
+    if (!Array.isArray(capability.implementation.transitiveChildFlowRefs)) {
+      fail('AI_DATA_CONTROL_CALL_GRAPH', `capabilities.${key}.implementation.transitiveChildFlowRefs must be an array.`);
+    }
+    const childRefs = capability.implementation.transitiveChildFlowRefs;
+    childRefs.forEach((ref, index) => assertEagerDataFlowRef(
+      ref,
+      `capabilities.${key}.implementation.transitiveChildFlowRefs[${index}]`,
+    ));
+    if (new Set(childRefs).size !== childRefs.length
+      || childRefs.some((ref, index) => index > 0 && compareCodeUnits(childRefs[index - 1]!, ref) >= 0)) {
+      fail('AI_DATA_CONTROL_CALL_GRAPH', `capabilities.${key}.implementation.transitiveChildFlowRefs must be unique and sorted.`);
+    }
   } else {
     fail('AI_DATA_CONTROL_CAPABILITY_IMPLEMENTATION', `Capability ${key} has an unknown implementation kind.`);
   }
@@ -512,6 +546,17 @@ function normalizeRevisionOperation(
       op: value.op,
       nodeId: stringField(record, 'nodeId', location),
       capabilityId: stringField(record, 'capabilityId', location),
+      inputs: normalizeInputs(runtime, record.inputs, `${location}.inputs`),
+      ...(dependsOn === undefined ? {} : { dependsOn }),
+    };
+  }
+  if (value.op === 'add-subflow' || value.op === 'rewire-subflow') {
+    const record = exactRecord(value, ['op', 'nodeId', 'subflowCapabilityId', 'inputs'], ['dependsOn'], location);
+    const dependsOn = normalizeDependsOn(record.dependsOn, `${location}.dependsOn`);
+    return {
+      op: value.op,
+      nodeId: stringField(record, 'nodeId', location),
+      subflowCapabilityId: stringField(record, 'subflowCapabilityId', location),
       inputs: normalizeInputs(runtime, record.inputs, `${location}.inputs`),
       ...(dependsOn === undefined ? {} : { dependsOn }),
     };
@@ -836,7 +881,7 @@ function nodeContracts(
 
 function validateInputs(
   runtime: AIDataControlRuntime,
-  operation: Extract<AIDataControlRevisionOperation, { op: 'add-capability' | 'rewire-capability' }>,
+  operation: Exclude<AIDataControlRevisionOperation, { op: 'remove-node' }>,
   capability: AIDataControlCapability,
   contracts: ReadonlyMap<string, MutableNodeContract>,
   operationIndex: number,
@@ -969,6 +1014,7 @@ function capabilityConfig(
   if (capability.implementation.kind === 'code') {
     return { ...base, src: capability.implementation.codeRef };
   }
+  if (capability.implementation.kind === 'subflow') return base;
   return {
     ...base,
     agent: {
@@ -978,8 +1024,24 @@ function capabilityConfig(
   };
 }
 
+function capabilitySubflowBinding(
+  capability: AIDataControlCapability,
+  catalog: AIDataControlCapabilityCatalog,
+): AIDataWorkflowSubFlowBinding | undefined {
+  if (capability.implementation.kind !== 'subflow') return undefined;
+  return {
+    kind: 'autonomous',
+    schemaVersion: 'depa.ai-data-subflow-binding/v1',
+    capabilityId: capability.capabilityId,
+    catalogDigest: catalog.digest,
+    definitionRef: capability.implementation.definitionRef,
+    flowRef: capability.implementation.flowRef,
+    contractDigest: capability.implementation.contractDigest,
+  };
+}
+
 function operationDependencies(
-  operation: Extract<AIDataControlRevisionOperation, { op: 'add-capability' | 'rewire-capability' }>,
+  operation: Exclude<AIDataControlRevisionOperation, { op: 'remove-node' }>,
 ): readonly string[] {
   return [...new Set([
     ...(operation.dependsOn ?? []),
@@ -998,6 +1060,7 @@ function sameNodeRevision(
     inputs: node.inputs,
     outputs: node.outputs,
     config: node.config,
+    subflow: node.subflow ?? null,
     dependsOn: node.dependsOn,
   }) === runtime.stableDigest({
     tag: operation.changes.tag ?? node.tag,
@@ -1005,6 +1068,9 @@ function sameNodeRevision(
     inputs: operation.changes.inputs ?? node.inputs,
     outputs: operation.changes.outputs ?? node.outputs,
     config: operation.changes.config ?? node.config,
+    subflow: (Object.prototype.hasOwnProperty.call(operation.changes, 'subflow')
+      ? operation.changes.subflow
+      : node.subflow) ?? null,
     dependsOn: operation.changes.dependsOn ?? node.dependsOn,
   });
 }
@@ -1160,7 +1226,7 @@ function admitNormalizedAIDataControlDecision(
 
   const targets = new Set<string>();
   for (let index = 0; index < input.decision.operations.length; index += 1) {
-    const operation = input.decision.operations[index]!;
+    const operation: AIDataControlRevisionOperation = input.decision.operations[index]!;
     if (targets.has(operation.nodeId)) {
       return rejected(runtime, input.decision, [
         feedback('DUPLICATE_TARGET', `Revision targets ${operation.nodeId} more than once.`, {
@@ -1181,7 +1247,7 @@ function admitNormalizedAIDataControlDecision(
   const removed = new Set<string>();
 
   for (let index = 0; index < input.decision.operations.length; index += 1) {
-    const operation = input.decision.operations[index]!;
+    const operation: AIDataControlRevisionOperation = input.decision.operations[index]!;
     const existingContract = contracts.get(operation.nodeId);
     if (operation.op === 'remove-node') {
       if (!existingContract || existingContract.removed) {
@@ -1202,13 +1268,15 @@ function admitNormalizedAIDataControlDecision(
       continue;
     }
 
-    if (operation.op === 'add-capability' && existingContract) {
+    const isAdd = operation.op === 'add-capability' || operation.op === 'add-subflow';
+    const isRewire = operation.op === 'rewire-capability' || operation.op === 'rewire-subflow';
+    if (isAdd && existingContract) {
       return rejected(runtime, input.decision, [feedback('INVALID_DECISION', `Node ${operation.nodeId} already exists.`, {
         operationIndex: index,
         nodeId: operation.nodeId,
       })]);
     }
-    if (operation.op === 'rewire-capability') {
+    if (isRewire) {
       if (!existingContract || existingContract.removed) {
         return rejected(runtime, input.decision, [feedback('UNKNOWN_NODE', `Node ${operation.nodeId} is not active.`, {
           operationIndex: index,
@@ -1223,15 +1291,37 @@ function admitNormalizedAIDataControlDecision(
       }
     }
 
-    const capability = input.catalog.capabilities[operation.capabilityId];
+    const capabilityId = operation.op === 'add-subflow' || operation.op === 'rewire-subflow'
+      ? operation.subflowCapabilityId
+      : operation.capabilityId;
+    const capability = input.catalog.capabilities[capabilityId];
     if (!capability) {
-      return rejected(runtime, input.decision, [feedback('UNKNOWN_CAPABILITY', `Capability ${operation.capabilityId} is not frozen.`, {
+      return rejected(runtime, input.decision, [feedback('UNKNOWN_CAPABILITY', `Capability ${capabilityId} is not frozen.`, {
         operationIndex: index,
         nodeId: operation.nodeId,
       })]);
     }
+    const expectsSubflow = operation.op === 'add-subflow' || operation.op === 'rewire-subflow';
+    if (expectsSubflow !== (capability.implementation.kind === 'subflow')) {
+      return rejected(runtime, input.decision, [feedback(
+        'INVALID_DECISION',
+        `Operation ${operation.op} does not match frozen capability ${capabilityId}.`,
+        { operationIndex: index, nodeId: operation.nodeId },
+      )]);
+    }
     const inputProblem = validateInputs(runtime, operation, capability, contracts, index);
     if (inputProblem) return rejected(runtime, input.decision, [inputProblem]);
+    if (capability.implementation.kind === 'subflow') {
+      const parentFlowRef = `eager-data-flow://${input.graph.binding.definition.fqn}` as `eager-data-flow://${string}`;
+      if (capability.implementation.flowRef === parentFlowRef
+        || capability.implementation.transitiveChildFlowRefs.includes(parentFlowRef)) {
+        return rejected(runtime, input.decision, [feedback(
+          'RECURSIVE_SUBFLOW',
+          `Subflow capability ${capability.capabilityId} would recurse into ${parentFlowRef}.`,
+          { operationIndex: index, nodeId: operation.nodeId },
+        )]);
+      }
+    }
     const dependsOn = operationDependencies(operation);
     for (const dependency of dependsOn) {
       const dependencyContract = contracts.get(dependency);
@@ -1242,6 +1332,7 @@ function admitNormalizedAIDataControlDecision(
         })]);
       }
     }
+    const subflow = capabilitySubflowBinding(capability, input.catalog);
     const nodeFacts = {
       tag: capability.tag,
       nodeType: capability.nodeType,
@@ -1250,16 +1341,16 @@ function admitNormalizedAIDataControlDecision(
       config: capabilityConfig(capability, input.catalog),
       dependsOn,
     };
-    if (operation.op === 'add-capability') {
+    if (isAdd) {
       patchOperations.push({
         op: 'add-node',
-        node: { id: operation.nodeId, ...nodeFacts },
+        node: { id: operation.nodeId, ...nodeFacts, ...(subflow ? { subflow } : {}) },
       });
     } else {
       patchOperations.push({
         op: 'update-node',
         nodeId: operation.nodeId,
-        changes: nodeFacts,
+        changes: { ...nodeFacts, subflow: subflow ?? null },
       });
     }
     contracts.set(operation.nodeId, {

@@ -150,6 +150,25 @@ projector 只读取这些固定位置。普通 prompt、description、metadata �
 
 depa-flows 只投影并冻结 schema/policy 领域事实，不选择 JSON Schema validator、不解析 host tool catalog，也不创建 actor。JSON Schema 校验、exact tool binding 与 actor lifecycle 由运行 host 承担。
 
+## Agent selection owner
+
+`projectAIAgentDefinitionCandidates`、`admitAIAgentDefinitionSelection`、`reconcileAuthoredAIAgentDefinition` 和 `freezeSelectedAIAgentTaskBinding` 通过显式 `selectionOwner` 共享 authoring 门禁。支持 authoring 的 resource host 创建一次 owner，并在所有 observation、refresh、admission、reconcile 和新任务 freeze 中复用它：
+
+```ts
+import { createAIAgentDefinitionSelectionOwner } from 'ai-workflow-logic';
+
+const receiptAuthority = authoringRuntime.transaction;
+const selectionOwner = createAIAgentDefinitionSelectionOwner({ receiptAuthority });
+// Pass selectionOwner to every candidate projection, admission, reconcile and freeze.
+// Reconcile also receives this same receiptAuthority object.
+```
+
+owner 绑定 Halfcode 的 `loadReceipt` 端口，并拥有进程内 pending 与 observation supersession 状态。不同 resource host 使用不同 owner，因此即使 FQN、candidate digest 和 receipt bytes 完全相同也不会互相阻塞。owner 不进入任何资源摘要，不从物理路径、packageId、FQN 或内容猜测归属，也不代替 Halfcode 的 CAS、publication 或 durable receipt store。
+
+有状态 `author-new` / `revise-existing` 缺 owner 时返回 `selection-owner-required`；挪用其他 owner 的候选返回 `selection-owner-mismatch`。一个 registry 一旦绑定 owner，省略或更换 owner 的重新投影会拒绝。pending 跨同 owner 的 registry refresh 保留，revision reconcile 后旧 observation 的 selection/freeze 失效，已冻结 task 仍为不可变输入。已有纯读取/选择入口可继续不传 owner；支持 authoring 的 host 必须统一走拥有 owner 的入口。
+
+owner 是不可序列化的进程内句柄。新进程为对应的持久 Halfcode store 构造新的 receipt 端口和 owner；先由 Halfcode 恢复出版事务事实，再建立新的 observation。此 API 不恢复旧进程的内存 admission，也不要求跨进程保留对象身份。旧 frozen run 的恢复仍从持久冻结资源和代码材料经公开 API 重建 authentic proof。
+
 ## MaterialPort and MaterialBinding
 
 `MaterialPort` 定义 Agent 可消费的 material contract：

@@ -1,4 +1,4 @@
-<EffectPolicy #depa.flows.test.Policy.Safe apiVersion="depa.flows/v1" version="1.0.0" {
+<EffectPolicy #depa.flows.test.Policy.Safe envelopeVersion="halfcode.resource-envelope/v1" specVersion=1 {
   lifecycle = "Stable"
   description = "Explicit effect policy"
   toolMode = "declared-only"

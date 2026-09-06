@@ -1,4 +1,4 @@
-<AIWorkflowAppBundle #depa.flows.test.SupportAgent apiVersion="depa.flows/v1" version="1.0.0" {
+<AIWorkflowAppBundle #depa.flows.test.SupportAgent envelopeVersion="halfcode.resource-envelope/v1" specVersion=1 {
   lifecycle = "Active"
   description = "Support agent workflow app"
 } (

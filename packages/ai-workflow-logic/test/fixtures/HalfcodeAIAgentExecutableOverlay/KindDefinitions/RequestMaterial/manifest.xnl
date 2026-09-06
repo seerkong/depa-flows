@@ -1,4 +1,21 @@
-<KindDefinition #depa.flows.kind.RequestMaterial.ExecutableOverlay apiVersion="halfcode.resources/v1" version="1.0.0" {
-  lifecycle = "Stable" resourceKind = "RequestMaterial" sourceShapes = ["single-file"]
-  currentApiVersion = "depa.flows/v1" supportedApiVersions = ["depa.flows/v1"]
-}>
+<KindDefinition #Depa.Flows.KindDefinition.RequestMaterial envelopeVersion="halfcode.resource-envelope/v1" specVersion=1 {
+  lifecycle = "Stable"
+  resourceKind = "RequestMaterial"
+  subjectFqn = "Depa.Flows.KindDefinition.RequestMaterial"
+  sourceShapes = ["single-file"]
+  documentCardinality = "one"
+  description = "Canonical depa-flows RequestMaterial resource contract."
+} (
+  <SpecRevisions [
+    <SpecRevision #v1 {
+      specVersion = 1
+      schemaRef = "vfs://./spec-v1.schema.json"
+      schemaFingerprint = "sha256:fece2b88fce84abcf60040018724f2281d3c39007118596d69e5034f0c00fe1c"
+      contractFingerprint = "sha256:4a0a1e7128d08a9a327c4e57c1ffa6399d8d1438847e7ea37c5ee2e30f4c31a2"
+      semanticValidatorFingerprint = "sha256:17ec0b120f0552ce797ca95bed1278b786fb2aa5712a68618c6851c0eec9313a"
+      referenceProjectionFingerprint = "sha256:91b9acbe5d0fe4a4a11d014f032d7f717887f47aac67b774bd1e476157de6b83"
+      compilerInputFingerprint = "sha256:72fa82b33ac3926f7c890791891256122d6b078adb8b029cc7094fccdf3fa37b"
+      stability = "stable"
+    }>
+  ]>
+)>

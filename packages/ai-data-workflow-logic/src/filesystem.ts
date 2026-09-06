@@ -1,6 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import type {
+  AIDataWorkflowChildInvocationIdentity,
+  AIDataWorkflowChildInvocationRuntimePort,
+  AIDataWorkflowChildTerminalReceipt,
   AIDataWorkflowRunCheckpoint,
   AIDataWorkflowRunGraph,
 } from 'ai-data-workflow-contract';
@@ -12,10 +15,13 @@ import type {
   AIWorkflowReusePolicy,
   FlowClosedValue,
 } from 'ai-workflow-contract';
+import type { EagerDataFlowModuleImporter } from 'eager-data-flow-logic';
 import type {
-  EagerDataFlowModuleImporter,
-} from 'eager-data-flow-logic';
-import type { EagerDataFlowDurableNodeState } from 'eager-data-flow-contract';
+  EagerDataFlowDurableNodeState,
+  EagerDataFlowExecutable,
+  EagerDataFlowExecutableRegistry,
+  EagerDataFlowRecord,
+} from 'eager-data-flow-contract';
 import {
   createFilesystemCodeResolver,
   materializeEagerDataFlowPlan,
@@ -30,6 +36,7 @@ import {
 } from 'ai-workflow-logic/checkpoint-filesystem';
 import {
   createInitialRunStepExtensions,
+  FlowRunCheckpointVersionConflictError,
   normalizeAIWorkflowProfileDurableState,
   normalizeFlowClosedObject,
   normalizeFlowClosedValue,
@@ -45,13 +52,26 @@ import {
 } from 'work-ctrl-flow-logic';
 import {
   commitAIDataWorkflowCheckpoint,
+  acceptAIDataWorkflowChildTerminalReceipt,
+  createAIDataWorkflowChildInvocationIdentity,
   createAIDataWorkflowCheckpoint,
   createAIDataWorkflowRunGraph,
   createAIDataWorkflowAgentNodeRuntimeBinder,
   loadAIDataWorkflowCheckpoint,
   loadAIDataWorkflowSources,
+  normalizeAIDataWorkflowChildInvocationObservation,
+  normalizeAIDataWorkflowChildTerminalReceipt,
+  projectAIDataWorkflowRunGraphPlan,
   recordAIDataWorkflowNodeResult,
+  recordAIDataWorkflowChildFreezeReceipt,
+  reserveAIDataWorkflowChildInvocation,
 } from './index.js';
+
+export interface MaterializedAIDataWorkflowChildFlow {
+  readonly definitionRef?: `resource://${string}`;
+  readonly contractDigest?: string;
+  readonly executable: EagerDataFlowExecutable<any>;
+}
 
 export interface MaterializedAIDataWorkflowRuntime {
   readonly supportRoot: string;
@@ -60,6 +80,15 @@ export interface MaterializedAIDataWorkflowRuntime {
   readonly extensionCodecs?: DefinitionStepAssemblyRuntime['extensionCodecs'];
   readonly agentEffects?: AIAgentHostEffectPort;
   readonly agentTaskProofs?: Readonly<Record<string, FrozenAIAgentTaskBinding>>;
+  /** Exact admitted child definitions keyed by their eager-data-flow id. */
+  readonly childFlows?: Readonly<Record<string, MaterializedAIDataWorkflowChildFlow>>;
+  readonly childInvocations?: AIDataWorkflowChildInvocationRuntimePort;
+  /** Read-only lifecycle observation/fault-injection seam; it owns no parent or child facts. */
+  readonly childInvocationObserver?: (event: {
+    readonly phase: 'settled-before-parent-accept';
+    readonly identity: AIDataWorkflowChildInvocationIdentity;
+    readonly receipt: AIDataWorkflowChildTerminalReceipt;
+  }) => void | Promise<void>;
   readonly checkpointObserver?: (event: {
     readonly checkpoint: AIDataWorkflowRunCheckpoint;
     readonly nodeId: string;
@@ -209,43 +238,56 @@ async function executeAIDataCheckpoint(
     nodeId: string,
     phase: 'before' | 'after' | 'failed',
   ): Promise<void> => transition(async () => {
-    const owner = await loadAIDataWorkflowCheckpoint(checkpointRuntime, {
-      instanceId: checkpoint.instanceId,
-      runId: checkpoint.runId,
-    });
-    if (!owner) throw new Error(`AI Data Workflow checkpoint ${checkpoint.runId} disappeared during node transition.`);
-    accepted = owner;
-    graph = { ...owner.profile.runGraph, binding };
-    const nextGraph = updateGraph(graph);
-    const nextStatus = graphCheckpointStatus(nextGraph);
-    accepted = await commitAIDataWorkflowCheckpoint(checkpointRuntime, {
-      expectedVersion: accepted.version,
-      checkpoint: {
-        ...accepted,
-        version: accepted.version + 1,
-        state: { status: nextStatus, generation: nextGraph.currentGeneration },
-        output: graphCheckpointOutput(nextGraph, nextStatus),
-        controllerSidecars: { status: nextStatus },
-        nodeSidecars: nodeStatuses(nextGraph),
-        profile: { ...accepted.profile, runGraph: durableGraph(nextGraph) },
-      },
-    });
-    graph = { ...accepted.profile.runGraph, binding };
-    if (runtime.checkpointObserver) {
+    for (let attempt = 0; attempt < 8; attempt += 1) {
+      const owner = await loadAIDataWorkflowCheckpoint(checkpointRuntime, {
+        instanceId: checkpoint.instanceId,
+        runId: checkpoint.runId,
+      });
+      if (!owner) throw new Error(`AI Data Workflow checkpoint ${checkpoint.runId} disappeared during node transition.`);
+      accepted = owner;
+      graph = { ...owner.profile.runGraph, binding };
+      const nextGraph = updateGraph(graph);
+      if (nextGraph === graph) return;
+      const nextStatus = graphCheckpointStatus(nextGraph);
       try {
-        await runtime.checkpointObserver({ checkpoint: accepted, nodeId, phase });
+        accepted = await commitAIDataWorkflowCheckpoint(checkpointRuntime, {
+          expectedVersion: accepted.version,
+          checkpoint: {
+            ...accepted,
+            version: accepted.version + 1,
+            state: { status: nextStatus, generation: nextGraph.currentGeneration },
+            output: graphCheckpointOutput(nextGraph, nextStatus),
+            controllerSidecars: { status: nextStatus },
+            nodeSidecars: nodeStatuses(nextGraph),
+            profile: { ...accepted.profile, runGraph: durableGraph(nextGraph) },
+          },
+        });
       } catch (cause) {
-        throw new AIDataCheckpointObserverError(cause);
+        if (cause instanceof FlowRunCheckpointVersionConflictError) continue;
+        throw cause;
       }
+      graph = { ...accepted.profile.runGraph, binding };
+      if (runtime.checkpointObserver) {
+        try {
+          await runtime.checkpointObserver({ checkpoint: accepted, nodeId, phase });
+        } catch (cause) {
+          throw new AIDataCheckpointObserverError(cause);
+        }
+      }
+      return;
     }
+    throw new Error(`AI Data Workflow node ${nodeId} checkpoint CAS did not converge.`);
   });
   let output: unknown;
   try {
-    const executable = await materializeEagerDataFlowPlan(binding.definition, {
+    const executionPlan = projectAIDataWorkflowRunGraphPlan(graph);
+    const executable = await materializeEagerDataFlowPlan(executionPlan, {
       resolveCode: createFilesystemCodeResolver(runtime.importModule),
+      subflows: createMaterializedChildRegistry(runtime, () => graph),
     });
     output = await executable.invoke(runtime.workflow, invocationInput, {
       completedNodes: completedEagerNodes(graph),
+      invokeSubFlow: createMaterializedChildInvoker(runtime, () => graph, commitGraph),
       ...(runtime.agentEffects ? {
         bindNode: ((binder) => (nodeRuntime: unknown, identity: { readonly nodeId: string }) => binder(
           nodeRuntime as AIDataWorkflowRuntime,
@@ -264,6 +306,14 @@ async function executeAIDataCheckpoint(
         return commitGraph((current) => {
           const node = current.nodes[nodeId];
           if (!node) throw new Error(`AI Data Workflow node ${nodeId} does not exist in the durable graph.`);
+          if (node.tag === 'SubFlowNode' && node.subflow?.kind === 'autonomous') {
+            const identity = node.childInvocation ?? createAIDataWorkflowChildInvocationIdentity({
+              graph: current,
+              parentInstanceId: checkpoint.instanceId,
+              nodeId,
+            });
+            return reserveAIDataWorkflowChildInvocation({ graph: current, identity });
+          }
           return recordAIDataWorkflowNodeResult(current, nodeId, {
             nodeId,
             generation: node.generation,
@@ -275,6 +325,7 @@ async function executeAIDataCheckpoint(
         return commitGraph((current) => {
           const node = current.nodes[settlement.nodeId];
           if (!node) throw new Error(`AI Data Workflow node ${settlement.nodeId} does not exist in the durable graph.`);
+          if (node.tag === 'SubFlowNode' && node.childTerminalReceipt) return current;
           return recordAIDataWorkflowNodeResult(current, settlement.nodeId, {
             nodeId: settlement.nodeId,
             generation: node.generation,
@@ -284,10 +335,13 @@ async function executeAIDataCheckpoint(
           });
         }, settlement.nodeId, 'after');
       },
-      onNodeFailure: ({ nodeId }) => {
+      onNodeFailure: ({ nodeId, cause }) => {
         return commitGraph((current) => {
           const node = current.nodes[nodeId];
           if (!node) throw new Error(`AI Data Workflow node ${nodeId} does not exist in the durable graph.`);
+          if (cause instanceof AIDataChildInvocationSuspendedError
+            || cause instanceof AIDataChildInvocationTerminalFailure
+            || findCheckpointObserverError(cause)) return current;
           return recordAIDataWorkflowNodeResult(current, nodeId, {
             nodeId,
             generation: node.generation,
@@ -308,6 +362,125 @@ async function executeAIDataCheckpoint(
     throw new Error(`AI Data Workflow ${checkpoint.runId} Return output does not match its durable RunGraph result.`);
   }
   return { checkpoint: accepted, graph };
+}
+
+class AIDataChildInvocationSuspendedError extends Error {
+  constructor(nodeId: string, status: string) {
+    super(`AI Data child invocation ${nodeId} is ${status}; continue the parent checkpoint to resume it.`);
+    this.name = 'AIDataChildInvocationSuspendedError';
+  }
+}
+
+class AIDataChildInvocationTerminalFailure extends Error {
+  constructor(nodeId: string, code: string, message: string) {
+    super(`AI Data child invocation ${nodeId} failed (${code}): ${message}`);
+    this.name = 'AIDataChildInvocationTerminalFailure';
+  }
+}
+
+function createMaterializedChildRegistry(
+  runtime: MaterializedAIDataWorkflowRuntime,
+  currentGraph: () => AIDataWorkflowRunGraph,
+): EagerDataFlowExecutableRegistry<any> {
+  const registry: Record<string, EagerDataFlowExecutable<any>> = {};
+  for (const nodeId of currentGraph().declarationOrder) {
+    const node = currentGraph().nodes[nodeId];
+    if (!node || node.status === 'Removed' || node.tag !== 'SubFlowNode' || !node.subflow) continue;
+    const flowId = node.subflow.flowRef.slice('eager-data-flow://'.length);
+    const admitted = runtime.childFlows?.[flowId];
+    if (!admitted || admitted.executable.plan.fqn !== flowId) {
+      throw new Error(`AI Data child flow ${flowId} is not present in the admitted executable registry.`);
+    }
+    if (node.subflow.kind === 'autonomous' && (admitted.definitionRef !== node.subflow.definitionRef
+      || admitted.contractDigest !== node.subflow.contractDigest)) {
+      throw new Error(`AI Data child flow ${flowId} does not match its frozen definition and contract.`);
+    }
+    if (node.subflow.kind === 'autonomous' && !runtime.childInvocations) {
+      throw new Error(`AI Data autonomous child flow ${flowId} requires a child invocation runtime port.`);
+    }
+    registry[flowId] = admitted.executable;
+  }
+  return Object.freeze(registry);
+}
+
+function createMaterializedChildInvoker(
+  runtime: MaterializedAIDataWorkflowRuntime,
+  currentGraph: () => AIDataWorkflowRunGraph,
+  commitGraph: (
+    updateGraph: (current: AIDataWorkflowRunGraph) => AIDataWorkflowRunGraph,
+    nodeId: string,
+    phase: 'before' | 'after' | 'failed',
+  ) => Promise<void>,
+) {
+  return async (
+    workflow: AIDataWorkflowRuntime,
+    invocation: { readonly nodeId: string; readonly flowRef: string },
+    input: Readonly<EagerDataFlowRecord>,
+    options: { readonly signal: AbortSignal },
+  ): Promise<EagerDataFlowRecord> => {
+    const node = currentGraph().nodes[invocation.nodeId];
+    if (!node || node.tag !== 'SubFlowNode' || node.subflow?.flowRef !== invocation.flowRef) {
+      throw new Error(`AI Data child dispatch ${invocation.nodeId} does not match the current RunGraph.`);
+    }
+    const flowId = invocation.flowRef.slice('eager-data-flow://'.length);
+    const admitted = runtime.childFlows?.[flowId];
+    if (!admitted) throw new Error(`AI Data child flow ${flowId} is not admitted.`);
+    if (node.subflow.kind === 'declared') {
+      return admitted.executable.invoke(workflow, input, { signal: options.signal });
+    }
+    if (!node.childInvocation || !runtime.childInvocations) {
+      throw new Error(`AI Data child node ${invocation.nodeId} was not reserved before dispatch.`);
+    }
+    const identity = node.childInvocation;
+    let freeze = node.childFreezeReceipt;
+    if (!freeze) {
+      freeze = await runtime.childInvocations.resolveAndFreeze({ identity });
+      await commitGraph(
+        (graph) => recordAIDataWorkflowChildFreezeReceipt({ graph, nodeId: node.id, receipt: freeze! }),
+        node.id,
+        'before',
+      );
+      freeze = currentGraph().nodes[node.id].childFreezeReceipt;
+    }
+    if (!freeze) throw new Error(`AI Data child node ${node.id} freeze receipt was not committed.`);
+    let observation = normalizeAIDataWorkflowChildInvocationObservation(
+      await runtime.childInvocations.startOrContinue({
+        identity,
+        freeze,
+        input: normalizeFlowClosedObject(input, `aiData.child.${node.id}.input`),
+      }),
+      identity,
+    );
+    if (observation.status === 'Reserved' || observation.status === 'Running') {
+      observation = normalizeAIDataWorkflowChildInvocationObservation(
+        await runtime.childInvocations.load({ identity, freeze }),
+        identity,
+      );
+    }
+    if (observation.status === 'Reserved' || observation.status === 'Running') {
+      throw new AIDataChildInvocationSuspendedError(node.id, observation.status);
+    }
+    const receipt = normalizeAIDataWorkflowChildTerminalReceipt(
+      await runtime.childInvocations.settle({ identity, freeze, terminalStatus: observation.status }),
+      identity,
+    );
+    if (runtime.childInvocationObserver) {
+      try {
+        await runtime.childInvocationObserver({ phase: 'settled-before-parent-accept', identity, receipt });
+      } catch (cause) {
+        throw new AIDataCheckpointObserverError(cause);
+      }
+    }
+    await commitGraph(
+      (graph) => acceptAIDataWorkflowChildTerminalReceipt({ graph, nodeId: node.id, receipt }),
+      node.id,
+      receipt.status === 'Succeeded' ? 'after' : 'failed',
+    );
+    if (receipt.status === 'Failed') {
+      throw new AIDataChildInvocationTerminalFailure(node.id, receipt.failureCode, receipt.failureMessage);
+    }
+    return receipt.output as EagerDataFlowRecord;
+  };
 }
 
 class AIDataCheckpointObserverError extends Error {

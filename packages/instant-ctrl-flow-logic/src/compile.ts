@@ -79,11 +79,12 @@ function compileStatement(
   node: FlowNodeSpec,
   extension: CompileExtension | undefined,
   path: string,
+  blockStack: readonly string[] = [],
 ): CtrlNode {
-  const key = node.id ?? path;
+  const key = blockStack.length ? `${path}:${node.id ?? node.tag}` : node.id ?? path;
   const attrs = resolvedAttrs(spec, node);
   const compileStatements = (nodes: FlowNodeSpec[], bodyKey: string) =>
-    sequence(bodyKey, nodes.map((child, index) => compileStatement(spec, child, extension, `${bodyKey}.${index}`)));
+    sequence(bodyKey, nodes.map((child, index) => compileStatement(spec, child, extension, `${bodyKey}.${index}`, blockStack)));
   const helpers: CompileHelpers = { meta: { key, name: node.id }, attrs, compileStatements };
 
   const extended = extension?.(spec, node, helpers);
@@ -94,6 +95,14 @@ function compileStatement(
   }
 
   switch (node.tag) {
+    case 'RunBlock': {
+      const ref = String(attrs.block ?? '');
+      const id = ref.startsWith('block://#') ? ref.slice(9) : '';
+      const body = spec.blocks?.[id];
+      if (!body) throw new FlowCompileError('unresolved-block-ref', ref);
+      if (blockStack.includes(id)) throw new FlowCompileError('recursive-block', [...blockStack, id].join(' -> '));
+      return sequence(key, body.map((child, index) => compileStatement(spec, child, extension, `${key}.block.${id}.${index}`, [...blockStack, id])));
+    }
     case 'Run':
       return action('flow.Run', key, { src: String(attrs.src ?? ''), config: statementConfig(attrs) });
     case 'Return':

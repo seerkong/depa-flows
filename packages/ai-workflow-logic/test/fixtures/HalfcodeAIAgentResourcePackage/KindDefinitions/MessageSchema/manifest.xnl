@@ -1,4 +1,21 @@
-<KindDefinition #depa.flows.kind.MessageSchema apiVersion="halfcode.resources/v1" version="1.0.0" {
-  lifecycle = "Stable" resourceKind = "MessageSchema" sourceShapes = ["single-file"]
-  currentApiVersion = "depa.flows/v1" supportedApiVersions = ["depa.flows/v1"]
-}>
+<KindDefinition #Depa.Flows.KindDefinition.MessageSchema envelopeVersion="halfcode.resource-envelope/v1" specVersion=1 {
+  lifecycle = "Stable"
+  resourceKind = "MessageSchema"
+  subjectFqn = "Depa.Flows.KindDefinition.MessageSchema"
+  sourceShapes = ["single-file"]
+  documentCardinality = "one"
+  description = "Canonical depa-flows MessageSchema resource contract."
+} (
+  <SpecRevisions [
+    <SpecRevision #v1 {
+      specVersion = 1
+      schemaRef = "vfs://./spec-v1.schema.json"
+      schemaFingerprint = "sha256:4f2955ee8442481e951ab72088b460527917ba7eaf43b2fdd6533881b83761ac"
+      contractFingerprint = "sha256:9576acba4519663438262b6ccb3dc7f699b25ad600eadf4735d7958e9922ec98"
+      semanticValidatorFingerprint = "sha256:61b815a8ad7b5fb3495fe42f1e754a2fa780fcfd89c5fea0ef61de9a3410ead6"
+      referenceProjectionFingerprint = "sha256:744417af155c6d405c00b9f6b093dfde598bcf906a74e94601a6dba9335ee95a"
+      compilerInputFingerprint = "sha256:e8414bf5b7fc188634da121718acada2577ed58639807fa677951c1a59ee95fc"
+      stability = "stable"
+    }>
+  ]>
+)>

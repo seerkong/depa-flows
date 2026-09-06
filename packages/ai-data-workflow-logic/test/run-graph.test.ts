@@ -205,6 +205,48 @@ describe('AI Data Workflow RunGraph', () => {
     })).toThrow('must match its declared config and platform authority');
   });
 
+  test('preserves autonomous SubFlow identity as a first-class RunGraph fact', () => {
+    const graph = createAIDataWorkflowRunGraph({ binding, runId: 'subflow-binding-run' });
+    const subflow = {
+      kind: 'autonomous' as const,
+      schemaVersion: 'depa.ai-data-subflow-binding/v1' as const,
+      capabilityId: 'child-capability',
+      catalogDigest: 'sha256:catalog',
+      definitionRef: 'resource://depa.flows.test.Child' as const,
+      flowRef: 'eager-data-flow://depa.flows.test.Child' as const,
+      contractDigest: 'sha256:contract',
+    };
+    const patched = applyAIDataWorkflowGraphPatch(graph, {
+      patchId: 'add-child',
+      operations: [{
+        op: 'add-node',
+        node: {
+          id: 'child',
+          tag: 'SubFlowNode',
+          nodeType: 'subflow',
+          inputs: { value: ref('entry', 'value') },
+          outputs: ['result'],
+          dependsOn: ['entry'],
+          subflow,
+        },
+      }],
+    });
+    expect(patched.nodes.child.subflow).toEqual(subflow);
+    expect(patched.patchHistory[0]?.operations[0]).toMatchObject({
+      op: 'add-node', node: { id: 'child', subflow },
+    });
+    expect(JSON.parse(JSON.stringify(patched)).nodes.child.subflow).toEqual(subflow);
+
+    expect(() => applyAIDataWorkflowGraphPatch(graph, {
+      patchId: 'missing-child-binding',
+      operations: [{ op: 'add-node', node: { id: 'invalid-child', tag: 'SubFlowNode' } }],
+    })).toThrow('requires an exact subflow binding');
+    expect(() => applyAIDataWorkflowGraphPatch(graph, {
+      patchId: 'binding-on-transform',
+      operations: [{ op: 'add-node', node: { id: 'invalid-transform', tag: 'TransformNode', subflow } }],
+    })).toThrow('cannot carry a subflow binding');
+  });
+
   test('projects active invalidation facts exactly and clears stale execution facts', () => {
     let graph = createAIDataWorkflowRunGraph({ binding, runId: 'active-invalidation-run' });
     graph = recordAIDataWorkflowNodeResult(graph, 'entry', {

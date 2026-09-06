@@ -105,9 +105,9 @@ function harness(initialAI = {
 
 describe('typed Agent invocation processors', () => {
   test('normalizes the closed selector union before resolving state', () => {
-    expect(normalizeAIAgentSelector({ byInstanceId: 'agent-1' })).toEqual({ byInstanceId: 'agent-1' });
-    expect(normalizeAIAgentSelector({ byInstanceName: 'reviewer' })).toEqual({ byInstanceName: 'reviewer' });
-    for (const selector of [{}, { byInstanceId: 'a', byInstanceName: 'b' }, { byInstanceId: '' }, { byInstanceId: 'a', extra: true }]) {
+    expect(normalizeAIAgentSelector({ byId: 'agent-1' })).toEqual({ byId: 'agent-1' });
+    expect(normalizeAIAgentSelector({ byName: 'reviewer' })).toEqual({ byName: 'reviewer' });
+    for (const selector of [{}, { byId: 'a', byName: 'b' }, { byId: '' }, { byId: 'a', extra: true }, { byInstanceId: 'a' }, { byInstanceName: 'a' }]) {
       expect(() => normalizeAIAgentSelector(selector)).toThrow(AIAgentInvocationError);
     }
   });
@@ -179,9 +179,9 @@ describe('typed Agent invocation processors', () => {
       instanceIdByName: { reviewer: 'agent-1' },
       invocationsByKey: {},
     };
-    for (const selector of [{ byInstanceName: 'reviewer' }, { byInstanceId: 'agent-1' }] as const) {
+    for (const selector of [{ byName: 'reviewer' }, { byId: 'agent-1' }] as const) {
       const h = harness(state);
-      const runtime = { ...h.runtime, nodeId: 'refine', invocationKey: `refine#${'byInstanceName' in selector ? 1 : 2}`, taskBinding: { ...h.runtime.taskBinding, nodeId: 'refine' } };
+      const runtime = { ...h.runtime, nodeId: 'refine', invocationKey: `refine#${'byName' in selector ? 1 : 2}`, taskBinding: { ...h.runtime.taskBinding, nodeId: 'refine' } };
       const result = await runTargetedAgent(runtime, selector, { kind: 'ai.agent', payload: { prompt: 'refine' } }, {
         agentDefinitionRef: 'resource://demo.Agent',
       });
@@ -192,7 +192,7 @@ describe('typed Agent invocation processors', () => {
 
   test('rejects unresolved and conflicting selectors before host dispatch', async () => {
     const h = harness();
-    await expect(runTargetedAgent(h.runtime, { byInstanceName: 'missing' }, {
+    await expect(runTargetedAgent(h.runtime, { byName: 'missing' }, {
       kind: 'ai.agent', payload: {},
     }, { agentDefinitionRef: 'resource://demo.Agent' })).rejects.toMatchObject({
       code: 'AI_AGENT_INSTANCE_NAME_NOT_FOUND',
@@ -227,10 +227,10 @@ describe('typed Agent invocation processors', () => {
     };
     const h = harness(state);
     const runtime = { ...h.runtime, nodeId: 'refine', invocationKey: 'refine#1', taskBinding: { ...h.runtime.taskBinding, nodeId: 'refine' } };
-    await runTargetedAgent(runtime, { byInstanceId: 'agent-1' }, { kind: 'ai.agent', payload: {}, metadata: { phase: 'one' } }, {
+    await runTargetedAgent(runtime, { byId: 'agent-1' }, { kind: 'ai.agent', payload: {}, metadata: { phase: 'one' } }, {
       agentDefinitionRef: 'resource://demo.Agent', materialRefs: ['resource://demo.Material'], effectPolicy: { mode: 'declared' },
     });
-    await expect(runTargetedAgent(runtime, { byInstanceId: 'agent-1' }, { kind: 'ai.agent', payload: {}, metadata: { phase: 'two' } }, {
+    await expect(runTargetedAgent(runtime, { byId: 'agent-1' }, { kind: 'ai.agent', payload: {}, metadata: { phase: 'two' } }, {
       agentDefinitionRef: 'resource://demo.Agent', materialRefs: ['resource://demo.Material'], effectPolicy: { mode: 'declared' },
     })).rejects.toMatchObject({ code: 'AI_AGENT_INVOCATION_KEY_CONFLICT' });
     expect(h.calls).toHaveLength(1);
@@ -275,14 +275,14 @@ describe('typed Agent invocation processors', () => {
     });
     const invocation = { kind: 'ai.agent', payload: {}, metadata: { phase: 'one' } } as const;
     const config = { agentDefinitionRef: 'resource://demo.Agent', materialRefs: ['resource://demo.Material'], effectPolicy: { mode: 'declared' } } as const;
-    await runTargetedAgent(runtime(), { byInstanceName: 'reviewer' }, invocation, config);
-    await runTargetedAgent(runtime(), { byInstanceName: 'reviewer' }, invocation, config);
+    await runTargetedAgent(runtime(), { byName: 'reviewer' }, invocation, config);
+    await runTargetedAgent(runtime(), { byName: 'reviewer' }, invocation, config);
     for (const [changedInvocation, changedConfig] of [
       [invocation, { ...config, materialRefs: ['resource://demo.Other'] }],
       [invocation, { ...config, effectPolicy: { mode: 'other' } }],
       [{ ...invocation, metadata: { phase: 'two' } }, config],
     ] as const) {
-      await expect(runTargetedAgent(runtime(), { byInstanceName: 'reviewer' }, changedInvocation, changedConfig))
+      await expect(runTargetedAgent(runtime(), { byName: 'reviewer' }, changedInvocation, changedConfig))
         .rejects.toMatchObject({ code: 'AI_AGENT_INVOCATION_KEY_CONFLICT' });
     }
     expect(dispatches).toBe(1);

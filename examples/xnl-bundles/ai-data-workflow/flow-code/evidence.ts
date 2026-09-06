@@ -26,7 +26,7 @@ export async function retrieveEvidence(runtime: Runtime, input: { ticket: Suppor
 
 export async function summarizeEvidence(runtime: Runtime, input: { evidence: EvidenceRecord; prior: AIAgentInstanceReference }, config: AgentConfig) {
   const result = await runtime.ai.effects.runTargetedAgent(
-    { byInstanceId: input.prior.instanceId },
+    { byId: input.prior.instanceId },
     { kind: 'ai.agent', payload: { evidence: input.evidence as unknown as FlowClosedValue } },
     config.agent,
   );

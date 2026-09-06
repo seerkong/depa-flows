@@ -11,6 +11,6 @@
 
 events、run index 和 status view 只能从 checkpoint 投影。fresh process 从 instance descriptor、frozen definition 与 checkpoint 恢复，不读取 live source bundle。
 
-本示例的普通 `Run` code保持 `output = fn(runtime, input, config)`：首次调用同名 bound `runtime.ai.effects.runAgent(input, config)`，后续节点以 exact `{byInstanceName}` 调用 `runTargetedAgent`。bound facade只闭包绑定 canonical runtime-first Processor；底层仍是 `runAgent(agentRuntime, input, config)` / `runTargetedAgent(agentRuntime, selector, invocation, config)`。authored surface不暴露 generic `invoke`，也不保存child history。
+本示例的普通 `Run` code保持 `output = fn(runtime, input, config)`：首次调用同名 bound `runtime.ai.effects.runAgent(input, config)`，后续节点以 exact `{byName}` 调用 `runTargetedAgent`。bound facade只闭包绑定 canonical runtime-first Processor；底层仍是 `runAgent(agentRuntime, input, config)` / `runTargetedAgent(agentRuntime, selector, invocation, config)`。authored surface不暴露 generic `invoke`，也不保存child history。
 
 物理目录和 CAS 约束见 [Definition、Instance 与 Run](../../../docs/flow-dsl/spec/flow-core/instance-run.md)。

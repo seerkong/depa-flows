@@ -115,13 +115,13 @@ function optionalStringArray(value: unknown, location: string): readonly string[
 }
 
 export function normalizeAIAgentSelector(value: unknown, location = 'selector'): AIAgentSelector {
-  const input = record(value, [], ['byInstanceId', 'byInstanceName'], location);
-  const hasId = Object.prototype.hasOwnProperty.call(input, 'byInstanceId');
-  const hasName = Object.prototype.hasOwnProperty.call(input, 'byInstanceName');
+  const input = record(value, [], ['byId', 'byName'], location);
+  const hasId = Object.prototype.hasOwnProperty.call(input, 'byId');
+  const hasName = Object.prototype.hasOwnProperty.call(input, 'byName');
   if (hasId === hasName) fail('AI_AGENT_SELECTOR_EXACTLY_ONE', location, 'Selector must contain exactly one supported key.');
   return Object.freeze(hasId
-    ? { byInstanceId: identity(input.byInstanceId, `${location}.byInstanceId`) }
-    : { byInstanceName: identity(input.byInstanceName, `${location}.byInstanceName`) });
+    ? { byId: identity(input.byId, `${location}.byId`) }
+    : { byName: identity(input.byName, `${location}.byName`) });
 }
 
 export function normalizeAIAgentEffectConfig(value: unknown, location = 'config'): AIAgentEffectConfig {

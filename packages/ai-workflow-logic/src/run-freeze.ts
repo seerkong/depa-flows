@@ -7,6 +7,8 @@ import type {
   AIWorkflowRunResourceFreezeReceipt,
   MaterialBindingProjection,
   MaterialPortProjection,
+  CompiledAIAgentCodeExecution,
+  AIAgentCodeExecutionIdentity,
 } from 'ai-workflow-contract';
 import {
   normalizeHolonTaskTarget,
@@ -18,16 +20,25 @@ import {
   buildResourceDependencySnapshot,
   composeLayeredResourceRegistry,
   loadResourceTree,
-  resolveEffectiveResourceContentIdentities,
   sha256Digest,
+  digestCanonical,
   type EffectiveResourceRegistry,
   type ResourceContentIdentity,
   type ResourceDependencyEdge,
+  type Sha256Digest,
 } from 'halfcode-compiler.xnl/resource-core';
 import { projectAIWorkflowAgentResources } from './agent-resources.js';
 import { sourceRegistryForAIWorkflowAgentResourceProjection } from './agent-resource-brand.js';
+import { authorityForAIAgentCodeExecution } from './agent-code-brand.js';
+import { assertAIAgentExecutionResources, assertAIAgentFreezeRegistry, type AIAgentExecutionResourceObservation } from './agent-execution-resources.js';
+import {
+  createResolvedAIWorkflowContentIdentityIndex,
+  resolveAIWorkflowResourceTree,
+} from './resource-resolution.js';
 
 export interface FreezeAIWorkflowRunResourcesInput {
+  readonly executionResources?: AIAgentExecutionResourceObservation;
+  readonly codeExecutions?: readonly CompiledAIAgentCodeExecution[];
   readonly registry: EffectiveResourceRegistry;
   readonly projection: AIWorkflowAgentResourceProjection;
   readonly task: AIWorkflowAgentTaskRef;
@@ -39,14 +50,15 @@ export async function freezeAIWorkflowRunResourcesFromDirectory(
   rootDir: string,
   task: AIWorkflowAgentTaskRef,
 ): Promise<AIWorkflowRunResourceFreezeReceipt> {
-  const tree = await loadResourceTree({ rootDir });
+  const authoredTree = await loadResourceTree({ rootDir });
+  const tree = resolveAIWorkflowResourceTree(authoredTree);
   const layers = [{ id: 'workspace', tree }] as const;
   const registry = composeLayeredResourceRegistry({ layers });
   return freezeAIWorkflowRunResources({
     registry,
     projection: projectAIWorkflowAgentResources(registry),
     task,
-    contentIdentities: resolveEffectiveResourceContentIdentities({ registry, layers }),
+    contentIdentities: createResolvedAIWorkflowContentIdentityIndex(tree),
   });
 }
 
@@ -59,6 +71,7 @@ export class AIWorkflowRunResourceFreezeError extends Error {
 
 const authenticFreezeReceipts = new WeakSet<object>();
 const authenticTaskBindings = new WeakSet<object>();
+const receiptByTaskBinding = new WeakMap<object, AIWorkflowRunResourceFreezeReceipt>();
 const authenticHolonTargetFreezeReceipts = new WeakSet<object>();
 const authenticFrozenHolonTargets = new WeakSet<object>();
 
@@ -72,13 +85,14 @@ export async function freezeAIWorkflowHolonTaskTargetFromDirectory(
   rootDir: string,
   target: HolonTaskTarget,
 ): Promise<AIWorkflowHolonTaskTargetFreezeReceipt> {
-  const tree = await loadResourceTree({ rootDir });
+  const authoredTree = await loadResourceTree({ rootDir });
+  const tree = resolveAIWorkflowResourceTree(authoredTree);
   const layers = [{ id: 'workspace', tree }] as const;
   const registry = composeLayeredResourceRegistry({ layers });
   return freezeAIWorkflowHolonTaskTarget({
     registry,
     target,
-    contentIdentities: resolveEffectiveResourceContentIdentities({ registry, layers }),
+    contentIdentities: createResolvedAIWorkflowContentIdentityIndex(tree),
   });
 }
 
@@ -180,6 +194,7 @@ export function assertFrozenHolonTaskTarget(value: FrozenHolonTaskTarget): Froze
 export function freezeAIWorkflowRunResources(
   input: FreezeAIWorkflowRunResourcesInput,
 ): AIWorkflowRunResourceFreezeReceipt {
+  assertAIAgentFreezeRegistry(input.registry);
   const diagnostics: AIWorkflowResourceProjectionDiagnostic[] = [];
   if (sourceRegistryForAIWorkflowAgentResourceProjection(input.projection) !== input.registry) {
     diagnostics.push(diagnostic(
@@ -188,6 +203,19 @@ export function freezeAIWorkflowRunResources(
       'Run freeze requires the exact immutable Agent resource projection produced for this registry.',
     ));
     throwFreezeError(diagnostics);
+  }
+  const executionResources = input.executionResources === undefined ? undefined
+    : assertAIAgentExecutionResources(input.executionResources, input.registry);
+  if (executionResources) {
+    if (input.contentIdentities.size !== executionResources.contentIdentities.size
+      || [...executionResources.contentIdentities].some(([id, identity]) =>
+        digestCanonical(input.contentIdentities.get(id) ?? null) !== digestCanonical(identity))) {
+      throw new AIWorkflowRunResourceFreezeError(Object.freeze([
+        diagnostic('AI_RUN_EXECUTION_CONTENT_IDENTITY_MISMATCH', 'run-freeze:identities', 'Execution observation requires its exact authored content identity facts.'),
+      ]));
+    }
+    input = { ...input, registry: executionResources.registry, projection: executionResources.projection,
+      contentIdentities: executionResources.contentIdentities };
   }
   const task = normalizeTask(input.task, diagnostics);
   if (!task) throwFreezeError(diagnostics);
@@ -225,19 +253,34 @@ export function freezeAIWorkflowRunResources(
     agentDefinitionRef: task.agentDefinitionRef,
   });
   const bindingResourceIds = Object.freeze(orderedBindings.map((binding) => binding.resource.resourceId));
-  const semanticFingerprint = semanticResourceFingerprint(
+  const resourceFingerprint = semanticResourceFingerprint(
     frozenTask,
     agent,
     orderedBindings,
     dependencySnapshot.closure,
     dependencySnapshot.edges,
   );
+  const codeExecutions = selectedCodeExecutions(input, dependencySnapshot.closure.map(item => item.resourceId));
+  const resourceResolutions = executionResources && Object.freeze(dependencySnapshot.closure
+    .map(item => {
+      const resolution = executionResources.resolutionIdentities.get(item.resourceId);
+      if (!resolution) throw new Error(`AI_RUN_RESOURCE_RESOLUTION_MISSING: ${item.resourceId}`);
+      return resolution;
+    }).sort((a, b) => a.resourceId < b.resourceId ? -1 : a.resourceId > b.resourceId ? 1 : 0));
+  const codeFingerprint = codeExecutions.length
+    ? sha256Digest(JSON.stringify({ schemaVersion: 'ai-workflow.code-bound-semantic/v1', resourceFingerprint, codeExecutions }))
+    : resourceFingerprint;
+  const semanticFingerprint = resourceResolutions
+    ? sha256Digest(JSON.stringify({ schemaVersion: 'ai-workflow.reader-bound-semantic/v1', resourceFingerprint: codeFingerprint, resourceResolutions }))
+    : codeFingerprint;
   const receipt = Object.freeze({
     schemaVersion: 'ai-workflow.run-resource-freeze/v1',
     task: frozenTask,
     bindingResourceIds,
     dependencySnapshot,
     semanticFingerprint,
+    ...(codeExecutions.length ? { codeExecutions } : {}),
+    ...(resourceResolutions ? { resourceResolutions } : {}),
   });
   authenticFreezeReceipts.add(receipt);
   return receipt;
@@ -258,9 +301,50 @@ export function projectFrozenAIAgentTaskBinding(
     semanticFingerprint: receipt.semanticFingerprint,
     snapshotRevision: receipt.dependencySnapshot.snapshotRevision,
     closureResourceIds: Object.freeze(receipt.dependencySnapshot.closure.map((item) => item.resourceId)),
+    ...(receipt.codeExecutions ? { codeExecutions: receipt.codeExecutions } : {}),
+    ...(receipt.resourceResolutions ? { resourceResolutions: receipt.resourceResolutions } : {}),
   });
   authenticTaskBindings.add(binding);
+  receiptByTaskBinding.set(binding, receipt);
   return binding;
+}
+
+/** Retrieves the old Agent identity from the authentic freeze, not caller feedback. */
+export function frozenAIAgentTaskAgentContentDigest(binding: FrozenAIAgentTaskBinding): Sha256Digest {
+  assertFrozenAIAgentTaskBinding(binding);
+  const receipt = receiptByTaskBinding.get(binding)!;
+  const agentId = resourceIdFromRef(receipt.task.agentDefinitionRef)!;
+  const identity = receipt.dependencySnapshot.closure.find(({ resourceId }) => resourceId === agentId);
+  if (!identity) throw new AIWorkflowRunResourceFreezeError(Object.freeze([
+    diagnostic('AI_RUN_AGENT_IDENTITY_MISSING', binding.task.agentDefinitionRef, 'Frozen Agent identity is absent.'),
+  ]));
+  if (!/^sha256:[a-f0-9]{64}$/.test(identity.contentDigest)) throw new Error('Invalid frozen Agent content digest');
+  return identity.contentDigest as Sha256Digest;
+}
+
+function selectedCodeExecutions(input: FreezeAIWorkflowRunResourcesInput, closureIds: readonly string[]): readonly AIAgentCodeExecutionIdentity[] {
+  const selected = new Set(closureIds);
+  const identities = new Map<string, AIAgentCodeExecutionIdentity>();
+  for (const execution of input.codeExecutions ?? []) {
+    const authority = authorityForAIAgentCodeExecution(execution);
+    if (!authority || !selected.has(authority.identity.resourceId)
+      || input.registry.byId.get(authority.identity.resourceId)?.resource !== authority.projection.resource
+      || !(input.projection.codeResources ?? []).includes(authority.projection)
+      || identities.has(authority.identity.resourceId)) {
+      throw new AIWorkflowRunResourceFreezeError(Object.freeze([
+        diagnostic('AI_RUN_CODE_EXECUTION_UNTRUSTED', 'run-freeze:code', 'Code execution must be authentic, selected and belong to the exact registry projection.'),
+      ]));
+    }
+    identities.set(authority.identity.resourceId, authority.identity);
+  }
+  for (const code of input.projection.codeResources ?? []) {
+    if (code.mode === 'native' && selected.has(code.resource.resourceId) && !identities.has(code.resource.resourceId)) {
+      throw new AIWorkflowRunResourceFreezeError(Object.freeze([
+        diagnostic('AI_RUN_CODE_EXECUTION_MISSING', `resource://${code.resource.resourceId}`, 'Native code must be compiled or restored before task freeze.'),
+      ]));
+    }
+  }
+  return Object.freeze([...identities.values()].sort((a, b) => a.resourceId < b.resourceId ? -1 : a.resourceId > b.resourceId ? 1 : 0));
 }
 
 /** Runtime assertion; a structurally similar literal is not an admitted authority. */

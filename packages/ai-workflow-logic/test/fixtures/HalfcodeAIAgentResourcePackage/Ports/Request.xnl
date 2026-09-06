@@ -1,4 +1,4 @@
-<MaterialPort #depa.flows.test.Port.Request apiVersion="depa.flows/v1" version="1.0.0" {
+<MaterialPort #depa.flows.test.Port.Request envelopeVersion="halfcode.resource-envelope/v1" specVersion=1 {
   lifecycle = "Stable"
   description = "Required request material"
   materialKind = "RequestMaterial"

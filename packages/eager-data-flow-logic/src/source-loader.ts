@@ -57,6 +57,9 @@ const FLOW_PORT_REF = /^flow-port:\/\/#([A-Za-z_][A-Za-z0-9_-]*)\/([A-Za-z_][A-Z
 const FLOW_NODE_REF = /^flow-node:\/\/#([A-Za-z_][A-Za-z0-9_-]*)$/;
 const SUBFLOW_REF = /^eager-data-flow:\/\/([A-Za-z_][A-Za-z0-9_-]*(?:\.[A-Za-z_][A-Za-z0-9_-]*)+)$/;
 const VFS_REF = /^vfs:\/\/.+#[A-Za-z_$][A-Za-z0-9_$]*$/;
+const HALF_CODE_RESOURCE_ENVELOPE_VERSION = 'halfcode.resource-envelope/v1';
+const DEPA_FLOW_SEMANTIC_API_VERSION = 'depa.flows/v1';
+const DEPA_FLOW_RESOURCE_SPEC_VERSION = 1;
 
 interface ParsedRoot {
   element: DataElementNode;
@@ -70,6 +73,64 @@ interface DiagnosticSink {
     message: string,
     context?: Partial<Pick<EagerDataFlowDiagnostic, 'source' | 'nodeId'>>,
   ) => void;
+}
+
+interface FlowRootIdentityProjection {
+  apiVersion: string;
+  version: string;
+  diagnostic?: { code: string; message: string };
+}
+
+function projectFlowRootIdentity(metadata: Readonly<Record<string, unknown>>): FlowRootIdentityProjection {
+  const legacyApiVersion = typeof metadata.apiVersion === 'string' ? metadata.apiVersion : undefined;
+  const legacyVersion = typeof metadata.version === 'string' ? metadata.version : undefined;
+  const hasLegacyMetadata = metadata.apiVersion !== undefined || metadata.version !== undefined;
+  const hasResourceMetadata = metadata.envelopeVersion !== undefined || metadata.specVersion !== undefined;
+  if (hasLegacyMetadata && hasResourceMetadata) {
+    return {
+      apiVersion: '',
+      version: '',
+      diagnostic: {
+        code: 'mixed-flow-root-metadata',
+        message: 'flow root must use either depa apiVersion/version or Halfcode envelopeVersion/specVersion metadata',
+      },
+    };
+  }
+  if (hasResourceMetadata) {
+    if (metadata.envelopeVersion !== HALF_CODE_RESOURCE_ENVELOPE_VERSION) {
+      return {
+        apiVersion: '',
+        version: '',
+        diagnostic: {
+          code: 'unsupported-flow-resource-envelope',
+          message: `flow resource root requires envelopeVersion "${HALF_CODE_RESOURCE_ENVELOPE_VERSION}"`,
+        },
+      };
+    }
+    if (metadata.specVersion !== DEPA_FLOW_RESOURCE_SPEC_VERSION) {
+      return {
+        apiVersion: '',
+        version: '',
+        diagnostic: {
+          code: 'unsupported-flow-resource-spec-version',
+          message: `flow resource root requires numeric specVersion ${DEPA_FLOW_RESOURCE_SPEC_VERSION}`,
+        },
+      };
+    }
+    return {
+      apiVersion: DEPA_FLOW_SEMANTIC_API_VERSION,
+      version: String(DEPA_FLOW_RESOURCE_SPEC_VERSION),
+    };
+  }
+  if (legacyApiVersion && legacyVersion) return { apiVersion: legacyApiVersion, version: legacyVersion };
+  return {
+    apiVersion: legacyApiVersion ?? '',
+    version: legacyVersion ?? '',
+    diagnostic: {
+      code: 'missing-flow-metadata',
+      message: 'flow root requires apiVersion/version or Halfcode envelopeVersion/specVersion metadata',
+    },
+  };
 }
 
 const isDataElement = (node: unknown): node is DataElementNode =>
@@ -546,10 +607,10 @@ function loadEagerDataSources(
       source: rootSource,
     });
   }
-  const apiVersion = typeof root.metadata.apiVersion === 'string' ? root.metadata.apiVersion : '';
-  const version = typeof root.metadata.version === 'string' ? root.metadata.version : '';
-  if (!apiVersion || !version) {
-    sink.note('missing-flow-metadata', `${rootTag} requires apiVersion and version metadata`, {
+  const rootIdentity = projectFlowRootIdentity(root.metadata ?? {});
+  const { apiVersion, version } = rootIdentity;
+  if (rootIdentity.diagnostic) {
+    sink.note(rootIdentity.diagnostic.code, rootIdentity.diagnostic.message, {
       source: rootSource,
     });
   }

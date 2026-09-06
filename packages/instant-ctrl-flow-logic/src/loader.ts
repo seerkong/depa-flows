@@ -46,6 +46,7 @@ const LEGACY_PUBLIC_CONTROL_NODES = new Set(['Sequence', 'Selector', 'Condition'
 const LEGACY_PUBLIC_ACTION_NODES = new Set(['SetVariable', 'Log', 'Assert', 'Sleep', 'HttpCall', 'RunScript']);
 const COMMON_STATEMENTS = new Set([
   'Run',
+  'RunBlock',
   'If',
   'Require',
   'Fallback',
@@ -64,6 +65,9 @@ const PROFILE_STATEMENTS: Record<FlowForm, ReadonlySet<string>> = {
   BPCtrlFlow: new Set([...COMMON_STATEMENTS, 'ExternalJob', 'Timer', 'TaskStep']),
 };
 const CODE_REF = /^vfs:\/\/[^#\s]+#[A-Za-z_$][A-Za-z0-9_$]*$/;
+const HALF_CODE_RESOURCE_ENVELOPE_VERSION = 'halfcode.resource-envelope/v1';
+const DEPA_FLOW_SEMANTIC_API_VERSION = 'depa.flows/v1';
+const DEPA_FLOW_RESOURCE_SPEC_VERSION = 1;
 
 interface XnlEl {
   kind: string;
@@ -73,6 +77,64 @@ interface XnlEl {
   attributes?: Record<string, unknown>;
   body?: unknown[];
   extend?: { order?: string[]; children: Record<string, XnlEl> };
+}
+
+interface FlowRootIdentityProjection {
+  apiVersion: string;
+  version: string;
+  diagnostic?: { code: string; message: string };
+}
+
+function projectFlowRootIdentity(metadata: Readonly<Record<string, unknown>>): FlowRootIdentityProjection {
+  const legacyApiVersion = typeof metadata.apiVersion === 'string' ? metadata.apiVersion : undefined;
+  const legacyVersion = typeof metadata.version === 'string' ? metadata.version : undefined;
+  const hasLegacyMetadata = metadata.apiVersion !== undefined || metadata.version !== undefined;
+  const hasResourceMetadata = metadata.envelopeVersion !== undefined || metadata.specVersion !== undefined;
+  if (hasLegacyMetadata && hasResourceMetadata) {
+    return {
+      apiVersion: '',
+      version: '',
+      diagnostic: {
+        code: 'mixed-flow-root-metadata',
+        message: 'flow root must use either depa apiVersion/version or Halfcode envelopeVersion/specVersion metadata',
+      },
+    };
+  }
+  if (hasResourceMetadata) {
+    if (metadata.envelopeVersion !== HALF_CODE_RESOURCE_ENVELOPE_VERSION) {
+      return {
+        apiVersion: '',
+        version: '',
+        diagnostic: {
+          code: 'unsupported-flow-resource-envelope',
+          message: `flow resource root requires envelopeVersion "${HALF_CODE_RESOURCE_ENVELOPE_VERSION}"`,
+        },
+      };
+    }
+    if (metadata.specVersion !== DEPA_FLOW_RESOURCE_SPEC_VERSION) {
+      return {
+        apiVersion: '',
+        version: '',
+        diagnostic: {
+          code: 'unsupported-flow-resource-spec-version',
+          message: `flow resource root requires numeric specVersion ${DEPA_FLOW_RESOURCE_SPEC_VERSION}`,
+        },
+      };
+    }
+    return {
+      apiVersion: DEPA_FLOW_SEMANTIC_API_VERSION,
+      version: String(DEPA_FLOW_RESOURCE_SPEC_VERSION),
+    };
+  }
+  if (legacyApiVersion && legacyVersion) return { apiVersion: legacyApiVersion, version: legacyVersion };
+  return {
+    apiVersion: legacyApiVersion ?? '',
+    version: legacyVersion ?? '',
+    diagnostic: {
+      code: 'container-missing-meta',
+      message: 'container missing metadata "apiVersion" or "version"',
+    },
+  };
 }
 
 const isEl = (n: unknown): n is XnlEl =>
@@ -276,6 +338,17 @@ function loadCtrlFlowSources(
   const statementEls = listChildren(container);
   for (const statement of statementEls) visitStatement(statement);
 
+  const blockSections = sectionChildren(container).filter(s => s.tag === 'Blocks');
+  if (blockSections.length > 1) note('duplicate-blocks', 'only one Blocks section is allowed');
+  const blockEls = blockSections.flatMap(listChildren);
+  const blockIds = new Set<string>();
+  for (const block of blockEls) {
+    const id = idOf(block);
+    if (block.tag !== 'Block' || !id) note('invalid-block', 'Blocks requires named Block children');
+    else if (blockIds.has(id)) note('duplicate-block', `duplicate block #${id}`);
+    else blockIds.add(id);
+  }
+  const blockRefs = new Map<string, Set<string>>();
   const seenIds = new Set<string>();
   const requireCodeRef = (el: XnlEl, field: string) => {
     const value = el.attributes?.[field];
@@ -302,6 +375,13 @@ function loadCtrlFlowSources(
       else seenIds.add(id);
 
       if (node.tag === 'Run') requireCodeRef(node, 'src');
+      if (node.tag === 'RunBlock') {
+        const ref = node.attributes?.block;
+        if (typeof ref !== 'string' || !/^block:\/\/#[-\w.]+$/.test(ref) || !blockIds.has(ref.slice(9))) {
+          note('unresolved-block-ref', `<RunBlock #${id ?? ''}> requires an existing flow-local block://#id`);
+        }
+        if (listChildren(node).length) note('run-block-body', 'RunBlock cannot have an inline body');
+      }
       if (node.tag === 'Require' || node.tag === 'Until' || node.tag === 'ForEach') requireCodeRef(node, 'when');
       if (node.tag === 'Retry') requirePositiveInteger(node, 'maxAttempts', true);
       if (node.tag === 'Timeout') {
@@ -376,6 +456,25 @@ function loadCtrlFlowSources(
     }
   };
   validateBody(statementEls);
+  const refs = (nodes: XnlEl[], result = new Set<string>()): Set<string> => {
+    for (const n of nodes) {
+      if (n.tag === 'RunBlock' && typeof n.attributes?.block === 'string') result.add(n.attributes.block.slice(9));
+      refs(listChildren(n), result); refs(sectionChildren(n), result);
+    }
+    return result;
+  };
+  for (const block of blockEls) {
+    validateBody(listChildren(block));
+    blockRefs.set(idOf(block) ?? '', refs(listChildren(block)));
+  }
+  const visited = new Set<string>(), active = new Set<string>();
+  const checkBlock = (id: string): void => {
+    if (active.has(id)) { note('recursive-block', `block reference cycle at #${id}`); return; }
+    if (visited.has(id)) return;
+    active.add(id); for (const target of blockRefs.get(id) ?? []) checkBlock(target);
+    active.delete(id); visited.add(id);
+  };
+  for (const id of blockIds) checkBlock(id);
 
   for (const name of Object.keys(facets) as FacetName[]) {
     if (!ALLOWED_FACETS[form].has(name)) {
@@ -428,16 +527,19 @@ function loadCtrlFlowSources(
     : undefined;
   const stateSeed = facets['state.seed'] ? { ...(facets['state.seed'].attributes ?? {}) } : undefined;
   const taskSpace = facets['task.space'] ? toNodeSpec(facets['task.space']) : undefined;
+  const rootIdentity = projectFlowRootIdentity(container.metadata ?? {});
+  if (rootIdentity.diagnostic) note(rootIdentity.diagnostic.code, rootIdentity.diagnostic.message);
   const spec: FlowBundleSpec = {
     form,
     fqn,
-    apiVersion: String(container.metadata?.apiVersion ?? ''),
-    version: String(container.metadata?.version ?? ''),
+    apiVersion: rootIdentity.apiVersion,
+    version: rootIdentity.version,
     title: container.attributes?.title as string | undefined,
     sourceNames,
     baseUri: options.baseUri,
     dir: options.baseUri ?? '',
     statements: statementEls.map(toNodeSpec),
+    blocks: Object.fromEntries(blockEls.filter(b => idOf(b)).map(b => [idOf(b)!, listChildren(b).map(toNodeSpec)])),
     ...(definitionStepForest ? { definitionStepForest } : {}),
     flowContract,
     config,
@@ -447,7 +549,6 @@ function loadCtrlFlowSources(
     taskSpace,
     diagnostics,
   };
-  if (!spec.apiVersion) note('container-missing-meta', 'container missing metadata "apiVersion"');
   if (!fqn.includes('.')) note('container-id-not-fqn', `container #id must be a dotted FQN, got "${fqn}"`);
   return { spec, diagnostics };
 }

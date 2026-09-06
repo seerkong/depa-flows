@@ -1,4 +1,4 @@
-<MessageSchema #depa.flows.test.Schema.Response apiVersion="depa.flows/v1" version="1.0.0" {
+<MessageSchema #depa.flows.test.Schema.Response envelopeVersion="halfcode.resource-envelope/v1" specVersion=1 {
   lifecycle = "Stable"
   description = "Response schema"
   schema = { type = "string" }

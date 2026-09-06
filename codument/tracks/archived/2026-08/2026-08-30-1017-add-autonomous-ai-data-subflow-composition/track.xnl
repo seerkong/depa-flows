@@ -1,0 +1,65 @@
+<Track #add-autonomous-ai-data-subflow-composition apiVersion="codument.tech/v1alpha1" version="1" { status = "completed" goal = "Let AI Data autonomous control decompose goals through canonical, durable SubFlowNode child runs without a GoalGraph." description = "Add closed subflow admission, first-class child binding, crash-safe start-or-continue ports and filesystem composition while preserving the existing RunGraph owner." question_mode = "decision-tree" question_severity = "auto" commit_mode = "manual" created_at = "2026-08-30T05:54:42.733Z" updated_at = "2026-08-30T07:17:54.360Z" modeling_base_commit = "014128da802c8ed3e4d8fa58520e42cd64b76b9c" engineering_base_commit = "014128da802c8ed3e4d8fa58520e42cd64b76b9c" } (
+  <Ports { scope = "track" } [
+    <MaterialBundle { role = "input" name = "eager-subflow-authority" domain = "code" path = "vfs://@/packages/eager-data-flow-contract/" }>
+    <MaterialBundle { role = "output" name = "ai-data-subflow-contract" domain = "code" path = "vfs://@/packages/ai-data-workflow-contract/" }>
+    <MaterialBundle { role = "output" name = "ai-data-subflow-runtime" domain = "code" path = "vfs://@/packages/ai-data-workflow-logic/" }>
+  ]>
+  <TaskSpace #space_add-autonomous-ai-data-subflow-composition { name = "add-autonomous-ai-data-subflow-composition" version = "1" child_mode = "dag" } (
+    <SubNodes [
+      <TaskGroup #P1 { name = "Closed autonomous subflow contract" status = "DONE" order = 0 } (
+        <SubNodes [
+          <Task #P1-T1 { name = "specify subflow capability and revision operations" status = "DONE" order = 0 } (
+            <Acceptance [
+              <Criterion #P1-T1-AC1 { checked = true } ?01M1ARZTEE26R9M173R2CDXT5Y>
+              Subflow proposals carry exact child flow and contract identities and cannot be represented as ordinary code or Agent implementations.
+              </?01M1ARZTEE26R9M173R2CDXT5Y>
+            ]>
+          )>
+          <Task #P1-T2 { name = "preserve child binding in patch RunGraph and codecs" status = "DONE" order = 1 }>
+          <Task #P1-T3 { name = "test port mismatch stale catalog protection and recursion rejection" status = "DONE" order = 2 }>
+        ]>
+      )>
+      <TaskGroup #P2 { name = "Durable child invocation runtime" status = "DONE" order = 1 } (
+        <SubNodes [
+          <Task #P2-T1 { name = "add explicit child resolve freeze start continue load and settle ports" status = "DONE" order = 0 }>
+          <Task #P2-T2 { name = "reserve deterministic child invocation before dispatch" status = "DONE" order = 1 } (
+            <Acceptance [
+              <Criterion #P2-T2-AC1 { checked = true } ?01M1AMKXMNQCK00YB7J1HK5G5R>
+              Concurrent or fresh-process resumes converge on one child invocation and accepted child effects are never replayed.
+              </?01M1AMKXMNQCK00YB7J1HK5G5R>
+            ]>
+          )>
+          <Task #P2-T3 { name = "validate terminal receipt and atomically accept parent output" status = "DONE" order = 2 }>
+        ]>
+      )>
+      <TaskGroup #P3 { name = "Filesystem composition and verification" status = "DONE" order = 2 } (
+        <SubNodes [
+          <Task #P3-T1 { name = "materialize and inject exact child executable registry" status = "DONE" order = 0 }>
+          <Task #P3-T2 { name = "run nested crash concurrency recursion and regression matrices" status = "DONE" order = 1 } (
+            <Acceptance [
+              <Criterion #P3-T2-AC1 { checked = true } ?01M1A2E38NJH8CW5YJ1SBNRHTQ>
+              A→B→C succeeds, A→B→A fails closed, and every parent/child crash point resumes the same durable child run.
+              </?01M1A2E38NJH8CW5YJ1SBNRHTQ>
+            ]>
+          )>
+        ]>
+        <Hooks [
+          <Hook { on = "phase:after" } (
+            <AttractorCheck { use = "coding" }>
+          )>
+        ]>
+      )>
+    ]>
+  )>
+  <Schedule [
+    <Dag { for = "space_add-autonomous-ai-data-subflow-composition" } [
+      <Node #P2 [
+        <After { ref = "P1" }>
+      ]>
+      <Node #P3 [
+        <After { ref = "P2" }>
+      ]>
+    ]>
+  ]>
+  <Hooks []>
+)>

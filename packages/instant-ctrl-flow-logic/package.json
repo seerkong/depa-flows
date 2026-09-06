@@ -1,21 +1,23 @@
 {
   "name": "instant-ctrl-flow-logic",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "private": false,
-  "description": "InstantCtrlFlow 引擎：xnl bundle 加载 → 行为树编译 → 无状态单次执行",
+  "description": "InstantCtrlFlow \u5f15\u64ce\uff1axnl bundle \u52a0\u8f7d \u2192 \u884c\u4e3a\u6811\u7f16\u8bd1 \u2192 \u65e0\u72b6\u6001\u5355\u6b21\u6267\u884c",
   "type": "module",
   "main": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
     "./browser": "./src/browser.ts",
-    "./filesystem": "./src/filesystem.ts"
+    "./filesystem": "./src/filesystem.ts",
+    "./graph": "./src/graph.ts"
   },
   "dependencies": {
     "depa-behavior-tree": "0.1.1",
     "flow-step-space-contract": "0.1.1",
     "flow-step-space-logic": "0.1.1",
     "instant-ctrl-flow-contract": "0.1.2",
-    "xnl-core": "^0.1.8"
+    "xnl-core": "^0.1.8",
+    "port-control-graph-logic": "0.1.0"
   },
   "files": [
     "src"

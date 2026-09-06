@@ -25,8 +25,8 @@ const packageManifest = JSON.parse(await readFile(join(packageRoot, 'package.jso
   version: string;
 };
 
-if (packageManifest.name !== 'ai-workflow-flow-dsl-reference' || packageManifest.version !== '0.1.6') {
-  throw new Error('FLOW_DSL_REFERENCE_PACKAGE_IDENTITY_INVALID: expected ai-workflow-flow-dsl-reference@0.1.6');
+if (packageManifest.name !== 'ai-workflow-flow-dsl-reference' || packageManifest.version !== '0.2.0') {
+  throw new Error('FLOW_DSL_REFERENCE_PACKAGE_IDENTITY_INVALID: expected ai-workflow-flow-dsl-reference@0.2.0');
 }
 
 const sourceFiles = await collectCanonicalMarkdownFiles(sourceRoot);
@@ -149,7 +149,7 @@ async function buildResourceModule(moduleRoot: string): Promise<void> {
 }
 
 function resourcePackageManifest(): string {
-  return `<ResourcePackage #Depa.Flows.FlowDsl.Reference.Package apiVersion="halfcode.resources/v1" version="1.0.1" {
+  return `<ResourcePackage #Depa.Flows.FlowDsl.Reference.Package envelopeVersion="halfcode.resource-envelope/v1" specVersion=1 {
   lifecycle = "Stable"
   description = "Canonical depa Flow DSL documentation reference resources for authoring Skills."
 } (
@@ -162,7 +162,7 @@ function resourcePackageManifest(): string {
 }
 
 function wikiPageManifest(path: string): string {
-  return `<WikiPage #${wikiPageResourceId(path)} apiVersion="halfcode.resources/v1" version="1.0.1" {
+  return `<WikiPage #${wikiPageResourceId(path)} envelopeVersion="halfcode.resource-envelope/v1" specVersion=1 {
   lifecycle = "Stable"
   description = "Canonical depa Flow DSL reference page: ${path}."
 } (

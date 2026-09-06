@@ -5,7 +5,8 @@
   "description": "depa-flows workspace root (bun monorepo)",
   "workspaces": [
     "packages/*",
-    "tools/*"
+    "tools/*",
+    "../depa-processor"
   ],
   "scripts": {
     "flow-dsl-check": "bun tools/flow-dsl-check/check.mjs",

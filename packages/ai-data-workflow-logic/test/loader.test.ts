@@ -63,6 +63,45 @@ describe('AIDataWorkflow source loader', () => {
     });
   });
 
+  test('loads an exact Halfcode 0.3 resource root as the same depa semantic profile', () => {
+    const result = loadAIDataWorkflow(loaderRuntime, { sources: {
+      ...canonicalSources,
+      'manifest.xnl': canonicalSources['manifest.xnl'].replace(
+        'apiVersion="depa.flows/v1" version="1.0.0"',
+        'envelopeVersion="halfcode.resource-envelope/v1" specVersion=1',
+      ),
+    } }, {});
+
+    expect(result.diagnostics).toEqual([]);
+    expect(result.binding?.definition).toMatchObject({
+      apiVersion: 'depa.flows/v1',
+      version: '1',
+      fqn: 'depa.examples.SupportEvidenceDag',
+    });
+  });
+
+  test('rejects unknown and incomplete Halfcode resource root revisions', () => {
+    const resourceManifest = canonicalSources['manifest.xnl'].replace(
+      'apiVersion="depa.flows/v1" version="1.0.0"',
+      'envelopeVersion="halfcode.resource-envelope/v2" specVersion=1',
+    );
+    const unknownEnvelope = loadAIDataWorkflow(loaderRuntime, { sources: {
+      ...canonicalSources,
+      'manifest.xnl': resourceManifest,
+    } }, {});
+    const missingRevision = loadAIDataWorkflow(loaderRuntime, { sources: {
+      ...canonicalSources,
+      'manifest.xnl': resourceManifest
+        .replace('halfcode.resource-envelope/v2', 'halfcode.resource-envelope/v1')
+        .replace(' specVersion=1', ''),
+    } }, {});
+
+    expect(unknownEnvelope.binding).toBeUndefined();
+    expect(unknownEnvelope.diagnostics.map(({ code }) => code)).toContain('unsupported-flow-resource-envelope');
+    expect(missingRevision.binding).toBeUndefined();
+    expect(missingRevision.diagnostics.map(({ code }) => code)).toContain('unsupported-flow-resource-spec-version');
+  });
+
   test('returns stable diagnostics and no binding for a wrong root or invalid node', () => {
     const wrongRoot = loadAIDataWorkflow(loaderRuntime, { sources: {
       ...canonicalSources,

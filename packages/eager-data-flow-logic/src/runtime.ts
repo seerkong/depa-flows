@@ -140,9 +140,19 @@ function topologyLayers(plan: EagerDataFlowAuthoringPlan): ReadonlyMap<string, n
   return layers;
 }
 
+function isPortReference(value: unknown): value is { readonly nodeId: string; readonly port: string } {
+  return Boolean(value && typeof value === 'object' && !Array.isArray(value)
+    && typeof (value as { nodeId?: unknown }).nodeId === 'string'
+    && typeof (value as { port?: unknown }).port === 'string'
+    && typeof (value as { ref?: unknown }).ref === 'string');
+}
+
 function inputFor(node: Exclude<EagerDataFlowNodePlan, { tag: 'EntryNode' }>, ports: ReadonlyMap<string, unknown>) {
   return Object.freeze(Object.fromEntries(
-    Object.entries(node.inputs).map(([input, ref]) => [input, ports.get(`${ref.nodeId}/${ref.port}`)]),
+    Object.entries(node.inputs).map(([input, binding]) => [
+      input,
+      isPortReference(binding) ? ports.get(`${binding.nodeId}/${binding.port}`) : binding,
+    ]),
   ));
 }
 
@@ -153,8 +163,8 @@ function isReady(
 ): boolean {
   if (status.get(node.id) !== 'pending') return false;
   if (node.tag !== 'EntryNode') {
-    for (const ref of Object.values(node.inputs)) {
-      if (!ports.has(`${ref.nodeId}/${ref.port}`)) return false;
+    for (const binding of Object.values(node.inputs)) {
+      if (isPortReference(binding) && !ports.has(`${binding.nodeId}/${binding.port}`)) return false;
     }
   }
   return node.waitFor.every((ref) => status.get(ref.nodeId) === 'succeeded');
@@ -288,10 +298,17 @@ async function invokeMaterialized<Runtime>(
           success = { node, returned: requireExactRecord(nodeInput, plan.contract.outputPorts, `${node.id} output`) };
         } else if (node.tag === 'SubFlowNode') {
           const target = subflows[subflowId(node)];
-          const output = await target.invoke(runtime, nodeInput, {
-            signal: controller.signal,
-            ...(options.bindSignal ? { bindSignal: options.bindSignal } : {}),
-          });
+          const output = options.invokeSubFlow
+            ? await options.invokeSubFlow(
+              effectiveRuntime,
+              { nodeId: node.id, flowRef: node.flow },
+              nodeInput,
+              { signal: controller.signal },
+            )
+            : await target.invoke(runtime, nodeInput, {
+              signal: controller.signal,
+              ...(options.bindSignal ? { bindSignal: options.bindSignal } : {}),
+            });
           success = { node, output: requireExactRecord(output, node.outputs, `${node.id} output`) };
         } else {
           const fn = code.get(node.id)!;

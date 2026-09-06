@@ -1,4 +1,4 @@
-<RequestMaterial #depa.flows.test.Material.Request.Overflow.A apiVersion="depa.flows/v1" version="1.0.0" {
+<RequestMaterial #depa.flows.test.Material.Request.Overflow.A envelopeVersion="halfcode.resource-envelope/v1" specVersion=1 {
   lifecycle = "Active"
   description = "Overflow request material A"
   value = "overflow-a"

@@ -67,7 +67,7 @@ describe('AI Workflow Flow DSL reference module', () => {
     expect(provenance.schemaVersion).toBe('depa.flow-dsl-reference/v1');
     expect(provenance.moduleId).toBe('DepaFlowsFlowDslReference');
     expect(provenance.packageName).toBe('ai-workflow-flow-dsl-reference');
-    expect(provenance.packageVersion).toBe('0.1.6');
+    expect(provenance.packageVersion).toBe('0.2.0');
     expect(provenance.source).toBe('depa-flows/docs/flow-dsl');
     expect(provenance.files.map((file) => file.path)).toEqual(canonicalFiles);
     expect(provenance.files.every((file) => /^sha256:[a-f0-9]{64}$/.test(file.contentDigest))).toBe(true);
@@ -86,6 +86,12 @@ describe('AI Workflow Flow DSL reference module', () => {
     const module = loadAIWorkflowFlowDslReferenceModule();
     const tree = await loadResourceTree({ rootDir: module.resourceRootDir });
     const canonicalFiles = await listMarkdownFiles(canonicalRoot);
+
+    expect(await readFile(join(module.resourceRootDir, 'manifest.xnl'), 'utf8')).not.toContain('apiVersion="halfcode.resources/v1"');
+    for (const wikiPage of tree.registry.byKind.get('WikiPage') ?? []) {
+      expect(wikiPage.metadata.envelopeVersion).toBe('halfcode.resource-envelope/v1');
+      expect(wikiPage.metadata.specVersion).toBe(1);
+    }
 
     expect(tree.manifest.resourceId).toBe('Depa.Flows.FlowDsl.Reference.Package');
     expect(tree.registry.byKind.get('WikiPage')?.length).toBe(canonicalFiles.length);
@@ -134,8 +140,8 @@ describe('AI Workflow Flow DSL reference module', () => {
       publishConfig: Record<string, string>;
     };
     expect(manifest.name).toBe('ai-workflow-flow-dsl-reference');
-    expect(manifest.version).toBe('0.1.6');
-    expect(manifest.dependencies).toEqual({ 'halfcode-compiler.xnl': '0.2.3' });
+    expect(manifest.version).toBe('0.2.0');
+    expect(manifest.dependencies).toEqual({ 'halfcode-compiler.xnl': '0.3.0' });
     expect(manifest.publishConfig).toEqual({ access: 'public' });
   });
 });
@@ -151,7 +157,7 @@ async function createAuthoringFixtureModule(root: string) {
     join(halfcodeModule.resourceRootDir, 'KindDefinitions', 'SkillCapsule', 'manifest.xnl'),
     join(kindDefinitionRoot, 'manifest.xnl'),
   );
-  await writeFile(join(root, 'manifest.xnl'), `<ResourcePackage #Eidolon.Test.Authoring.Package apiVersion="halfcode.resources/v1" version="1.0.0" {
+  await writeFile(join(root, 'manifest.xnl'), `<ResourcePackage #Eidolon.Test.Authoring.Package envelopeVersion="halfcode.resource-envelope/v1" specVersion=1 {
   lifecycle = "Testing"
   description = "Fixture authoring Skill that embeds depa Flow DSL references."
 } (
@@ -161,7 +167,7 @@ async function createAuthoringFixtureModule(root: string) {
   ]>
 )>
 `);
-  await writeFile(join(skillRoot, 'manifest.xnl'), `<SkillCapsule #Eidolon.Test.Skill.Authoring apiVersion="halfcode.resources/v1" version="1.0.0" {
+  await writeFile(join(skillRoot, 'manifest.xnl'), `<SkillCapsule #Eidolon.Test.Skill.Authoring envelopeVersion="halfcode.resource-envelope/v1" specVersion=1 {
   name = "sys-eidolon-anchor-authoring-test"
   lifecycle = "Testing"
   description = "Fixture authoring Skill."
@@ -174,9 +180,9 @@ async function createAuthoringFixtureModule(root: string) {
   ]>
 )>
 `);
-  await writeFile(join(skillRoot, 'SKILL.metadata.yaml'), 'title: Eidolon authoring fixture\ndescription: Test-only authoring reference composition.\n');
+  await writeFile(join(skillRoot, 'SKILL.metadata.yaml'), 'version: 1.0.0\ntitle: Eidolon authoring fixture\ndescription: Test-only authoring reference composition.\n');
   await writeFile(join(skillRoot, 'SKILL.template.ejs'), '---\nname: <%= metadata.name %>\ndescription: Test fixture.\n---\n\nRead references/flow-dsl/README.md first.\n');
-  await writeFile(join(skillRoot, 'resource-mappings.xnl'), `<ResourceMappings #Eidolon.Test.ResourceMappings.Authoring apiVersion="halfcode.resources/v1" version="1.0.0" (
+  await writeFile(join(skillRoot, 'resource-mappings.xnl'), `<ResourceMappings #Eidolon.Test.ResourceMappings.Authoring envelopeVersion="halfcode.resource-envelope/v1" specVersion=1 (
   <SourceRoots [
     <SourceRoot #FlowDsl { sourceRoot = "vfs://module/DepaFlowsFlowDslReference/" } [
       <CopyDirectory { from = "content" to = "references/flow-dsl" }>

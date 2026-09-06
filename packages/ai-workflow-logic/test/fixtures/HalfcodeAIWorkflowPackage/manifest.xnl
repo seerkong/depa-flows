@@ -1,4 +1,4 @@
-<ResourcePackage #depa.flows.test.resource_package apiVersion="halfcode.resources/v1" version="1.0.0" {
+<ResourcePackage #depa.flows.test.resource_package envelopeVersion="halfcode.resource-envelope/v1" specVersion=1 {
   lifecycle = "Active"
   description = "Halfcode-backed AI workflow package fixture"
 } (

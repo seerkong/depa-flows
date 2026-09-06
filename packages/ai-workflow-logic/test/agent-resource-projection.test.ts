@@ -109,8 +109,8 @@ describe('AI Agent and Material resource projection', () => {
 
   test('projects an ordered heterogeneous MessagePrefix and explicit ContextPipeline', () => {
     const prompt = record('Prompt', 'depa.flows.test.Prompt.System');
-    const source = record('AgentMessageSource', 'depa.flows.test.MessageSource.Workspace');
-    const pipeline = record('AgentContextPipeline', 'depa.flows.test.ContextPipeline.Standard');
+    const source = record('AgentMessageSource', 'depa.flows.test.MessageSource.Workspace', { Content: { ...node('Content'), text: 'workspace-source/v1' } });
+    const pipeline = record('AgentContextPipeline', 'depa.flows.test.ContextPipeline.Standard', { Content: { ...node('Content'), text: 'context-pipeline/v1' } });
     const agent = record('AIAgentDefinition', 'depa.flows.test.Agent.Composed', {
       MessagePrefix: node('MessagePrefix', undefined, {}, [
         message('system'),
@@ -339,7 +339,7 @@ function record(
     kind,
     fqn: resourceId,
     resourceId,
-    metadata: { apiVersion: 'depa.flows/v1', version: '1.0.0' },
+    metadata: { envelopeVersion: 'halfcode.resource-envelope/v1', specVersion: 1 },
     sourceShape: 'single-file',
     logicalPath: `${kind}/${resourceId}.xnl`,
     documentUri: `vfs://@/${kind}/${resourceId}.xnl`,

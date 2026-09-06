@@ -1,4 +1,21 @@
-<KindDefinition #depa.flows.kind.EffectPolicy.ExecutableOverlay apiVersion="halfcode.resources/v1" version="1.0.0" {
-  lifecycle = "Stable" resourceKind = "EffectPolicy" sourceShapes = ["single-file"]
-  currentApiVersion = "depa.flows/v1" supportedApiVersions = ["depa.flows/v1"]
-}>
+<KindDefinition #Depa.Flows.KindDefinition.EffectPolicy envelopeVersion="halfcode.resource-envelope/v1" specVersion=1 {
+  lifecycle = "Stable"
+  resourceKind = "EffectPolicy"
+  subjectFqn = "Depa.Flows.KindDefinition.EffectPolicy"
+  sourceShapes = ["single-file"]
+  documentCardinality = "one"
+  description = "Canonical depa-flows EffectPolicy resource contract."
+} (
+  <SpecRevisions [
+    <SpecRevision #v1 {
+      specVersion = 1
+      schemaRef = "vfs://./spec-v1.schema.json"
+      schemaFingerprint = "sha256:b5a93a137dc8718a94a6468af547c0367bf66fcbdf3291bbc1ab0c78425667b3"
+      contractFingerprint = "sha256:de8b691eea3b3151c0c0acf78dd8a475674a551c5c6c39620afb6a9ad683f0fa"
+      semanticValidatorFingerprint = "sha256:0a129faabfc38969ec3673763f6bca17fdb3df68e4603540c57358f7639aed2f"
+      referenceProjectionFingerprint = "sha256:7357f87072db02c10d3f7f21634b97493e49780fa9b6c95022f16fa1c2b40adf"
+      compilerInputFingerprint = "sha256:5e994b40a384734648f3a46481e9c2b76b1125da123f931d10fe4254335dc764"
+      stability = "stable"
+    }>
+  ]>
+)>

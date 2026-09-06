@@ -1,4 +1,4 @@
-<RequestMaterial #depa.flows.test.Material.Request apiVersion="depa.flows/v1" version="1.0.0" {
+<RequestMaterial #depa.flows.test.Material.Request envelopeVersion="halfcode.resource-envelope/v1" specVersion=1 {
   lifecycle = "Active"
   description = "Request material"
   value = { request = "request-001" }

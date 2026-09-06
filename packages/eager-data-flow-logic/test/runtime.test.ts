@@ -232,6 +232,39 @@ describe('EagerDataFlow materialization and scheduling', () => {
     })).rejects.toBeInstanceOf(EagerDataFlowMaterializationError);
   });
 
+  test('keeps two nodes targeting the same child Flow addressable during injected dispatch', async () => {
+    const childPlan = plan(source('depa.test.SharedChild', `
+      <EntryNode #entry>
+      <ReturnNode #return { inputs = { mapped = "flow-port://#entry/value" } }>
+    `, ['value'], ['mapped']));
+    const child = await materializeEagerDataFlowPlan(childPlan, { resolveCode: resolver({}) });
+    const parentPlan = plan(source('depa.test.TwoChildNodes', `
+      <EntryNode #entry>
+      <SubFlowNode #first {
+        flow = "eager-data-flow://depa.test.SharedChild"
+        inputs = { value = "flow-port://#entry/value" }
+      }>
+      <SubFlowNode #second {
+        flow = "eager-data-flow://depa.test.SharedChild"
+        inputs = { value = "flow-port://#entry/value" }
+      }>
+      <ReturnNode #return { inputs = { result = "flow-port://#first/mapped" } }>
+    `), { 'depa.test.SharedChild': childPlan });
+    const parent = await materializeEagerDataFlowPlan(parentPlan, {
+      resolveCode: resolver({}),
+      subflows: { 'depa.test.SharedChild': child },
+    });
+    const dispatched: string[] = [];
+    const output = await parent.invoke({}, { value: 'subject' }, {
+      async invokeSubFlow(_runtime, identity, input) {
+        dispatched.push(identity.nodeId);
+        return { mapped: `${identity.nodeId}:${String(input.value)}` };
+      },
+    });
+    expect(dispatched.sort()).toEqual(['first', 'second']);
+    expect(output).toEqual({ result: 'first:subject' });
+  });
+
   test('chooses the primary concurrent fault by topology layer then declaration order', async () => {
     interface FaultRuntime {
       signal?: AbortSignal;

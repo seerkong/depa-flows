@@ -1,0 +1,65 @@
+<BehaviorPatch #track.add-autonomous-ai-data-subflow-composition.behavior_patch.ai-data-workflow apiVersion="codument.tech/v1alpha1" version="1" { capability = "ai-data-workflow" } (
+  <Mutations [
+    <Upsert { selector = "behavior://ai-data-workflow/requirements/autonomous-subflow-composition" } (
+      <Requirement #autonomous-subflow-composition (
+        <Statement ?01M1ANG2MD51N22VZA9EK29R6R>
+        AI Data autonomous control SHALL compose hierarchical goals through canonical SubFlowNode patches and durable child invocation receipts, without introducing a GoalGraph or a second graph authority.
+        </?01M1ANG2MD51N22VZA9EK29R6R>
+        <Suites [
+          <Suite #subflow-admission { name = "Autonomous subflow admission" } (
+            <Cases [
+              <Case #closed-child-capability (
+                <Given ?01M1AZPXR06DYYQRV2RJ0317WG>
+                A frozen catalog projects an exact child EagerDataFlow identity and FlowContract.
+                </?01M1AZPXR06DYYQRV2RJ0317WG>
+                <When ?01M1AF8PM945HPZR2ZWA8WV7Q0>
+                The controller proposes adding or rewiring a SubFlowNode.
+                </?01M1AF8PM945HPZR2ZWA8WV7Q0>
+                <Then ?01M1AGMVQHFPE2P9PVC43MNKFG>
+                Admission SHALL validate exact ports, contract digest, protection and acyclic call topology, then lower the decision to the existing RunGraph patch owner.
+                </?01M1AGMVQHFPE2P9PVC43MNKFG>
+              )>
+              <Case #invalid-child-no-mutation (
+                <Given ?01M1AW2ZEH0VR3KW3HEKYMRVME>
+                A child reference is missing, stale, contract-incompatible, protected or recursive.
+                </?01M1AW2ZEH0VR3KW3HEKYMRVME>
+                <When ?01M1AXV6PQ058XPE4BM99K8CMP>
+                The proposal is admitted.
+                </?01M1AXV6PQ058XPE4BM99K8CMP>
+                <Then ?01M1AHY1BSW9S25QX8XGCT3RA6>
+                The system SHALL return typed feedback and leave the canonical graph bytes unchanged.
+                </?01M1AHY1BSW9S25QX8XGCT3RA6>
+              )>
+            ]>
+          )>
+          <Suite #durable-child-invocation { name = "Durable child invocation" } (
+            <Cases [
+              <Case #reserve-before-dispatch (
+                <Given ?01M1A7N8SB129PW92AXVESWE6C>
+                A parent SubFlowNode becomes ready.
+                </?01M1A7N8SB129PW92AXVESWE6C>
+                <When ?01M1AYY1J17Y7CC1PMCWRNBMQG>
+                The child is started or resumed.
+                </?01M1AYY1J17Y7CC1PMCWRNBMQG>
+                <Then ?01M1AVSBCMDQ1VYSW19G20M0Y2>
+                The parent SHALL first reserve one deterministic child invocation binding and SHALL use explicit runtime ports to start-or-continue that same child.
+                </?01M1AVSBCMDQ1VYSW19G20M0Y2>
+              )>
+              <Case #fresh-recovery-exactly-once (
+                <Given ?01M1A69E4H2Z9VF6T815W58476>
+                A process stops after reservation, child creation, accepted child effect or child terminal commit.
+                </?01M1A69E4H2Z9VF6T815W58476>
+                <When ?01M1ANBMXSAS93V0NDTKK84RXE>
+                A fresh runtime continues the parent run.
+                </?01M1ANBMXSAS93V0NDTKK84RXE>
+                <Then ?01M1AGP6NR22AEYBVHW39EZ90Z>
+                It SHALL recover the same child invocation, SHALL NOT replay accepted child effects and SHALL accept output only from its exact terminal receipt.
+                </?01M1AGP6NR22AEYBVHW39EZ90Z>
+              )>
+            ]>
+          )>
+        ]>
+      )>
+    )>
+  ]>
+)>
