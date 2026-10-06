@@ -74,7 +74,8 @@ try {
   }
   // Reject duplicate Halfcode/workflow owners in the physical dependency graph.
   const tree = JSON.parse(await run(['npm', 'ls', '--all', '--json'], consumer));
-  function checkTree(node: { dependencies?: Record<string, { version?: string }> }): void {
+  interface DependencyNode { version?: string; dependencies?: Record<string, DependencyNode> }
+  function checkTree(node: DependencyNode): void {
     for (const [name, child] of Object.entries(node.dependencies ?? {})) {
       if (name in versions && child.version !== versions[name as keyof typeof versions]) {
         throw new Error(`Duplicate authority ${name}@${child.version}`);

@@ -51,6 +51,29 @@ afterEach(() => {
 });
 
 describe('canonical bundle loading', () => {
+  test('compiles the actual graph fixtures and validates code references in shared blocks', () => {
+    for (const name of ['diamond', 'nested', 'loop']) {
+      const result = checkDir(demo(`port-ctrl-graph-${name}`));
+      expect(result.form).toBe('InstantCtrlFlow');
+      expect(result.problems).toEqual([]);
+    }
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'flow-graph-code-'));
+    temporaryDirectories.push(root);
+    fs.cpSync(demo('port-ctrl-graph-nested'), root, {recursive: true});
+    const file = path.join(root, 'manifest.xnl');
+    fs.writeFileSync(file, fs.readFileSync(file, 'utf8').replace('vfs://./flow-code/review.ts#shared', 'vfs://./flow-code/missing.ts#shared'));
+    expect(codes(checkDir(root))).toContain('vfs-ref-missing');
+  });
+
+  test('checks unresolved block references and rejects persistent block profiles', () => {
+    const root = temporaryBundle('InstantCtrlFlow', '<RunBlock #call {block="block://#missing"}>');
+    const manifest = path.join(root, 'manifest.xnl');
+    fs.writeFileSync(manifest, fs.readFileSync(manifest, 'utf8').replace(') [', '<Blocks [<Block #other [<Return #stop>]>]>) ['));
+    expect(codes(checkDir(root))).toContain('unresolved-block-ref');
+    for (const form of ['WorkCtrlFlow', 'BPCtrlFlow', 'AICtrlWorkflow']) {
+      expect(codes(checkDir(temporaryBundle(form, '<RunBlock #call {block="block://#b"}>')))).toContain('unsupported-block-profile');
+    }
+  });
   test('loads direct product-root statements for all demos', () => {
     for (const [name, form] of Object.entries(canonicalDemos)) {
       const result = checkDir(demo(name));

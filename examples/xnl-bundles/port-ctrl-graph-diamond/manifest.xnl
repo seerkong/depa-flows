@@ -1,0 +1,38 @@
+<CtrlFlowGraph #demo.PortOrder apiVersion="depa.flows/v1" version="1.0.0" {
+  targetForm = "InstantCtrlFlow"
+  entry = "ctrl-node://#load"
+} (
+  <FlowContract #demo.PortOrder {
+    input = "vfs://./flow-code/review.contracts.ts#OrderInput"
+    output = "vfs://./flow-code/review.contracts.ts#OrderResult"
+  }>
+  <Nodes [
+    <Run #load { src = "vfs://./flow-code/review.ts#load" }>
+    <If #route (
+      <Ports [
+        <Port #accepted { order = 0 when = "vfs://./flow-code/review.ts#isAccepted" }>
+        <Port #otherwise { order = 1 default = true }>
+      ]>
+    )>
+    <Run #charge { src = "vfs://./flow-code/review.ts#charge" }>
+    <Run #refuse { src = "vfs://./flow-code/review.ts#refuse" }>
+    <Run #audit { src = "vfs://./flow-code/review.ts#audit" }>
+    <Return #done { src = "vfs://./flow-code/review.ts#done" }>
+  ]>
+  <Edges [
+    <Edge #load-route { from = "port://#load/next" to = "port://#route/enter" }>
+    <Edge #accepted-charge { from = "port://#route/accepted" to = "port://#charge/enter" }>
+    <Edge #otherwise-refuse { from = "port://#route/otherwise" to = "port://#refuse/enter" }>
+    <Edge #charge-audit { from = "port://#charge/next" to = "port://#audit/enter" }>
+    <Edge #refuse-audit { from = "port://#refuse/next" to = "port://#audit/enter" }>
+    <Edge #audit-done { from = "port://#audit/next" to = "port://#done/enter" }>
+  ]>
+  <FlowAuthoring #demo.PortOrder { viewport = { x = 0 y = 0 zoom = 1 } } [
+    <NodeLayout #load { x = 80 y = 80 }>
+    <NodeLayout #route { x = 240 y = 80 }>
+    <NodeLayout #charge { x = 400 y = 20 }>
+    <NodeLayout #refuse { x = 400 y = 160 }>
+    <NodeLayout #audit { x = 560 y = 80 }>
+    <NodeLayout #done { x = 720 y = 80 }>
+  ]>
+)>

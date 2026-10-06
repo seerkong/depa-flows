@@ -1,7 +1,7 @@
 <Track #add-port-control-graph-compiler apiVersion="codument.tech/v1alpha1" version="1" {
   status = "in_progress"
-  goal = "To be authored by codument-plan-track."
-  description = "To be authored by codument-plan-track."
+  goal = "提供泛型带端口控制图编译与调用侧作用域 Blocks/RunBlock"
+  description = "本地交付映射；唯一工作图见 Eidolon cdmt mission loop.md"
   question_mode = "decision-tree"
   question_severity = "auto"
   commit_mode = "manual"

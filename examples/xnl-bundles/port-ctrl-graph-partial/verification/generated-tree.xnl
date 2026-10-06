@@ -1,0 +1,86 @@
+<InstantCtrlFlow #demo.PartialJoin apiVersion="depa.flows/v1" version="1.0.0" (
+<FlowContract #demo.PartialJoin {
+input = "vfs://./flow-code/review.contracts.ts#OrderInput"
+output = "vfs://./flow-code/review.contracts.ts#OrderResult"
+}>
+<FlowAuthoring #demo.PartialJoin [
+<NodeLayout #entry {
+x = 40
+y = 180
+}>
+<NodeLayout #route {
+x = 240
+y = 180
+}>
+<NodeLayout #runA {
+x = 450
+y = 20
+}>
+<NodeLayout #runB {
+x = 450
+y = 180
+}>
+<NodeLayout #runC {
+x = 450
+y = 340
+}>
+<NodeLayout #shared {
+x = 650
+y = 100
+}>
+<NodeLayout #finishShared {
+x = 850
+y = 100
+}>
+<NodeLayout #finishC {
+x = 650
+y = 340
+}>
+]>
+<Blocks [
+<Block #block_3 [
+<Run #shared {
+src = "vfs://./flow-code/review.ts#shared"
+}>
+<Return #finishShared {
+src = "vfs://./flow-code/review.ts#finishShared"
+}>
+]>
+]>
+) [
+<Run #entry {
+src = "vfs://./flow-code/review.ts#entry"
+}>
+<If #route (
+<Branches [
+<Branch #route_A {
+when = "vfs://./flow-code/review.ts#routeA"
+} [
+<Run #runA {
+src = "vfs://./flow-code/review.ts#runA"
+}>
+<RunBlock #shared__ref {
+block = "block://#block_3"
+}>
+]>
+<Branch #route_B {
+when = "vfs://./flow-code/review.ts#routeB"
+} [
+<Run #runB {
+src = "vfs://./flow-code/review.ts#runB"
+}>
+<RunBlock #shared__ref__main_1_B_1_0 {
+block = "block://#block_3"
+}>
+]>
+<Otherwise [
+<Run #runC {
+src = "vfs://./flow-code/review.ts#runC"
+}>
+<Return #finishC {
+src = "vfs://./flow-code/review.ts#finishC"
+}>
+]>
+]>
+)>
+]>

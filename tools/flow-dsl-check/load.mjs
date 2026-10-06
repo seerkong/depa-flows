@@ -1,6 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { parseXnl } from 'xnl-core';
+import { compileCtrlFlowGraph } from 'instant-ctrl-flow-logic/graph';
+import { loadFlowBundleFromSources } from 'instant-ctrl-flow-logic/browser';
 import {
   assembleDefinitionStepProfileDirectory,
   createFilesystemDefinitionStepProfileRuntime,
@@ -90,6 +92,14 @@ export function loadBundle(dir, runtime = { extensionCodecs: { resolve: () => un
     if (fileRoots[tag]) noteOnce(code, message);
   }
 
+  if (fileRoots.CtrlFlowGraph) {
+    if (FORMS.some(candidate => fileRoots[candidate])) note('mixed-graph-tree', 'graph bundle cannot also declare a tree root');
+    try {
+      const entry = fileRoots.CtrlFlowGraph;
+      const compiled = compileCtrlFlowGraph(fs.readFileSync(path.join(dir, entry.file), 'utf8'), {baseUri:dir});
+      fileRoots.InstantCtrlFlow = {element:els(parseXnl(compiled.source).nodes)[0],file:entry.file};
+    } catch (error) { note('graph-compile', error.message); }
+  }
   const form = FORMS.find((candidate) => fileRoots[candidate]);
   if (!form) {
     if (!diagnostics.length) note('no-container', `no supported flow root found in ${dir}`);
@@ -98,6 +108,14 @@ export function loadBundle(dir, runtime = { extensionCodecs: { resolve: () => un
 
   const container = fileRoots[form].element;
   const containerFile = fileRoots[form].file;
+  const blockSections = sectionChildren(container).filter(s => s.tag === 'Blocks');
+  if (blockSections.length) {
+    if (form !== 'InstantCtrlFlow') note('unsupported-block-profile', 'Blocks are supported only in InstantCtrlFlow');
+    if (form !== 'AICtrlWorkflow' && form !== 'AIDataWorkflow') {
+      const sources = Object.fromEntries(xnlFiles.map(file => [file, fs.readFileSync(path.join(dir,file),'utf8')]));
+      if (!fileRoots.CtrlFlowGraph) diagnostics.push(...loadFlowBundleFromSources(sources).diagnostics);
+    }
+  }
   const facets = {};
 
   for (const [tag, { element, file }] of Object.entries(fileRoots)) {
@@ -119,7 +137,7 @@ export function loadBundle(dir, runtime = { extensionCodecs: { resolve: () => un
     else facets[name] = section;
   }
 
-  const assembled = assembleDefinitionStepProfileDirectory(
+  const assembled = fileRoots.CtrlFlowGraph ? {diagnostics:[],forest:undefined} : assembleDefinitionStepProfileDirectory(
     createFilesystemDefinitionStepProfileRuntime({
       rootDir: dir,
       extensionCodecs: runtime.extensionCodecs,

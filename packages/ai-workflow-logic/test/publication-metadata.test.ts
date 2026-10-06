@@ -67,8 +67,8 @@ describe('AI workflow public package metadata', () => {
     expect(ctrl.version).toBe('0.2.0');
     expect(ctrl.dependencies).toEqual({
       'ai-ctrl-workflow-contract': '0.2.0',
-      'ai-workflow-contract': '0.2.0',
-      'ai-workflow-logic': '0.2.0',
+      'ai-workflow-contract': '0.2.1',
+      'ai-workflow-logic': '0.2.1',
       'flow-step-space-logic': '0.1.1',
       'instant-ctrl-flow-contract': '0.1.2',
       'instant-ctrl-flow-logic': '0.1.6',
@@ -80,8 +80,8 @@ describe('AI workflow public package metadata', () => {
     expect(data.version).toBe('0.2.0');
     expect(data.dependencies).toEqual({
       'ai-data-workflow-contract': '0.2.0',
-      'ai-workflow-contract': '0.2.0',
-      'ai-workflow-logic': '0.2.0',
+      'ai-workflow-contract': '0.2.1',
+      'ai-workflow-logic': '0.2.1',
       'eager-data-flow-contract': '0.1.4',
       'eager-data-flow-logic': '0.1.7',
       'flow-step-space-logic': '0.1.1',
@@ -159,6 +159,7 @@ describe('AI workflow public package metadata', () => {
       'instant-ctrl-flow-logic': {
         version: '0.1.6',
         dependencies: {
+          'port-control-graph-logic': '0.1.0',
           'depa-behavior-tree': '0.1.1',
           'flow-step-space-contract': '0.1.1',
           'flow-step-space-logic': '0.1.1',
@@ -199,6 +200,7 @@ describe('AI workflow public package metadata', () => {
       './filesystem': './src/filesystem.ts',
       './run-freeze': './src/run-freeze.ts',
       './agent-code-execution': './src/agent-code-execution.ts',
+      './definitions': './src/definitions.ts',
     });
   });
 });

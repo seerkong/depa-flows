@@ -1,0 +1,34 @@
+<CtrlFlowGraph #demo.NestedPartial apiVersion="depa.flows/v1" version="1.0.0" {targetForm="InstantCtrlFlow" entry="entry"} (
+<FlowContract #demo.NestedPartial {input="vfs://./flow-code/review.contracts.ts#OrderInput" output="vfs://./flow-code/review.contracts.ts#OrderResult"}>
+<Nodes [
+<Run #entry {src="vfs://./flow-code/review.ts#entry"}>
+<If #a (<Ports [<Port #yes {order=0 when="vfs://./flow-code/review.ts#a"}><Port #no {order=1 default=true}>]>)>
+<If #b (<Ports [<Port #yes {order=0 when="vfs://./flow-code/review.ts#b"}><Port #no {order=1 default=true}>]>)>
+<If #c (<Ports [<Port #yes {order=0 when="vfs://./flow-code/review.ts#c"}><Port #no {order=1 default=true}>]>)>
+<Run #x {src="vfs://./flow-code/review.ts#x"}>
+<Run #shared {src="vfs://./flow-code/review.ts#shared"}>
+<Run #other {src="vfs://./flow-code/review.ts#other"}>
+<Return #done {src="vfs://./flow-code/review.ts#done"}>
+]>
+<Edges [
+<Edge #entry_next_a {from="port://#entry/next" to="port://#a/enter"}>
+<Edge #a_yes_b {from="port://#a/yes" to="port://#b/enter"}>
+<Edge #a_no_x {from="port://#a/no" to="port://#x/enter"}>
+<Edge #b_yes_c {from="port://#b/yes" to="port://#c/enter"}>
+<Edge #b_no_shared {from="port://#b/no" to="port://#shared/enter"}>
+<Edge #c_yes_other {from="port://#c/yes" to="port://#other/enter"}>
+<Edge #c_no_shared {from="port://#c/no" to="port://#shared/enter"}>
+<Edge #x_next_done {from="port://#x/next" to="port://#done/enter"}>
+<Edge #shared_next_done {from="port://#shared/next" to="port://#done/enter"}>
+]>
+<FlowAuthoring #demo.NestedPartial [
+<NodeLayout #entry {x=60 y=40}>
+<NodeLayout #a {x=310 y=40}>
+<NodeLayout #b {x=560 y=40}>
+<NodeLayout #c {x=60 y=200}>
+<NodeLayout #x {x=310 y=200}>
+<NodeLayout #shared {x=560 y=200}>
+<NodeLayout #other {x=60 y=360}>
+<NodeLayout #done {x=310 y=360}>
+]>
+)>

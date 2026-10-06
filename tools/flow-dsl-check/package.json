@@ -2,11 +2,12 @@
   "name": "flow-dsl-check",
   "version": "0.1.0",
   "private": true,
-  "description": "流定义 bundle 校验器（规范真源 docs/flow-dsl）",
+  "description": "\u6d41\u5b9a\u4e49 bundle \u6821\u9a8c\u5668\uff08\u89c4\u8303\u771f\u6e90 docs/flow-dsl\uff09",
   "type": "module",
   "dependencies": {
     "bp-ctrl-flow-contract": "workspace:*",
     "flow-step-space-logic": "workspace:*",
-    "xnl-core": "^0.1.8"
+    "xnl-core": "^0.1.8",
+    "instant-ctrl-flow-logic": "workspace:*"
   }
 }
