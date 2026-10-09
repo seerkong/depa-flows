@@ -11,7 +11,8 @@
     "./checkpoint-filesystem": "./src/checkpoint-filesystem.ts",
     "./filesystem": "./src/filesystem.ts",
     "./run-freeze": "./src/run-freeze.ts",
-    "./agent-code-execution": "./src/agent-code-execution.ts"
+    "./agent-code-execution": "./src/agent-code-execution.ts",
+    "./definitions": "./src/definitions.ts"
   },
   "dependencies": {
     "ai-workflow-contract": "0.2.1",

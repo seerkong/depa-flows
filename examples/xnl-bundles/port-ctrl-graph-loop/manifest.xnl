@@ -1,0 +1,36 @@
+<CtrlFlowGraph #demo.LoopBranchJoin apiVersion="depa.flows/v1" version="1.0.0" {targetForm="InstantCtrlFlow" entry="entry"} (
+<FlowContract #demo.LoopBranchJoin {input="vfs://./flow-code/review.contracts.ts#OrderInput" output="vfs://./flow-code/review.contracts.ts#OrderResult"}>
+<Nodes [
+<Run #entry {src="vfs://./flow-code/review.ts#entry"}>
+<Until #loop {when="vfs://./flow-code/review.ts#doneLoop" maxIterations=5}>
+<If #chooseStep (<Ports [
+<Port #even {order=0 when="vfs://./flow-code/review.ts#evenIteration"}>
+<Port #odd {order=1 default=true}>
+]>)>
+<Run #fast {src="vfs://./flow-code/review.ts#fast"}>
+<Run #slow {src="vfs://./flow-code/review.ts#slow"}>
+<Run #advance {src="vfs://./flow-code/review.ts#advance"}>
+<Run #finalize {src="vfs://./flow-code/review.ts#finalize"}>
+<Return #done {src="vfs://./flow-code/review.ts#done"}>
+]>
+<Edges [
+<Edge #edge0 {from="port://#entry/next" to="port://#loop/enter"}>
+<Edge #edge1 {from="port://#loop/body" to="port://#chooseStep/enter"}>
+<Edge #edge2 {from="port://#loop/next" to="port://#finalize/enter"}>
+<Edge #edge3 {from="port://#chooseStep/even" to="port://#fast/enter"}>
+<Edge #edge4 {from="port://#chooseStep/odd" to="port://#slow/enter"}>
+<Edge #edge5 {from="port://#fast/next" to="port://#advance/enter"}>
+<Edge #edge6 {from="port://#slow/next" to="port://#advance/enter"}>
+<Edge #edge7 {from="port://#finalize/next" to="port://#done/enter"}>
+]>
+<FlowAuthoring #demo.LoopBranchJoin [
+<NodeLayout #entry {x=40 y=40}>
+<NodeLayout #loop {x=240 y=40}>
+<NodeLayout #chooseStep {x=450 y=200}>
+<NodeLayout #fast {x=650 y=170}>
+<NodeLayout #slow {x=650 y=340}>
+<NodeLayout #advance {x=850 y=250}>
+<NodeLayout #finalize {x=450 y=40}>
+<NodeLayout #done {x=650 y=40}>
+]>
+)>

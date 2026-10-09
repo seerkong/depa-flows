@@ -7,7 +7,8 @@
   "main": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./filesystem": "./src/filesystem.ts"
+    "./filesystem": "./src/filesystem.ts",
+    "./browser": "./src/core.ts"
   },
   "dependencies": {
     "flow-step-space-contract": "0.1.1",

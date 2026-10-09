@@ -3,9 +3,18 @@
   "compilerOptions": {
     "baseUrl": "..",
     "paths": {
-      "ai-workflow-contract": ["packages/ai-workflow-contract/src/index.ts"],
-      "ai-ctrl-workflow-logic": ["packages/ai-ctrl-workflow-logic/src/index.ts"],
-      "ai-data-workflow-logic": ["packages/ai-data-workflow-logic/src/index.ts"]
+      "ai-workflow-contract": [
+        "packages/ai-workflow-contract/src/index.ts"
+      ],
+      "ai-ctrl-workflow-logic": [
+        "packages/ai-ctrl-workflow-logic/src/index.ts"
+      ],
+      "ai-data-workflow-logic": [
+        "packages/ai-data-workflow-logic/src/index.ts"
+      ],
+      "ai-workflow-logic": [
+        "packages/ai-workflow-logic/src/index.ts"
+      ]
     }
   },
   "include": [

@@ -1,0 +1,61 @@
+<InstantCtrlFlow #demo.PortOrder apiVersion="depa.flows/v1" version="1.0.0" (
+<FlowContract #demo.PortOrder {
+input = "vfs://./flow-code/review.contracts.ts#OrderInput"
+output = "vfs://./flow-code/review.contracts.ts#OrderResult"
+}>
+<FlowAuthoring #demo.PortOrder {
+viewport = { "x" = 0 "y" = 0 "zoom" = 1 }
+} [
+<NodeLayout #load {
+x = 80
+y = 80
+}>
+<NodeLayout #route {
+x = 240
+y = 80
+}>
+<NodeLayout #charge {
+x = 400
+y = 20
+}>
+<NodeLayout #refuse {
+x = 400
+y = 160
+}>
+<NodeLayout #audit {
+x = 560
+y = 80
+}>
+<NodeLayout #done {
+x = 720
+y = 80
+}>
+]>
+<Blocks>
+) [
+<Run #load {
+src = "vfs://./flow-code/review.ts#load"
+}>
+<If #route (
+<Branches [
+<Branch #route_accepted {
+when = "vfs://./flow-code/review.ts#isAccepted"
+} [
+<Run #charge {
+src = "vfs://./flow-code/review.ts#charge"
+}>
+]>
+<Otherwise [
+<Run #refuse {
+src = "vfs://./flow-code/review.ts#refuse"
+}>
+]>
+]>
+)>
+<Run #audit {
+src = "vfs://./flow-code/review.ts#audit"
+}>
+<Return #done {
+src = "vfs://./flow-code/review.ts#done"
+}>
+]>

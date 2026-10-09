@@ -1,0 +1,75 @@
+<InstantCtrlFlow #demo.LoopBranchJoin apiVersion="depa.flows/v1" version="1.0.0" (
+<FlowContract #demo.LoopBranchJoin {
+input = "vfs://./flow-code/review.contracts.ts#OrderInput"
+output = "vfs://./flow-code/review.contracts.ts#OrderResult"
+}>
+<FlowAuthoring #demo.LoopBranchJoin [
+<NodeLayout #entry {
+x = 40
+y = 40
+}>
+<NodeLayout #loop {
+x = 240
+y = 40
+}>
+<NodeLayout #chooseStep {
+x = 450
+y = 200
+}>
+<NodeLayout #fast {
+x = 650
+y = 170
+}>
+<NodeLayout #slow {
+x = 650
+y = 340
+}>
+<NodeLayout #advance {
+x = 850
+y = 250
+}>
+<NodeLayout #finalize {
+x = 450
+y = 40
+}>
+<NodeLayout #done {
+x = 650
+y = 40
+}>
+]>
+<Blocks>
+) [
+<Run #entry {
+src = "vfs://./flow-code/review.ts#entry"
+}>
+<Until #loop {
+when = "vfs://./flow-code/review.ts#doneLoop"
+maxIterations = 5
+} [
+<If #chooseStep (
+<Branches [
+<Branch #chooseStep_even {
+when = "vfs://./flow-code/review.ts#evenIteration"
+} [
+<Run #fast {
+src = "vfs://./flow-code/review.ts#fast"
+}>
+]>
+<Otherwise [
+<Run #slow {
+src = "vfs://./flow-code/review.ts#slow"
+}>
+]>
+]>
+)>
+<Run #advance {
+src = "vfs://./flow-code/review.ts#advance"
+}>
+]>
+<Run #finalize {
+src = "vfs://./flow-code/review.ts#finalize"
+}>
+<Return #done {
+src = "vfs://./flow-code/review.ts#done"
+}>
+]>

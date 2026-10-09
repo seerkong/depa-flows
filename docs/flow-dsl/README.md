@@ -39,6 +39,8 @@ CtrlFlow 是一套共享的 **statements 语法、canonical AST 和编辑投影*
 
 `EagerDataFlow` 是另一种公开执行产品，根 `[]` 直接承载一次调用内主动求值的 DAG nodes；它不使用 CtrlFlow statements 或其内部计划，也不是长生命周期的 lazy signal DataGraph。`AIDataWorkflow` 在 EagerDataFlow authoring plan 之上增加可恢复 RunGraph、patch/generation/invalidation 与 run-local semantic reuse 状态。
 
+图式控制流定义另有 [CtrlFlowGraph profile](spec/port-control-graph/index.md)：先编译到 InstantCtrlFlow statements + Blocks/RunBlock，再由现有引擎执行。
+
 ## 产品与制品矩阵
 
 | 产品 | definition 根 | 目录入口 | 根 `[]` | 根 `()` | 跨 unit scheme |

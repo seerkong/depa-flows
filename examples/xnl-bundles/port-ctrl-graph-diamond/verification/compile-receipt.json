@@ -1,0 +1,24 @@
+{
+  "receipt": {
+    "schemaVersion": "depa.flows/ctrl-graph-receipt/v1",
+    "compiler": "depa.flows/port-ctrl-graph-to-tree@1",
+    "profile": "InstantCtrlFlow",
+    "sourceDigest": "sha256:b4bdf5b53f215f68030a2d5cf8601e320c13035c792a3d62c6bb062b02a40417",
+    "outputDigest": "sha256:05a1d5319aa61144ad19d57d9f266806aa35468cb912db419a5c0110c5ed2be7"
+  },
+  "provenance": {
+    "load": "load",
+    "route": "route",
+    "charge": "charge",
+    "route_accepted": "route_accepted",
+    "refuse": "refuse",
+    "audit": "audit",
+    "done": "done"
+  },
+  "inferredNext": [
+    {
+      "owner": "route",
+      "next": "audit"
+    }
+  ]
+}

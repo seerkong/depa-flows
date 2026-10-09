@@ -7,6 +7,7 @@ const CTRL_FLOW_FORMS = new Set(['InstantCtrlFlow', 'WorkCtrlFlow', 'BPCtrlFlow'
 const DAG_FORMS = new Set(['EagerDataFlow', 'AIDataWorkflow']);
 const SHARED_STATEMENTS = new Set([
   'Run',
+  'RunBlock',
   'If',
   'Require',
   'Fallback',
@@ -427,6 +428,10 @@ export function checkBundle(bundle) {
         if (tag === 'Race' && !['first-success', 'first-completed'].includes(statement.attributes?.mode)) {
           note('invalid-race-mode', `Race #${id} mode must be "first-success" or "first-completed"`);
         }
+      } else if (tag === 'RunBlock') {
+        if (form !== 'InstantCtrlFlow') note('unsupported-block-profile', 'RunBlock is supported only in InstantCtrlFlow');
+        // Reference existence/cycles are checked by the canonical loader.
+        if (!/^block:\/\/#[-\w.]+$/.test(statement.attributes?.block ?? '')) note('invalid-block-ref', 'RunBlock requires block://#id');
       } else if (tag === 'CallFlow') {
         if (typeof statement.attributes?.flow !== 'string' || !/^(instant-ctrl-flow|work-ctrl-flow|bp-ctrl-flow):\/\/[\w.-]+$/.test(statement.attributes.flow)) {
           note('invalid-flow-ref', `CallFlow #${id} flow must use a product flow URI`);
@@ -467,6 +472,9 @@ export function checkBundle(bundle) {
     checkDagNodes();
   } else if (CTRL_FLOW_FORMS.has(form)) {
     checkStatements(statements);
+    for (const section of sectionChildren(container).filter(s => s.tag === 'Blocks')) {
+      for (const block of listChildren(section)) checkStatements(listChildren(block));
+    }
   }
 
   for (const taskId of new Set(taskStepRefs)) {

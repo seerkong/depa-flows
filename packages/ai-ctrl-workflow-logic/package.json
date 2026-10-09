@@ -8,12 +8,13 @@
   "exports": {
     ".": "./src/index.ts",
     "./browser": "./src/browser.ts",
-    "./filesystem": "./src/filesystem.ts"
+    "./filesystem": "./src/filesystem.ts",
+    "./sources": "./src/source-loader.ts"
   },
   "dependencies": {
     "ai-ctrl-workflow-contract": "0.2.0",
-    "ai-workflow-contract": "0.2.0",
-    "ai-workflow-logic": "0.2.0",
+    "ai-workflow-contract": "0.2.1",
+    "ai-workflow-logic": "0.2.1",
     "flow-step-space-logic": "0.1.1",
     "instant-ctrl-flow-contract": "0.1.2",
     "instant-ctrl-flow-logic": "0.1.6",

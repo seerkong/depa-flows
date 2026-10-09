@@ -7,8 +7,8 @@ import {
 import {
   assembleDefinitionStepProfile,
   createDefinitionStepSourceRuntime,
-} from 'flow-step-space-logic';
-import type { DefinitionStepAssemblyRuntime, DefinitionStepSourceCollection } from 'flow-step-space-logic';
+} from 'flow-step-space-logic/browser';
+import type { DefinitionStepAssemblyRuntime, DefinitionStepSourceCollection } from 'flow-step-space-logic/browser';
 import type {
   EagerDataEdge,
   EagerDataFlowAuthoringPlan,

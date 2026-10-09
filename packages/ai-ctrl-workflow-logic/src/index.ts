@@ -25,7 +25,6 @@ import type {
 import {
   commitFlowRunCheckpoint,
   createAIWorkflowRuntimeContext,
-  defineAICtrlWorkflow,
   loadFlowRunCheckpoint,
   projectWorkCtrlSnapshotToCheckpointData,
   bindAIAgentProcessors,
@@ -37,7 +36,6 @@ import type {
   FlowSourceCollection,
   LoadFlowSourcesOptions,
 } from 'instant-ctrl-flow-contract';
-import { loadCtrlFlowProfileFromSources } from 'instant-ctrl-flow-logic';
 import type {
   ResumeSignal,
   TickOutcome,
@@ -231,34 +229,7 @@ export function createAICtrlWorkflowController(
   };
 }
 
-export function defineWorkCtrlFlowBackedAICtrlWorkflow(
-  definition: AICtrlWorkflowDefinitionBinding['definition'],
-): AICtrlWorkflowDefinitionBinding {
-  return defineAICtrlWorkflow(definition);
-}
-
-export interface AICtrlWorkflowSourceLoadResult {
-  readonly binding?: AICtrlWorkflowDefinitionBinding;
-  readonly diagnostics: readonly FlowDiagnostic[];
-}
-
-export function loadAICtrlWorkflowSources(
-  sources: FlowSourceCollection,
-  options: LoadFlowSourcesOptions = {},
-): AICtrlWorkflowSourceLoadResult {
-  const loaded = loadCtrlFlowProfileFromSources(sources, {
-    ...options,
-    profileRoot: 'AICtrlWorkflow',
-    substrateForm: 'WorkCtrlFlow',
-  });
-  if (!loaded.spec || loaded.diagnostics.length > 0) {
-    return { diagnostics: loaded.diagnostics };
-  }
-  return {
-    binding: defineWorkCtrlFlowBackedAICtrlWorkflow(loaded.spec),
-    diagnostics: loaded.diagnostics,
-  };
-}
+export * from './source-loader.js';
 
 function nodeIdFromInvocationKey(invocationKey: string): string {
   const withoutVisit = invocationKey.slice(0, invocationKey.lastIndexOf('#'));

@@ -7,7 +7,7 @@ import { parseXnl } from 'xnl-core';
 import {
   assembleDefinitionStepProfile,
   createDefinitionStepSourceRuntime,
-} from 'flow-step-space-logic';
+} from 'flow-step-space-logic/browser';
 import type { DefinitionStepForest, DefinitionStepSourceCollection } from 'flow-step-space-contract';
 import type {
   FlowBundleSpec,
@@ -339,6 +339,7 @@ function loadCtrlFlowSources(
   for (const statement of statementEls) visitStatement(statement);
 
   const blockSections = sectionChildren(container).filter(s => s.tag === 'Blocks');
+  if (blockSections.length && form !== 'InstantCtrlFlow') note('unsupported-block-profile', 'Blocks persistence is only validated for InstantCtrlFlow');
   if (blockSections.length > 1) note('duplicate-blocks', 'only one Blocks section is allowed');
   const blockEls = blockSections.flatMap(listChildren);
   const blockIds = new Set<string>();
@@ -381,6 +382,7 @@ function loadCtrlFlowSources(
           note('unresolved-block-ref', `<RunBlock #${id ?? ''}> requires an existing flow-local block://#id`);
         }
         if (listChildren(node).length) note('run-block-body', 'RunBlock cannot have an inline body');
+        if (node.attributes?.config !== undefined || node.attributes?.input !== undefined) note('block-context-override', 'RunBlock preserves caller context and accepts no input/config override');
       }
       if (node.tag === 'Require' || node.tag === 'Until' || node.tag === 'ForEach') requireCodeRef(node, 'when');
       if (node.tag === 'Retry') requirePositiveInteger(node, 'maxAttempts', true);

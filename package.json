@@ -16,6 +16,11 @@
   "devDependencies": {
     "bun-types": "^1.3.14",
     "typescript": "^5.5.0",
-    "xnl-core": "^0.1.8"
+    "xnl-core": "^0.1.8",
+    "instant-ctrl-flow-logic": "workspace:*"
+  },
+  "overrides": {
+    "ai-workflow-logic": "workspace:*",
+    "ai-workflow-contract": "workspace:*"
   }
 }

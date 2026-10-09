@@ -122,27 +122,7 @@ export function assertAIWorkflowSubstrate(
   }
 }
 
-export function defineAICtrlWorkflow(
-  definition: AICtrlWorkflowDefinitionBinding['definition'],
-): AICtrlWorkflowDefinitionBinding {
-  return Object.freeze({
-    kind: 'AICtrlWorkflow',
-    substrate: 'WorkCtrlFlow',
-    descriptor: AI_CTRL_WORKFLOW_DESCRIPTOR,
-    definition,
-  });
-}
-
-export function defineAIDataWorkflow(
-  definition: AIDataWorkflowDefinitionBinding['definition'],
-): AIDataWorkflowDefinitionBinding {
-  return Object.freeze({
-    kind: 'AIDataWorkflow',
-    substrate: 'EagerDataFlow',
-    descriptor: AI_DATA_WORKFLOW_DESCRIPTOR,
-    definition,
-  });
-}
+export { defineAICtrlWorkflow, defineAIDataWorkflow } from './definitions.js';
 
 export function projectAIWorkflowAppBundles(
   registry: AIWorkflowResourceRegistryView,

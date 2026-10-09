@@ -201,3 +201,26 @@ output = fn(runtime, input, config)
 | `output` | code export | 普通 data；predicate 限定为 boolean；技术失败通过 fault 通道表达。 |
 
 代码可同步或异步返回；runner 必须 await 后再推进下一条 statement。XNL 只保存 `vfs://...#Export`，不内嵌函数、表达式字符串、闭包或 handler object。
+
+## Blocks/RunBlock
+
+首版仅在 InstantCtrlFlow 实际执行并验收；WorkCtrlFlow/BPCtrlFlow/AICtrlWorkflow 的持久游标和恢复合同未扩展，loader/compiler 返回 unsupported-block-profile。
+
+```xnl
+<InstantCtrlFlow #demo.Blocks apiVersion="depa.flows/v1" version="1" (
+  <FlowContract #demo.Blocks>
+  <Blocks [
+    <Block #shared [<Run #append {src="vfs://./code.ts#append"}>]>
+  ]>
+) [
+  <RunBlock #first {block="block://#shared"}>
+  <RunBlock #second {block="block://#shared"}>
+  <Return #result>
+]>
+```
+
+Blocks 是 flow-local 命名 statements 集合；每个 Block ID 唯一，所有 statement ID（含主树及 block 内）全局唯一。RunBlock 的 block 必须引用本 flow 中已有的 `block://#id`，没有 inline body、input/config override，首版拒绝递归与互递归。
+
+RunBlock 复用调用侧 runtime/current/context/config 和循环作用域，不创建 child flow、闭包或新 execution environment。Block 正常完成时，其 output 成为调用点下一条 statement 的 input；每个调用实际执行，不缓存结果。Block 内 Return 结束调用侧整个 flow，fault 传播并跳过调用点 continuation。Until body 内的 RunBlock 更新值供下一轮 predicate 使用。
+
+编译时为每个调用位置建立独立游标键；复用 block definition 不表示复用运行 cursor。公开输出仍是 statements/blocks，不暴露内部 BT nodes。图转换规则见 [ported graph profile](../port-control-graph/index.md)。

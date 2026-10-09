@@ -1,0 +1,104 @@
+<InstantCtrlFlow #demo.NestedPartial apiVersion="depa.flows/v1" version="1.0.0" (
+<FlowContract #demo.NestedPartial {
+input = "vfs://./flow-code/review.contracts.ts#OrderInput"
+output = "vfs://./flow-code/review.contracts.ts#OrderResult"
+}>
+<FlowAuthoring #demo.NestedPartial [
+<NodeLayout #entry {
+x = 60
+y = 40
+}>
+<NodeLayout #a {
+x = 310
+y = 40
+}>
+<NodeLayout #b {
+x = 560
+y = 40
+}>
+<NodeLayout #c {
+x = 60
+y = 200
+}>
+<NodeLayout #x {
+x = 310
+y = 200
+}>
+<NodeLayout #shared {
+x = 560
+y = 200
+}>
+<NodeLayout #other {
+x = 60
+y = 360
+}>
+<NodeLayout #done {
+x = 310
+y = 360
+}>
+]>
+<Blocks [
+<Block #block_5 [
+<Run #shared {
+src = "vfs://./flow-code/review.ts#shared"
+}>
+<RunBlock #done__ref__block_5_1_0 {
+block = "block://#block_6"
+}>
+]>
+<Block #block_6 [
+<Return #done {
+src = "vfs://./flow-code/review.ts#done"
+}>
+]>
+]>
+) [
+<Run #entry {
+src = "vfs://./flow-code/review.ts#entry"
+}>
+<If #a (
+<Branches [
+<Branch #a_yes {
+when = "vfs://./flow-code/review.ts#a"
+} [
+<If #b (
+<Branches [
+<Branch #b_yes {
+when = "vfs://./flow-code/review.ts#b"
+} [
+<If #c (
+<Branches [
+<Branch #c_yes {
+when = "vfs://./flow-code/review.ts#c"
+} [
+<Run #other {
+src = "vfs://./flow-code/review.ts#other"
+}>
+]>
+<Otherwise [
+<RunBlock #shared__ref {
+block = "block://#block_5"
+}>
+]>
+]>
+)>
+]>
+<Otherwise [
+<RunBlock #shared__ref__main_1_yes_0_no_0_0 {
+block = "block://#block_5"
+}>
+]>
+]>
+)>
+]>
+<Otherwise [
+<Run #x {
+src = "vfs://./flow-code/review.ts#x"
+}>
+<RunBlock #done__ref {
+block = "block://#block_6"
+}>
+]>
+]>
+)>
+]>

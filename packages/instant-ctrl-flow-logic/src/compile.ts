@@ -96,6 +96,8 @@ function compileStatement(
 
   switch (node.tag) {
     case 'RunBlock': {
+      if (spec.form !== 'InstantCtrlFlow') throw new FlowCompileError('unsupported-block-profile', spec.form);
+      if (attrs.input !== undefined || attrs.config !== undefined) throw new FlowCompileError('block-context-override', 'RunBlock preserves caller context');
       const ref = String(attrs.block ?? '');
       const id = ref.startsWith('block://#') ? ref.slice(9) : '';
       const body = spec.blocks?.[id];
@@ -116,7 +118,9 @@ function compileStatement(
       const ifPath = key;
       const branches = node.sections.Branches?.children ?? [];
       const choices = branches.map((branch, index) => {
-        const branchKey = branch.id ?? `${key}.branch.${index}`;
+        const branchKey = blockStack.length
+          ? `${key}.branch.${index}:${branch.id ?? branch.tag}`
+          : branch.id ?? `${key}.branch.${index}`;
         if (branch.tag === 'Otherwise') {
           return sequence(`${branchKey}.__choice`, [
             action('flow.Otherwise', `${branchKey}.__otherwise`, {
@@ -154,7 +158,9 @@ function compileStatement(
         if (strategy.tag !== 'Strategy') {
           throw new FlowCompileError('invalid-fallback-strategy', `<Fallback #${key}> contains <${strategy.tag}>`);
         }
-        const strategyKey = strategy.id ?? `${key}.strategy.${index}`;
+        const strategyKey = blockStack.length
+          ? `${key}.strategy.${index}:${strategy.id ?? strategy.tag}`
+          : strategy.id ?? `${key}.strategy.${index}`;
         return sequence(`${strategyKey}.__strategy`, [
           action('flow.StrategyStart', `${strategyKey}.__start`, { fallbackKey: key }),
           compileStatements(strategy.children, `${strategyKey}.__body`),
