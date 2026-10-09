@@ -25,7 +25,7 @@ async function run(command: string[], cwd: string): Promise<string> {
 try {
   const dependencies: Record<string, string> = {
     'ai-data-workflow-logic': '0.2.0', 'ai-ctrl-workflow-logic': '0.2.0',
-    'task-manager-file-support': '0.1.4',
+    'task-manager-file-support': '0.1.5',
   };
   for (const name of names) {
     if (fromRegistry) dependencies[name] = versions[name];
