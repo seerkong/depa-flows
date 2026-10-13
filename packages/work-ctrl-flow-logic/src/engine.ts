@@ -36,6 +36,7 @@ import {
 import type { CtrlFlowResolver, FlowBundleSpec, FlowCodeResolver } from 'instant-ctrl-flow-contract';
 import {
   compileBundle,
+  projectCompiledFlowInvocationOwners,
   FlowCompileError,
   createFlowExecutionState,
   createFlowHandlers,
@@ -45,6 +46,7 @@ import {
   type FlowBranchDecision,
   type FlowDecisionHooks,
   type CompileExtension,
+  type FlowExecutionState,
 } from 'instant-ctrl-flow-logic/browser';
 import type {
   CompositeInvocationFact,
@@ -157,6 +159,10 @@ export const workFlowCompileExtension: CompileExtension = (_spec, node, { meta, 
   return CtrlFlowDsl.node(`wf.${node.tag}` as CtrlFlowNodeType, meta, { ...attrs, __waitKind: kind } as INodeConfig);
 };
 
+export function projectWorkCtrlFlowInvocationOwners(spec: FlowBundleSpec): Readonly<Record<string, string>> {
+  return projectCompiledFlowInvocationOwners(compileBundle(spec, workFlowCompileExtension));
+}
+
 /** tick 内挂起控制器 */
 export class TickController {
   suspended: WaitHandle[] = [];
@@ -165,6 +171,7 @@ export class TickController {
   constructor(
     public snapshot: WorkCtrlFlowSnapshot,
     public runtime: WorkCtrlFlowRuntime,
+    readonly loopOwners: ReadonlyMap<string, readonly string[]> = new Map(),
   ) {}
   now(): number {
     return this.runtime.now?.() ?? Date.now();
@@ -172,6 +179,22 @@ export class TickController {
   /** invocationKey 计数（每 tick 重置，重放确定性来源） */
   private visitCounts = new Map<string, number>();
   private invocationScopes: string[] = [];
+  /** 当前调用的寻址事实由引擎推导，作者input不能提供循环visit。 */
+  runtimeIdentity(nodeId: string, state?: FlowExecutionState) {
+    return this.runtimeIdentityForInvocation(nodeId, this.invocationKeyFor(nodeId), state);
+  }
+  /** Project an already-opened native wait without consuming another invocation visit. */
+  runtimeIdentityForInvocation(nodeId: string, invocationKey: string, state?: FlowExecutionState) {
+    const visit = invocationKey.slice(invocationKey.lastIndexOf('#') + 1);
+    if (!/^(0|[1-9][0-9]*)$/.test(visit) || !Number.isSafeInteger(Number(visit))) throw new Error('invalid-native-invocation-visit');
+    const scope = invocationKey.includes('/') ? invocationKey.slice(0, invocationKey.lastIndexOf('/')) : '';
+    const frames = (this.loopOwners.get(nodeId) ?? []).map(key => ({ key, iteration: state?.untilIterations[`${key}.__predicate_value`] ?? 0 }));
+    return {
+      treeId: this.snapshot.treeId, nodeId, invocationKey,
+      visit: frames.length ? JSON.stringify([scope, frames]) : `${scope}#${visit}`,
+      generation: frames.at(-1)?.iteration ?? Number(visit),
+    };
+  }
   invocationKeyFor(nodeKey: string): string {
     const scopedNodeKey = [...this.invocationScopes, nodeKey].join('/');
     const n = this.visitCounts.get(scopedNodeKey) ?? 0;
@@ -223,6 +246,7 @@ export class DurableCompositeScheduler implements ActionHandler<CtrlFlowNodeType
       src?: string;
       when?: string;
       concurrency?: number;
+      maxItems?: number;
       config?: Record<string, unknown>;
       mode?: 'first-success' | 'first-completed';
       flow?: string;
@@ -350,6 +374,7 @@ export class DurableCompositeScheduler implements ActionHandler<CtrlFlowNodeType
       when?: string;
       mode?: 'first-success' | 'first-completed';
       concurrency?: number;
+      maxItems?: number;
       config?: Record<string, unknown>;
       bodyPlan?: CtrlNode;
       items?: Array<{ id: string; bodyPlan: CtrlNode }>;
@@ -362,8 +387,9 @@ export class DurableCompositeScheduler implements ActionHandler<CtrlFlowNodeType
         .filter((lane) => lane.invocationKey === invocationKey)
         .sort((a, b) => Number(a.laneId) - Number(b.laneId));
       let selected: unknown[];
-      if (existing.length > 0) {
+      if (fact.expansion || existing.length > 0) {
         selected = existing.map((lane) => lane.item);
+        if (fact.expansion && selected.length !== fact.expansion.itemCount) throw new Error('ForEach frozen expansion is incomplete');
       } else {
         const selector = await this.definition.resolveCode({
           reference: String(config.src ?? config.when ?? ''),
@@ -373,7 +399,14 @@ export class DurableCompositeScheduler implements ActionHandler<CtrlFlowNodeType
         });
         const value = await selector(c.runtime, fact.input, config.config ?? {});
         if (!Array.isArray(value)) throw new TypeError('ForEach selector must return an array');
-        selected = value;
+        selected = structuredClone(value);
+      }
+      if (!fact.expansion) {
+        const concurrency = config.concurrency ?? 1;
+        const maxItems = config.maxItems;
+        if (!Number.isSafeInteger(concurrency) || concurrency < 1 || concurrency > Math.min(32, maxItems ?? 1000)) throw new RangeError('ForEach concurrency exceeds its bounded capacity');
+        if (maxItems !== undefined && (!Number.isSafeInteger(maxItems) || maxItems < 1 || maxItems > 1000 || selected.length > maxItems)) throw new RangeError('ForEach selection exceeds maxItems');
+        fact.expansion = { itemCount: selected.length, concurrency, ...(maxItems === undefined ? {} : { maxItems }) };
       }
       items = selected.map((_item, index) => ({ id: String(index), bodyPlan: config.bodyPlan! }));
       for (let i = 0; i < selected.length; i++) {
@@ -384,8 +417,17 @@ export class DurableCompositeScheduler implements ActionHandler<CtrlFlowNodeType
           item: selected[i],
           flowState: createFlowExecutionState(selected[i]),
           status: 'Open',
+          started: false,
         };
+        const lane = c.snapshot.orchestration.lanes[`${invocationKey}/${i}`];
+        // 兼容旧快照：原等待已经占槽，不能因缺少新字段而再次扩大发送。
+        if (lane.started === undefined) {
+          const scope = `${invocationKey}/${lane.bodyId}/`;
+          lane.started = [...c.snapshot.openWaitHandles, ...c.snapshot.closedWaitHandles].some(handle => handle.invocationKey.startsWith(scope))
+            || [...Object.keys(c.snapshot.nodeResults), ...Object.keys(c.snapshot.waitResults)].some(key => key.startsWith(scope));
+        }
       }
+      await this.persist(c.snapshot);
     } else {
       for (const item of items) c.snapshot.orchestration.lanes[`${invocationKey}/${item.id}`] ??= {
         invocationKey,
@@ -405,7 +447,7 @@ export class DurableCompositeScheduler implements ActionHandler<CtrlFlowNodeType
         config.primitive === 'ForEach' ? lane.item : fact.input,
       )) as ReturnType<typeof createFlowExecutionState>;
       delete laneState.fault;
-      const laneController = new TickController(workingSnapshot, c.runtime);
+      const laneController = new TickController(workingSnapshot, c.runtime, c.loopOwners);
       const laneRuntime = signal
         ? Object.assign(Object.create((ctx.runtime ?? {}) as object), { abortSignal: signal })
         : ctx.runtime;
@@ -434,16 +476,26 @@ export class DurableCompositeScheduler implements ActionHandler<CtrlFlowNodeType
 
     const ready = items.filter((item) =>
       c.snapshot.orchestration.lanes[`${invocationKey}/${item.id}`].status === 'Open');
-    const concurrency = config.primitive === 'ForEach'
-      ? Math.max(1, Math.floor(Number(config.concurrency ?? 1)))
-      : Math.max(1, ready.length);
+    const concurrency = fact.expansion?.concurrency ?? Math.max(1, ready.length);
     const completed: Awaited<ReturnType<typeof executeLane>>[] = [];
     const isRaceWinner = (lane: LaneFact) =>
       (config.mode ?? 'first-success') === 'first-completed'
         ? lane.status === 'Completed' || lane.status === 'Failed'
         : lane.status === 'Completed';
-    for (let offset = 0; offset < ready.length; offset += concurrency) {
-      const batchItems = ready.slice(offset, offset + concurrency);
+    const attempted = new Set<string>();
+    while (true) {
+      let batchItems = ready.filter(item => !attempted.has(item.id));
+      if (config.primitive === 'ForEach') {
+        const laneOf = (item: { id: string }) => c.snapshot.orchestration.lanes[`${invocationKey}/${item.id}`];
+        const occupied = ready.filter(item => laneOf(item).status === 'Open' && laneOf(item).started).length;
+        const continuing = batchItems.filter(item => laneOf(item).started);
+        const available = Math.max(0, concurrency - occupied);
+        batchItems = [...continuing, ...batchItems.filter(item => !laneOf(item).started).slice(0, available)];
+        for (const item of batchItems) laneOf(item).started = true;
+        if (batchItems.length) await this.persist(c.snapshot);
+      }
+      if (!batchItems.length) break;
+      for (const item of batchItems) attempted.add(item.id);
       const controllers = batchItems.map(() => new AbortController());
       const batch = batchItems.map((item, index) =>
         executeLane(item, controllers[index].signal).catch(() => {
@@ -473,6 +525,7 @@ export class DurableCompositeScheduler implements ActionHandler<CtrlFlowNodeType
         for (const outcome of settled) this.commitLaneOutcome(c.snapshot, invocationKey, outcome);
       }
       if (config.primitive === 'Race' && completed.some(({ lane }) => isRaceWinner(lane))) break;
+      await this.persist(c.snapshot);
     }
     c.suspended.push(...completed.flatMap(({ suspensions }) => suspensions));
 
@@ -751,6 +804,7 @@ class ReplayingHandler implements ActionHandler<CtrlFlowNodeType, INodeConfig> {
     private inner: ActionHandler<CtrlFlowNodeType, INodeConfig>,
     private controller: () => TickController,
     private replayResults = true,
+    private runtimeBinding = false,
   ) {}
   async execute(ctx: Ctx): Promise<BehaviorResult> {
     const c = this.controller();
@@ -761,7 +815,14 @@ class ReplayingHandler implements ActionHandler<CtrlFlowNodeType, INodeConfig> {
     if (!this.replayResults) return this.inner.execute(ctx);
     const key = c.invocationKeyFor(ctx.node.Key);
     const recorded = c.snapshot.nodeResults[key];
-    if (recorded !== undefined) return recorded === 'Success' ? BehaviorResult.Success : BehaviorResult.Failure;
+    if (recorded !== undefined) {
+      // 首次调用的代码runtime也占一个visit；重放跳过IO时仍须保留这个位置。
+      const config = ctx.node.Config as { src?: string; hasValue?: boolean };
+      const callsCode = ['flow.Run', 'flow.Require', 'flow.UntilPredicate'].includes(String(ctx.node.Type))
+        || (ctx.node.Type === 'flow.Return' && !config.hasValue && Boolean(config.src));
+      if (this.runtimeBinding && callsCode) c.invocationKeyFor(ctx.node.Key);
+      return recorded === 'Success' ? BehaviorResult.Success : BehaviorResult.Failure;
+    }
     const result = await this.inner.execute(ctx);
     if (result !== BehaviorResult.Running) {
       c.snapshot.nodeResults[key] = result === BehaviorResult.Success ? 'Success' : 'Failure';
@@ -779,6 +840,8 @@ export class WaitNodeHandler implements ActionHandler<CtrlFlowNodeType, INodeCon
     private onOpen?: (ctx: Ctx, handle: WaitHandle) => Promise<void>,
     /** 收敛回调（首次命中 waitResults 时执行一次，after-hooks 等）；重放幂等由 nodeResults 标记保证 */
     private onConverge?: (ctx: Ctx, invocationKey: string, result: TerminalResult) => Promise<void>,
+    /** Pure current-value projection on every replay; the persisted wait receipt remains unchanged. */
+    private projectOutput?: (ctx: Ctx, invocationKey: string, output: unknown) => unknown,
   ) {}
   async execute(ctx: Ctx): Promise<BehaviorResult> {
     const c = this.controller();
@@ -795,7 +858,8 @@ export class WaitNodeHandler implements ActionHandler<CtrlFlowNodeType, INodeCon
       const closed = c.snapshot.closedWaitHandles.find((handle) => handle.invocationKey === key);
       if (done.result === 'Success') {
         delete flow.fault;
-        flow.current = this.waitKind === 'timer' ? closed?.metadata?.input : done.payload;
+        const output = this.waitKind === 'timer' ? closed?.metadata?.input : done.payload;
+        flow.current = this.projectOutput ? this.projectOutput(ctx, key, output) : output;
       } else {
         flow.fault = new Error(`${this.waitKind} ${ctx.node.Key} finished with ${done.result}`);
       }
@@ -851,7 +915,7 @@ export interface WorkCtrlFlowEngineOptions {
   /** Derives the explicit Processor runtime for one ordinary node invocation. */
   bindNodeRuntime?: (
     runtime: WorkCtrlFlowRuntime,
-    identity: { readonly treeId: string; readonly nodeId: string; readonly invocationKey: string },
+    identity: { readonly treeId: string; readonly nodeId: string; readonly invocationKey: string; readonly visit?: string; readonly generation?: number },
   ) => WorkCtrlFlowRuntime;
   clock?: WorkCtrlFlowClock;
   view?: WorkCtrlFlowViewAdapter;
@@ -882,6 +946,26 @@ export class WorkCtrlFlowEngine {
   readonly spec: FlowBundleSpec;
   private runtime: WorkCtrlFlowRuntime;
   private controllerRef: { current?: TickController } = {};
+  private loopOwners?: ReadonlyMap<string, readonly string[]>;
+
+  private loopOwnersByNode(): ReadonlyMap<string, readonly string[]> {
+    if (this.loopOwners) return this.loopOwners;
+    const owners = new Map<string, readonly string[]>();
+    const visit = (node: CtrlNode, parents: readonly string[]): void => {
+      owners.set(node.Key, parents);
+      const loops = node.Kind === BehaviorTreeNodeKind.Until && node.Key.endsWith('.__until')
+        ? [...parents, node.Key.slice(0, -'.__until'.length)] : parents;
+      node.Children.forEach(child => visit(child, loops));
+      if (String(node.Type) === 'wf.Composite') {
+        const config = node.Config as { bodyPlan?: CtrlNode; items?: { bodyPlan: CtrlNode }[] };
+        if (config.bodyPlan) visit(config.bodyPlan, loops);
+        config.items?.forEach(item => visit(item.bodyPlan, loops));
+      }
+    };
+    visit(this.compileTree(this.spec), []);
+    this.loopOwners = owners;
+    return owners;
+  }
 
   constructor(private options: WorkCtrlFlowEngineOptions) {
     this.spec = options.definition.spec;
@@ -1062,16 +1146,12 @@ export class WorkCtrlFlowEngine {
   ): ActionHandlerRegistry<CtrlFlowNodeType, INodeConfig> {
     const registry = new ActionHandlerRegistry<CtrlFlowNodeType, INodeConfig>();
     const wrap = (h: ActionHandler<CtrlFlowNodeType, INodeConfig>, replayResults = true) =>
-      new ReplayingHandler(h, controller, replayResults);
+      new ReplayingHandler(h, controller, replayResults, Boolean(this.options.bindNodeRuntime));
 
     const decisionHooks: FlowDecisionHooks = {
-      runtimeForNode: (nodeId, runtime) => {
+      runtimeForNode: (nodeId, runtime, state) => {
         const c = controller();
-        return this.options.bindNodeRuntime?.(runtime, {
-          treeId: c.snapshot.treeId,
-          nodeId,
-          invocationKey: c.invocationKeyFor(nodeId),
-        }) ?? runtime;
+        return this.options.bindNodeRuntime?.(runtime, c.runtimeIdentity(nodeId, state)) ?? runtime;
       },
       begin: (ifPath) => {
         const c = controller();
@@ -1139,7 +1219,7 @@ export class WorkCtrlFlowEngine {
     snapshot.lastTickNo += 1;
     const logs: string[] = [];
     const errors: string[] = [];
-    const controller = new TickController(snapshot, this.runtime);
+    const controller = new TickController(snapshot, this.runtime, this.loopOwnersByNode());
     this.controllerRef.current = controller;
 
     const registry = this.buildRegistry(spec, logs);

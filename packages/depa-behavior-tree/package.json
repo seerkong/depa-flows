@@ -1,6 +1,6 @@
 {
   "name": "depa-behavior-tree",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": false,
   "description": "行为树内核（迁移自 depa-processor src/control）：BehaviorTreeCore + CtrlFlowEngine",
   "type": "module",

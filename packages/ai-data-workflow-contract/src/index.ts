@@ -250,6 +250,17 @@ export interface AIDataWorkflowGraphPatch {
   readonly atMs?: number;
 }
 
+/** 声明式 after 策略只允许重开标记过的前序任务，不添加反向 DAG 边。 */
+export interface AIDataWorkflowAfterPolicy {
+  readonly schemaVersion: 'depa.ai-data-after/v1';
+  readonly targetNodeId: string;
+  readonly resultPort: string;
+  readonly decisionField: string;
+  readonly reopenValue: string;
+  readonly completeValue: string;
+  readonly maxReopens: number;
+}
+
 export interface AIDataWorkflowPatchRecord {
   readonly patchId: string;
   readonly generation: number;

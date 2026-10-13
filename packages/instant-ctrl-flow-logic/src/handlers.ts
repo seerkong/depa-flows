@@ -51,6 +51,8 @@ type NodeConfig = {
   predicateKey?: string;
   countIteration?: boolean;
   maxIterations?: number;
+  onExhausted?: 'fail' | 'complete';
+  maxItems?: number;
   statements?: FlowNodeSpec[];
   items?: { id?: string; statements: FlowNodeSpec[] }[];
   flow?: string;
@@ -93,7 +95,7 @@ export interface FlowDecisionContext {
 export interface FlowDecisionHooks {
   begin(ifPath: string): FlowDecisionContext;
   record(decision: FlowBranchDecision): Promise<void> | void;
-  runtimeForNode?(nodeId: string, runtime: InstantCtrlFlowRuntime): InstantCtrlFlowRuntime;
+  runtimeForNode?(nodeId: string, runtime: InstantCtrlFlowRuntime, state?: FlowExecutionState): InstantCtrlFlowRuntime;
 }
 
 class FlowFunctionLoader {
@@ -104,8 +106,8 @@ class FlowFunctionLoader {
     private runtimeHooks?: FlowDecisionHooks,
   ) {}
 
-  runtimeForNode(nodeId: string, runtime: InstantCtrlFlowRuntime): InstantCtrlFlowRuntime {
-    return this.runtimeHooks?.runtimeForNode?.(nodeId, runtime) ?? runtime;
+  runtimeForNode(nodeId: string, runtime: InstantCtrlFlowRuntime, state: FlowExecutionState): InstantCtrlFlowRuntime {
+    return this.runtimeHooks?.runtimeForNode?.(nodeId, runtime, state) ?? runtime;
   }
 
   load(src: string, nodeId: string): Promise<FlowCodeFunction> {
@@ -135,7 +137,7 @@ async function callCode(ctx: Ctx, loader: FlowFunctionLoader, src: string): Prom
   const state = flowStateOf(ctx);
   const fn = await loader.load(src, ctx.node.Key);
   const runtime = (ctx.runtime ?? {}) as InstantCtrlFlowRuntime;
-  return fn(loader.runtimeForNode(ctx.node.Key, runtime), state.current, configOf(ctx).config ?? {});
+  return fn(loader.runtimeForNode(ctx.node.Key, runtime, state), state.current, configOf(ctx).config ?? {});
 }
 
 function fail(state: FlowExecutionState, error: unknown): BehaviorResult {
@@ -318,6 +320,10 @@ class UntilPredicateHandler implements ActionHandler<CtrlFlowNodeType, INodeConf
         const iterations = (state.untilIterations[key] ?? 0) + 1;
         state.untilIterations[key] = iterations;
         if (!result && iterations >= Number(config.maxIterations ?? 9999)) {
+          if (config.onExhausted === 'complete') {
+            state.untilValues[key] = true;
+            return BehaviorResult.Success;
+          }
           return fail(state, new Error(`Until node exceeded max iterations (${config.maxIterations})`));
         }
       }
@@ -391,6 +397,7 @@ class CompositeHandler implements ActionHandler<CtrlFlowNodeType, INodeConfig> {
       if (this.kind === 'ForEach') {
         const selected = await callCode(ctx, this.loader, String(config.src ?? configOf(ctx).src ?? ''));
         if (!Array.isArray(selected)) throw new TypeError('ForEach selector must return an array');
+        if (config.maxItems !== undefined && selected.length > config.maxItems) throw new RangeError(`ForEach #${ctx.node.Key} exceeds maxItems (${config.maxItems})`);
         const outputs: unknown[] = [];
         for (const item of selected) outputs.push(await this.executeBody(config.statements ?? [], item, runtime));
         state.current = outputs;

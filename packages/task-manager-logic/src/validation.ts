@@ -44,7 +44,8 @@ export function validateTaskSpaceDefinition(
   if (!Number.isSafeInteger(definition.schemaVersion) || definition.schemaVersion < 1) {
     invalid('schemaVersion must be a positive safe integer');
   }
-  if (definition.tasks.length === 0) invalid('TaskSpace must contain at least one task');
+  if (definition.allowEmpty !== undefined && definition.allowEmpty !== true) invalid('allowEmpty must be explicitly true');
+  if (definition.tasks.length === 0 && definition.allowEmpty !== true) invalid('TaskSpace must contain at least one task');
   if (definition.tasks.length > config.maxTasks) invalid(`TaskSpace exceeds maxTasks=${config.maxTasks}`);
   if (definition.relations.length > config.maxRelations) invalid(`TaskSpace exceeds maxRelations=${config.maxRelations}`);
 
@@ -216,7 +217,7 @@ export function assertArtifactBody(body: TaskArtifactBody, field: string): void 
   }
 }
 
-function assertProfile(profile: TaskProfileEnvelope, taskId: string): void {
+export function assertProfile(profile: TaskProfileEnvelope, taskId: string): void {
   if (profile.kind !== 'task-profile') invalid(`task ${taskId} has invalid profile envelope`);
   assertNonEmpty(profile.profileKind, `task ${taskId} profileKind`);
   if (!Number.isSafeInteger(profile.schemaVersion) || profile.schemaVersion < 1) {

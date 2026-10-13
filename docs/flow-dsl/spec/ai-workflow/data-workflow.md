@@ -112,6 +112,10 @@ Semantic reuse is run-local. Generation is history metadata and is not part of t
 
 Runtime-bearing普通 `TransformNode`/`SinkNode` code保持 `output = fn(runtime, input, config)`。首次调用使用同名bound `runAgent`；后继节点可从declared port构造exact `{byId}`，或使用static `{byName}`调用bound `runTargetedAgent`。旧的instance-prefixed keys fail closed。底层Processor始终显式接收runtime；Agent instance index/receipt与RunGraph只写同一canonical checkpoint，authored surface不暴露generic `invoke`。
 
+同一脚本需要适配启动时已准入的 Task、Session 或 from-node 来源时，显式调用 `runtime.ai.tasks.invoke(input, {agentDefinitionRef})`，再将业务输出包装为本节点声明的精确端口。绑定器先核冻结节点证明，然后依据不可变配置选择原资源 Agent 或原委托 owner；未知回执只观察原调用，不新派发或回退 Agent。委托路径不接受会被忽略的 Agent 实例名、材料覆盖或 Effect 策略，仍消费冻结材料和执行配置。该节点入口不改变旧 targeted 的精确定义与 selector 协议，也不允许脚本挑选 owner。
+
+显式 Agent 上下文策略使用与 ctrl 相同的首次冻结 `workflowAgentContexts` 协议，按 canonical 节点代次选择共享原实例或每代独立实例。旧快照没有该字段时仍执行原命名与 targeted 协议；错误代次、定义或实例身份不能绕过独立策略。协议和限制见 [ctrl 节点上下文](ctrl-workflow.md)。
+
 See [Definition、Instance 与 Run](../flow-core/instance-run.md) for the physical hierarchy, seed exact-once rule and fresh recovery path.
 
 For a Data node that consumes schema-validated organization-task material, see [Holon-targeted organization tasks](holon-task.md).

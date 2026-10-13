@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'bun:test';
 import path from 'node:path';
-import { compareDurableLaneIds, WorkCtrlFlowEngine, WorkCtrlFlowLoadError } from '../src/engine.js';
+import { compareDurableLaneIds, WaitNodeHandler, WorkCtrlFlowEngine, WorkCtrlFlowLoadError } from '../src/engine.js';
 import { createWorkCtrlFlowEngineFromDirectory } from '../src/filesystem.js';
 import { InMemoryWorkCtrlFlowStore, FileWorkCtrlFlowStore } from '../src/stores.js';
 import { FLOW_STATE_KEY, loadFlowBundleFromSources } from 'instant-ctrl-flow-logic/browser';
@@ -37,6 +37,35 @@ function makeEngine(store = new InMemoryWorkCtrlFlowStore(), nowRef = { t: 1_000
 }
 
 describe('WorkCtrlFlow 引擎：中断/恢复/幂等', () => {
+  it('projects a wait result on every replay using the original invocation without changing its durable receipt', async () => {
+    const loaded = loadFlowBundleFromSources({'manifest.xnl': `<WorkCtrlFlow #test.WaitProjection apiVersion="depa.flows/v1" version="1" (<FlowContract #test.WaitProjection>) [<ExternalJob #review {signalKind="human.review" signalKey="original"}><Timer #later {durationMs=100}><Return #out>]>`}, {baseUri: 'app://flows/wait-projection'});
+    const store = new InMemoryWorkCtrlFlowStore();
+    let opened = 0, converged = 0, projected = 0;
+    let now = 0;
+    function make() {
+      return new WorkCtrlFlowEngine({definition: {spec: loaded.spec!, resolveCode: () => () => null}, store, runtime: {now: () => now},
+        extraHandlers: controller => ({'wf.ExternalJob': new WaitNodeHandler('external-job', controller,
+          async (_ctx, handle) => {opened++; handle.metadata = {preserved: {plan: '原完整方案'}};},
+          async () => {converged++;},
+          (_ctx, key, output) => {projected++; const handle = controller().snapshot.closedWaitHandles.find(handle => handle.invocationKey === key); return {input: handle!.metadata!.preserved, decision: output};})}),
+      });
+    }
+    const first = await make().start('projection'), wait = first.openWaitHandles[0]!;
+    const signal = {signalKind: wait.signalKind, signalKey: wait.signalKey, resumeToken: wait.resumeToken, outcome: 'Success' as const, payload: {approved: false, decision: 'cancel'}};
+    const resumed = await make().resume('projection', signal);
+    expect(resumed.status).toBe('Waiting');
+    const expected = {input: {plan: '原完整方案'}, decision: signal.payload};
+    expect((resumed.vars[FLOW_STATE_KEY] as {current: unknown}).current).toEqual(expected);
+    expect((await store.load('projection'))!.waitResults[wait.invocationKey]!.payload).toEqual(signal.payload);
+    const replay = await make().refresh('projection');
+    expect((replay.vars[FLOW_STATE_KEY] as {current: unknown}).current).toEqual(expected);
+    expect((await store.load('projection'))!.closedWaitHandles.map(handle => handle.invocationKey)).toEqual([wait.invocationKey]);
+    expect(opened).toBe(1); expect(converged).toBe(1); expect(projected).toBe(2);
+    now = 100;
+    const completed = await make().fireDueTimers('projection');
+    expect(completed.status).toBe('Completed');
+    expect((completed.vars[FLOW_STATE_KEY] as {output: unknown}).output).toEqual(expected);
+  });
   it('orders durable lane identities by explicit numeric and UTF-16 rules', () => {
     const identities = ['中2', 'lane10', 'lane02', 'lane2', 'ä1', 'lane1', '中1'];
     const expected = ['lane1', 'lane2', 'lane02', 'lane10', 'ä1', '中1', '中2'];
@@ -302,7 +331,7 @@ describe('WorkCtrlFlow 引擎：中断/恢复/幂等', () => {
     const loaded = loadFlowBundleFromSources({
       'manifest.xnl': `<WorkCtrlFlow #test.ForEach apiVersion="depa.flows/v1" version="1" (
         <FlowContract #test.ForEach>
-      ) [<ForEach #each { when = "vfs://./code.ts#items" } [
+      ) [<ForEach #each { when = "vfs://./code.ts#items" concurrency = 2 } [
         <ExternalJob #work { signalKind = "job.completed" }>
       ]>]>`,
     });

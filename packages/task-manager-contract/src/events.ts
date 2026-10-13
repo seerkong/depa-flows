@@ -12,6 +12,7 @@ import type {
   TaskSpaceId,
   TaskStatus,
   TaskTimestamp,
+  TaskRootControl,
 } from './kernel.js';
 
 export const TASK_EVENT_KINDS = Object.freeze([
@@ -28,6 +29,8 @@ export const TASK_EVENT_KINDS = Object.freeze([
   'task.cancelled',
   'task.replanned',
   'task.group-status-projected',
+  'task.root-controlled',
+  'task.prepared',
 ] as const);
 
 export type TaskEventKind = (typeof TASK_EVENT_KINDS)[number];
@@ -106,6 +109,16 @@ export interface TaskReplannedEvent extends TaskEventBase<'task.replanned'> {
 
 export interface TaskGroupStatusProjectedEvent extends TaskStateEventBase<'task.group-status-projected'> {}
 
+export interface TaskRootControlledEvent extends TaskEventBase<'task.root-controlled'> {
+  readonly taskId: TaskId;
+  readonly control: TaskRootControl;
+}
+
+export interface TaskPreparedEvent extends TaskEventBase<'task.prepared'> {
+  readonly taskId: TaskId;
+  readonly preparationReceiptId: string;
+}
+
 export type TaskHistoryEvent =
   | TaskSpaceCreatedEvent
   | TaskSpacePatchedEvent
@@ -119,4 +132,6 @@ export type TaskHistoryEvent =
   | TaskFailedEvent
   | TaskCancelledEvent
   | TaskReplannedEvent
-  | TaskGroupStatusProjectedEvent;
+  | TaskGroupStatusProjectedEvent
+  | TaskRootControlledEvent
+  | TaskPreparedEvent;

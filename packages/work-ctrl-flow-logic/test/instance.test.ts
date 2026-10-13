@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'bun:test';
+import { describe, expect, it, spyOn } from 'bun:test';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -17,6 +17,29 @@ const ROOT = path.resolve(import.meta.dir, '../../..');
 const definition = () => path.join(ROOT, 'examples/xnl-bundles/order-fulfillment');
 
 describe('canonical definition materialization', () => {
+  it('reuses unchanged bundle bytes but detects edits, new files, removals and links', () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'wf-digest-reuse-'));
+    const file = path.join(root, 'source.txt');
+    fs.writeFileSync(file, 'before');
+    const reads = spyOn(fs, 'readFileSync');
+    try {
+      const first = computeFlowBundleDigest(root);
+      const count = reads.mock.calls.length;
+      expect(computeFlowBundleDigest(root)).toBe(first);
+      expect(reads.mock.calls.length).toBe(count);
+      const times = fs.statSync(file);
+      fs.writeFileSync(file, 'after!');
+      fs.utimesSync(file, times.atime, times.mtime);
+      const edited = computeFlowBundleDigest(root);
+      expect(edited).not.toBe(first);
+      fs.writeFileSync(path.join(root, 'new.txt'), 'new');
+      expect(computeFlowBundleDigest(root)).not.toBe(edited);
+      fs.unlinkSync(path.join(root, 'new.txt'));
+      expect(computeFlowBundleDigest(root)).toBe(edited);
+      fs.symlinkSync(file, path.join(root, 'link'));
+      expect(() => computeFlowBundleDigest(root)).toThrow();
+    } finally { reads.mockRestore(); fs.rmSync(root, {recursive: true, force: true}); }
+  });
   it('keeps a linked instances boundary outside the materializer owner root unchanged', () => {
     const supportRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'wf-instance-boundary-'));
     const external = fs.mkdtempSync(path.join(os.tmpdir(), 'wf-instance-external-'));

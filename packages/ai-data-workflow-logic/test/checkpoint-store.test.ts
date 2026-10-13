@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import type { FlowRunCheckpointRuntime } from 'ai-workflow-contract';
+import type { FlowRunCheckpointRuntime, WorkflowTaskDelegation } from 'ai-workflow-contract';
 import type { EagerDataFlowAuthoringPlan, EagerDataFlowNodePlan } from 'eager-data-flow-contract';
 import {
   applyAIDataWorkflowGraphPatch,
@@ -15,7 +15,7 @@ import {
   reserveAIDataWorkflowChildInvocation,
   recordAIDataWorkflowChildFreezeReceipt,
 } from 'ai-data-workflow-logic';
-import { FlowRunCheckpointTransitionError, InMemoryFlowRunCheckpointStore } from 'ai-workflow-logic';
+import { delegateWorkflowTask, FlowRunCheckpointTransitionError, InMemoryFlowRunCheckpointStore, normalizeFlowClosedValue, type WorkflowDelegationRuntime } from 'ai-workflow-logic';
 
 const nodes: EagerDataFlowNodePlan[] = [
   { tag: 'EntryNode', id: 'entry', declarationIndex: 0, waitFor: [], outputs: ['value'] },
@@ -60,6 +60,63 @@ const definition = {
 };
 
 describe('AI Data canonical checkpoint adapter', () => {
+  test('native wait context persists separately from output and cannot be replaced or dropped in the same generation',async()=>{
+    const runtime:FlowRunCheckpointRuntime={checkpointStore:new InMemoryFlowRunCheckpointStore()},graph=createAIDataWorkflowRunGraph({binding:defineEagerBackedAIDataWorkflow(plan),runId:'native-context'});
+    const original=await createAIDataWorkflowCheckpoint(runtime,{instanceId:'context-instance',definition,graph,input:{},config:{},state:{status:'Pending',generation:0},output:null,
+      controllerSidecars:{status:'Pending'},nodeSidecars:projectNodeSidecars(graph),ai:{schemaVersion:'depa.ai-agent-state/v1',instancesById:{},instanceIdByName:{},invocationsByKey:{}}});
+    const context={owner:'native.human-review',requestId:'original-request',fingerprint:'original-digest'};
+    const waiting=recordAIDataWorkflowNodeResult(graph,'prepare',{nodeId:'prepare',generation:0,status:'Waiting',waitContext:context});
+    const accepted=await commitAIDataWorkflowCheckpoint(runtime,{expectedVersion:original.version,checkpoint:{...original,version:original.version+1,state:{status:'Running',generation:0},controllerSidecars:{status:'Running'},nodeSidecars:projectNodeSidecars(waiting),profile:{...original.profile,runGraph:waiting}}});
+    const loaded=await loadAIDataWorkflowCheckpoint(runtime,{instanceId:'context-instance',runId:graph.runId});expect(loaded).toEqual(accepted);
+    const result=(loaded!.profile.runGraph as typeof waiting).nodes.prepare.result!;expect(result.waitContext).toEqual(context);expect(result.output).toBeUndefined();
+    expect(()=>recordAIDataWorkflowNodeResult(waiting,'prepare',{nodeId:'prepare',generation:0,status:'Succeeded',output:{result:'decision'}})).toThrow('native wait context');
+    for(const waitContext of [{...context,requestId:'changed'},undefined]){
+      const {waitContext:_original,...without}=result,changed=waitContext===undefined?without:{...result,waitContext};
+      const altered={...waiting,nodes:{...waiting.nodes,prepare:{...waiting.nodes.prepare,result:changed}}};
+      // Omission and replacement must fail even when a caller bypasses the graph helper.
+      await expect(commitAIDataWorkflowCheckpoint(runtime,{expectedVersion:accepted.version,checkpoint:{...accepted,version:accepted.version+1,nodeSidecars:projectNodeSidecars(altered),profile:{...accepted.profile,runGraph:altered}}})).rejects.toThrow('native wait context');
+    }
+    const complete=recordAIDataWorkflowNodeResult(waiting,'prepare',{nodeId:'prepare',generation:0,status:'Succeeded',output:{result:'decision'},waitContext:context});
+    const finished=await commitAIDataWorkflowCheckpoint(runtime,{expectedVersion:accepted.version,checkpoint:{...accepted,version:accepted.version+1,state:{status:'Pending',generation:0},controllerSidecars:{status:'Pending'},nodeSidecars:projectNodeSidecars(complete),profile:{...accepted.profile,runGraph:complete}}});
+    expect((finished.profile.runGraph as typeof complete).nodes.prepare.result?.waitContext).toEqual(context);
+  });
+  test('Session reuse requires the actual persisted native node revision across data generations', async () => {
+    const checkpointRuntime: FlowRunCheckpointRuntime = { checkpointStore: new InMemoryFlowRunCheckpointStore() };
+    const graph = createAIDataWorkflowRunGraph({ binding: defineEagerBackedAIDataWorkflow(plan), runId: 'shared-data-run' });
+    const target = { owner: 'anchor', providerScope: 'workspace:one', targetId: 'existing-session' };
+    const task: WorkflowTaskDelegation = {
+      kind: 'workflow.task-delegation/v1', context: { mode: 'reuse', ...target }, sessionPolicy: 'shared', materials: [],
+      task: { nodeId: 'prepare', agentDefinitionRef: 'resource://TestAgent', input: null },
+    };
+    await createAIDataWorkflowCheckpoint(checkpointRuntime, {
+      instanceId: 'shared-data-instance', definition, graph, input: {},
+      config: normalizeFlowClosedValue({ workflowDelegations: { prepare: task } }), state: { status: 'Pending', generation: 0 }, output: null,
+      controllerSidecars: { status: 'Pending' }, nodeSidecars: projectNodeSidecars(graph),
+      ai: { schemaVersion: 'depa.ai-agent-state/v1', instancesById: {}, instanceIdByName: {}, invocationsByKey: {} },
+    });
+    let submissions = 0;
+    const runtime = (generation: number): WorkflowDelegationRuntime => ({
+      checkpointRuntime, checkpointKey: { instanceId: 'shared-data-instance', runId: graph.runId }, nodeId: 'prepare',
+      invocationKey: `prepare#${generation}`, visit: `generation:${generation}`, generation, workflowKind: 'AIDataWorkflow',
+      workflowRef: 'resource://depa.flows.test.CheckpointData', dependencyInvocations: {},
+      taskBinding: { workflowKind: 'AIDataWorkflow', workflowRef: 'resource://depa.flows.test.CheckpointData', nodeId: 'prepare', agentDefinitionRef: 'resource://TestAgent' },
+      effects: { verifyMaterials: async () => {}, submit: async request => { submissions++; return { invocationKey: request.lineage.invocationKey, attempt: request.attempt, receiptId: `receipt:${generation}`, status: 'completed', target, output: request.delegation.task.input }; }, observe: async () => { throw Error('terminal calls must not be resubmitted or observed'); } },
+    });
+    expect(await delegateWorkflowTask(runtime(0), task)).toMatchObject({ status: 'completed', target });
+    await expect(delegateWorkflowTask(runtime(1), task)).rejects.toThrow('DELEGATION_SHARED_TARGET_CONCURRENT');
+    const original = await loadAIDataWorkflowCheckpoint(checkpointRuntime, runtime(0).checkpointKey);
+    if (!original) throw Error('checkpoint required');
+    const revised = applyAIDataWorkflowGraphPatch(graph, { patchId: 'actual-native-reopen', generation: 1, reason: 'review requires another complete task', operations: [{ op: 'update-node', nodeId: 'prepare', changes: { config: { revision: 1 } } }] });
+    await commitAIDataWorkflowCheckpoint(checkpointRuntime, {
+      expectedVersion: original.version, checkpoint: { ...original, version: original.version + 1,
+        state: { status: 'Pending', generation: 1 }, nodeSidecars: projectNodeSidecars(revised), profile: { ...original.profile, runGraph: revised } },
+    });
+    const next = { ...task, task: { ...task.task, input: { task: 'second complete task' } } };
+    expect(await delegateWorkflowTask(runtime(1), next)).toMatchObject({ status: 'completed', target, output: { task: 'second complete task' } });
+    await expect(delegateWorkflowTask(runtime(2), next)).rejects.toThrow('DELEGATION_SHARED_TARGET_CONCURRENT');
+    expect(submissions).toBe(2);
+  });
+
   test('accepts and preserves a declared platform reuse policy at version zero', async () => {
     const runtime: FlowRunCheckpointRuntime = { checkpointStore: new InMemoryFlowRunCheckpointStore() };
     const binding = defineEagerBackedAIDataWorkflow(plan);

@@ -93,14 +93,15 @@ const UNSUPPORTED_DIRECTORY_FSYNC = new Set(['EPERM', 'EINVAL', 'ENOTSUP', 'EISD
 
 /** Windows cannot fsync a directory handle. File data is still synced separately. */
 export function fsyncDirectory(directory: string): void {
-  const fd = fs.openSync(directory, 'r');
+  let fd: number | undefined;
   try {
+    fd = fs.openSync(directory, 'r');
     fs.fsyncSync(fd);
   } catch (error) {
     const code = (error as NodeJS.ErrnoException).code;
     if (process.platform !== 'win32' || !code || !UNSUPPORTED_DIRECTORY_FSYNC.has(code)) throw error;
   } finally {
-    fs.closeSync(fd);
+    if (fd !== undefined) fs.closeSync(fd);
   }
 }
 

@@ -12,6 +12,7 @@ import type {
   LegacyAIWorkflowProfileDurableState,
 } from 'ai-workflow-contract';
 import { normalizeFlowClosedObject, normalizeFlowClosedValue } from './run-checkpoint.js';
+import { normalizeWorkflowDelegations } from './delegation.js';
 
 export class AIAgentInvocationError extends Error {
   constructor(public readonly code: string, public readonly location: string, message: string) {
@@ -231,7 +232,7 @@ function normalizeReceipt(value: unknown, key: string, instances: Readonly<Recor
 }
 
 export function normalizeCanonicalAIAgentState(value: unknown, location = 'ai'): AIWorkflowProfileDurableState {
-  const input = record(value, ['schemaVersion', 'instancesById', 'instanceIdByName', 'invocationsByKey'], [], location);
+  const input = record(value, ['schemaVersion', 'instancesById', 'instanceIdByName', 'invocationsByKey'], ['delegationsByKey'], location);
   if (input.schemaVersion !== 'depa.ai-agent-state/v1') fail('AI_AGENT_STATE_SCHEMA_UNSUPPORTED', `${location}.schemaVersion`, 'Unsupported Agent state schema.');
   const instanceValues = objectMap(input.instancesById, `${location}.instancesById`);
   const instancesById: Record<string, AIAgentInstanceReference> = {};
@@ -259,7 +260,7 @@ export function normalizeCanonicalAIAgentState(value: unknown, location = 'ai'):
     }
     invocationsByKey[key] = receipt;
   }
-  return Object.freeze({ schemaVersion: 'depa.ai-agent-state/v1', instancesById: Object.freeze(instancesById), instanceIdByName: Object.freeze(instanceIdByName), invocationsByKey: Object.freeze(invocationsByKey) });
+  return Object.freeze({ schemaVersion: 'depa.ai-agent-state/v1', instancesById: Object.freeze(instancesById), instanceIdByName: Object.freeze(instanceIdByName), invocationsByKey: Object.freeze(invocationsByKey), ...(input.delegationsByKey === undefined ? {} : { delegationsByKey: normalizeWorkflowDelegations(input.delegationsByKey) }) });
 }
 
 export function upgradeLegacyAIWorkflowProfileDurableState(value: LegacyAIWorkflowProfileDurableState, agentDefinitionRefs: Readonly<Record<string, `resource://${string}`>>, location = 'legacyAI'): AIWorkflowProfileDurableState {

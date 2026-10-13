@@ -102,6 +102,12 @@ export interface InstantCtrlFlowRunOptions {
   runtime?: InstantCtrlFlowRuntime;
 }
 
+/** 仅作用于本次 instance 定义副本；Host 在检查/审阅时冻结同一份选项。 */
+export type FlowControlOptions = Readonly<Record<string,
+  | { readonly maxIterations?: number; readonly onExhausted?: 'fail' | 'complete' }
+  | { readonly maxItems?: number; readonly concurrency?: number }
+>>;
+
 export type FlowCodeFunction<Output = unknown, Runtime = InstantCtrlFlowRuntime> = (
   runtime: Runtime,
   input: unknown,

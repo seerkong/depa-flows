@@ -111,6 +111,8 @@ export interface TaskSpaceDefinition<Profile extends TaskProfileEnvelope = TaskP
   readonly taskSpaceId: TaskSpaceId;
   readonly name: string;
   readonly schemaVersion: number;
+  /** Explicit container capability; existing definitions remain non-empty. */
+  readonly allowEmpty?: true;
   readonly tasks: readonly TaskNodeDefinition<Profile>[];
   readonly relations: readonly TaskRelation[];
 }
@@ -152,6 +154,8 @@ export interface TaskRecord<Profile extends TaskProfileEnvelope = TaskProfileEnv
   readonly definition: TaskNodeDefinition<Profile>;
   /** Domain-owned current facts, initialized from `definition.profile`. */
   readonly profile: Profile;
+  /** Exact canonical preparation receipt, once a managed leaf has been admitted. */
+  readonly preparationReceiptId?: TaskReceiptId;
   readonly status: TaskStatus;
   readonly attempt: number;
   readonly leaseEpoch: number;
@@ -159,6 +163,21 @@ export interface TaskRecord<Profile extends TaskProfileEnvelope = TaskProfileEnv
   readonly outputArtifacts: readonly TaskArtifactRef[];
   readonly createdAt: TaskTimestamp;
   readonly updatedAt: TaskTimestamp;
+  /** Root dispatch authority; task execution status remains owned separately. */
+  readonly rootControl?: TaskRootControl;
+}
+
+export interface TaskRootBinding {
+  readonly bindingId: string;
+  readonly authorityRef: string;
+  readonly executionRef: string;
+  readonly digest: `sha256:${string}`;
+}
+
+export interface TaskRootControl {
+  readonly revision: number;
+  readonly paused: boolean;
+  readonly binding: TaskRootBinding | null;
 }
 
 export interface TaskSpaceSnapshot<Profile extends TaskProfileEnvelope = TaskProfileEnvelope> {

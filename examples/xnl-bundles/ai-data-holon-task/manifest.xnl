@@ -1,4 +1,0 @@
-<AIDataWorkflow #depa.examples.HolonTaskResultData apiVersion="depa.flows/v1" version="1.0.0" (
-  <FlowContract #depa.examples.HolonTaskResultData { inputPorts = ["task"] outputPorts = ["result"] }>
-  <StepSpaceRef { src = "step-space.xnl" }>
-)>

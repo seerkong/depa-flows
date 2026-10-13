@@ -11,153 +11,159 @@ importers:
       bun-types:
         specifier: ^1.3.14
         version: 1.3.14
+      instant-ctrl-flow-logic:
+        specifier: workspace:*
+        version: link:packages/instant-ctrl-flow-logic
       typescript:
         specifier: ^5.5.0
         version: 5.9.3
       xnl-core:
-        specifier: ^0.1.8
-        version: 0.1.11
+        specifier: 0.1.13
+        version: 0.1.13
 
   packages/ai-ctrl-workflow-contract:
     dependencies:
       ai-workflow-contract:
-        specifier: 0.1.8
+        specifier: 0.3.0-simplification.0
         version: link:../ai-workflow-contract
       work-ctrl-flow-contract:
-        specifier: 0.1.3
+        specifier: 0.1.4
         version: link:../work-ctrl-flow-contract
 
   packages/ai-ctrl-workflow-logic:
     dependencies:
       ai-ctrl-workflow-contract:
-        specifier: 0.1.5
+        specifier: 0.3.0-simplification.0
         version: link:../ai-ctrl-workflow-contract
       ai-workflow-contract:
-        specifier: 0.1.8
+        specifier: 0.3.0-simplification.0
         version: link:../ai-workflow-contract
       ai-workflow-logic:
-        specifier: 0.1.9
+        specifier: 0.3.0-simplification.0
         version: link:../ai-workflow-logic
+      depa-behavior-tree:
+        specifier: 0.1.2
+        version: link:../depa-behavior-tree
       flow-step-space-logic:
-        specifier: 0.1.1
+        specifier: 0.1.2
         version: link:../flow-step-space-logic
       instant-ctrl-flow-contract:
-        specifier: 0.1.2
+        specifier: 0.1.3
         version: link:../instant-ctrl-flow-contract
       instant-ctrl-flow-logic:
-        specifier: 0.1.5
+        specifier: 0.1.7
         version: link:../instant-ctrl-flow-logic
       task-manager-contract:
-        specifier: 0.1.3
+        specifier: 0.1.4
         version: link:../task-manager-contract
       task-manager-logic:
-        specifier: 0.1.6
+        specifier: 0.1.7
         version: link:../task-manager-logic
       work-ctrl-flow-contract:
-        specifier: 0.1.3
+        specifier: 0.1.4
         version: link:../work-ctrl-flow-contract
       work-ctrl-flow-logic:
-        specifier: 0.1.4
+        specifier: 0.1.6
         version: link:../work-ctrl-flow-logic
 
   packages/ai-data-workflow-contract:
     dependencies:
       ai-workflow-contract:
-        specifier: 0.1.8
+        specifier: 0.3.0-simplification.0
         version: link:../ai-workflow-contract
       eager-data-flow-contract:
-        specifier: 0.1.3
+        specifier: 0.1.4
         version: link:../eager-data-flow-contract
 
   packages/ai-data-workflow-logic:
     dependencies:
       ai-data-workflow-contract:
-        specifier: 0.1.5
+        specifier: 0.3.0-simplification.0
         version: link:../ai-data-workflow-contract
       ai-workflow-contract:
-        specifier: 0.1.8
+        specifier: 0.3.0-simplification.0
         version: link:../ai-workflow-contract
       ai-workflow-logic:
-        specifier: 0.1.9
+        specifier: 0.3.0-simplification.0
         version: link:../ai-workflow-logic
       eager-data-flow-contract:
-        specifier: 0.1.3
+        specifier: 0.1.4
         version: link:../eager-data-flow-contract
       eager-data-flow-logic:
-        specifier: 0.1.5
+        specifier: 0.1.8
         version: link:../eager-data-flow-logic
       flow-step-space-logic:
-        specifier: 0.1.1
+        specifier: 0.1.2
         version: link:../flow-step-space-logic
       task-manager-contract:
-        specifier: 0.1.3
+        specifier: 0.1.4
         version: link:../task-manager-contract
       task-manager-logic:
-        specifier: 0.1.6
+        specifier: 0.1.7
         version: link:../task-manager-logic
       work-ctrl-flow-logic:
-        specifier: 0.1.4
+        specifier: 0.1.6
         version: link:../work-ctrl-flow-logic
 
   packages/ai-workflow-contract:
     dependencies:
       eager-data-flow-contract:
-        specifier: 0.1.3
+        specifier: 0.1.4
         version: link:../eager-data-flow-contract
       halfcode-compiler.xnl:
-        specifier: 0.2.2
-        version: 0.2.2
+        specifier: 0.3.2
+        version: 0.3.2
       task-manager-contract:
-        specifier: 0.1.3
+        specifier: 0.1.4
         version: link:../task-manager-contract
       work-ctrl-flow-contract:
-        specifier: 0.1.3
+        specifier: 0.1.4
         version: link:../work-ctrl-flow-contract
 
   packages/ai-workflow-flow-dsl-reference:
     dependencies:
       halfcode-compiler.xnl:
-        specifier: 0.2.3
-        version: 0.2.3
+        specifier: 0.3.2
+        version: 0.3.2
 
   packages/ai-workflow-logic:
     dependencies:
       ai-workflow-contract:
-        specifier: 0.1.8
+        specifier: 0.3.0-simplification.0
         version: link:../ai-workflow-contract
+      ajv:
+        specifier: 8.20.0
+        version: 8.20.0
       flow-step-space-contract:
         specifier: 0.1.1
         version: link:../flow-step-space-contract
       flow-step-space-logic:
-        specifier: 0.1.1
+        specifier: 0.1.2
         version: link:../flow-step-space-logic
       halfcode-compiler.xnl:
-        specifier: 0.2.2
-        version: 0.2.2
-      holarchy-core-contract:
-        specifier: 0.1.1
-        version: 0.1.1
+        specifier: 0.3.2
+        version: 0.3.2
       task-manager-contract:
-        specifier: 0.1.3
+        specifier: 0.1.4
         version: link:../task-manager-contract
       task-manager-logic:
-        specifier: 0.1.6
+        specifier: 0.1.7
         version: link:../task-manager-logic
       work-ctrl-flow-contract:
-        specifier: 0.1.3
+        specifier: 0.1.4
         version: link:../work-ctrl-flow-contract
       work-ctrl-flow-logic:
-        specifier: 0.1.4
+        specifier: 0.1.6
         version: link:../work-ctrl-flow-logic
 
   packages/bp-ctrl-flow-contract:
     dependencies:
       task-manager-contract:
         specifier: 0.1.3
-        version: link:../task-manager-contract
+        version: 0.1.3
       work-ctrl-flow-contract:
         specifier: 0.1.3
-        version: link:../work-ctrl-flow-contract
+        version: 0.1.3
 
   packages/bp-ctrl-flow-logic:
     dependencies:
@@ -166,25 +172,25 @@ importers:
         version: link:../bp-ctrl-flow-contract
       depa-behavior-tree:
         specifier: 0.1.1
-        version: link:../depa-behavior-tree
+        version: 0.1.1
       instant-ctrl-flow-contract:
         specifier: 0.1.2
-        version: link:../instant-ctrl-flow-contract
+        version: 0.1.2
       instant-ctrl-flow-logic:
         specifier: 0.1.5
-        version: link:../instant-ctrl-flow-logic
+        version: 0.1.5
       task-manager-contract:
         specifier: 0.1.3
-        version: link:../task-manager-contract
+        version: 0.1.3
       task-manager-logic:
         specifier: 0.1.6
-        version: link:../task-manager-logic
+        version: 0.1.6
       work-ctrl-flow-contract:
         specifier: 0.1.3
-        version: link:../work-ctrl-flow-contract
+        version: 0.1.3
       work-ctrl-flow-logic:
         specifier: 0.1.4
-        version: link:../work-ctrl-flow-logic
+        version: 0.1.4
 
   packages/depa-behavior-tree:
     dependencies:
@@ -201,14 +207,14 @@ importers:
   packages/eager-data-flow-logic:
     dependencies:
       eager-data-flow-contract:
-        specifier: 0.1.3
+        specifier: 0.1.4
         version: link:../eager-data-flow-contract
       flow-step-space-logic:
-        specifier: 0.1.1
+        specifier: 0.1.2
         version: link:../flow-step-space-logic
       xnl-core:
-        specifier: ^0.1.8
-        version: 0.1.11
+        specifier: 0.1.13
+        version: 0.1.13
 
   packages/flow-step-space-contract: {}
 
@@ -218,8 +224,8 @@ importers:
         specifier: 0.1.1
         version: link:../flow-step-space-contract
       xnl-core:
-        specifier: ^0.1.8
-        version: 0.1.11
+        specifier: 0.1.13
+        version: 0.1.13
 
   packages/instant-ctrl-flow-contract:
     dependencies:
@@ -230,60 +236,71 @@ importers:
   packages/instant-ctrl-flow-logic:
     dependencies:
       depa-behavior-tree:
-        specifier: 0.1.1
+        specifier: 0.1.2
         version: link:../depa-behavior-tree
       flow-step-space-contract:
         specifier: 0.1.1
         version: link:../flow-step-space-contract
       flow-step-space-logic:
-        specifier: 0.1.1
+        specifier: 0.1.2
         version: link:../flow-step-space-logic
       instant-ctrl-flow-contract:
-        specifier: 0.1.2
+        specifier: 0.1.3
         version: link:../instant-ctrl-flow-contract
+      port-control-graph-logic:
+        specifier: 0.1.0
+        version: link:../port-control-graph-logic
       xnl-core:
-        specifier: ^0.1.8
-        version: 0.1.11
+        specifier: 0.1.13
+        version: 0.1.13
+
+  packages/port-control-graph-contract: {}
+
+  packages/port-control-graph-logic:
+    dependencies:
+      port-control-graph-contract:
+        specifier: 0.1.0
+        version: link:../port-control-graph-contract
 
   packages/task-manager-contract: {}
 
   packages/task-manager-file-support:
     dependencies:
       task-manager-contract:
-        specifier: 0.1.3
+        specifier: 0.1.4
         version: link:../task-manager-contract
       task-manager-logic:
-        specifier: 0.1.6
+        specifier: 0.1.7
         version: link:../task-manager-logic
 
   packages/task-manager-logic:
     dependencies:
       task-manager-contract:
-        specifier: 0.1.3
+        specifier: 0.1.4
         version: link:../task-manager-contract
 
   packages/work-ctrl-flow-contract:
     dependencies:
       instant-ctrl-flow-contract:
-        specifier: 0.1.2
+        specifier: 0.1.3
         version: link:../instant-ctrl-flow-contract
 
   packages/work-ctrl-flow-logic:
     dependencies:
       depa-behavior-tree:
-        specifier: 0.1.1
+        specifier: 0.1.2
         version: link:../depa-behavior-tree
       flow-step-space-logic:
-        specifier: 0.1.1
+        specifier: 0.1.2
         version: link:../flow-step-space-logic
       instant-ctrl-flow-contract:
-        specifier: 0.1.2
+        specifier: 0.1.3
         version: link:../instant-ctrl-flow-contract
       instant-ctrl-flow-logic:
-        specifier: 0.1.5
+        specifier: 0.1.7
         version: link:../instant-ctrl-flow-logic
       work-ctrl-flow-contract:
-        specifier: 0.1.3
+        specifier: 0.1.4
         version: link:../work-ctrl-flow-contract
 
   tools/flow-dsl-check:
@@ -294,6 +311,9 @@ importers:
       flow-step-space-logic:
         specifier: workspace:*
         version: link:../../packages/flow-step-space-logic
+      instant-ctrl-flow-logic:
+        specifier: workspace:*
+        version: link:../../packages/instant-ctrl-flow-logic
       xnl-core:
         specifier: ^0.1.8
         version: 0.1.11
@@ -303,24 +323,52 @@ packages:
   '@types/node@26.1.2':
     resolution: {integrity: sha512-Vu4a5UFA9rIIFJ7rB/Vaafh9lrCQszopTCx6KjFboXTGQbPNasehVR5TEiithSDGyd1DEiUByggTZsg8jukeIg==, tarball: https://registry.npmjs.org/@types/node/-/node-26.1.2.tgz}
 
+  ajv@8.20.0:
+    resolution: {integrity: sha512-Thbli+OlOj+iMPYFBVBfJ3OmCAnaSyNn4M1vz9T6Gka5Jt9ba/HIR56joy65tY6kx/FCF5VXNB819Y7/GUrBGA==, tarball: https://registry.npmjs.org/ajv/-/ajv-8.20.0.tgz}
+
   bun-types@1.3.14:
     resolution: {integrity: sha512-4N0ig0fEomHt5R0KCFWjovxow98rIoRwKolrYdCcknNwMekCXRnWEUvgu5soYV8QXtVsrUD8B95MBOZGPvr6KQ==, tarball: https://registry.npmjs.org/bun-types/-/bun-types-1.3.14.tgz}
 
-  depa-domain-protocol@0.1.0:
-    resolution: {integrity: sha512-/sPTEph4fFfU6C1fPh7zXfYpJEO4LYdHEzUf2KOrXuAgRVY6LmFWjHGhirepFmpcYsR+BWBqKybRqWONmYRBNA==, tarball: https://registry.npmjs.org/depa-domain-protocol/-/depa-domain-protocol-0.1.0.tgz}
+  depa-behavior-tree@0.1.1:
+    resolution: {integrity: sha512-KYCogfIs3GT4KkajtJ1ZnjVSP7aLRNRMP4yun8KGJWnmSroPArwZqCkPDPuSZ4lrwOl4uDHjz/SljmvVe03AnQ==, tarball: https://registry.npmjs.org/depa-behavior-tree/-/depa-behavior-tree-0.1.1.tgz}
 
   depa-processor@0.1.1:
     resolution: {integrity: sha512-yZQuRE/9NDlV6Bld3sUYCxGDSyXz86rhNfx2WASb5Z7vlTeu3KMAPDDDSfqNF6b6FyNIahvEVA41ot9OUfhfjw==, tarball: https://registry.npmjs.org/depa-processor/-/depa-processor-0.1.1.tgz}
     engines: {node: '>=14.0.0'}
 
-  halfcode-compiler.xnl@0.2.2:
-    resolution: {integrity: sha512-O7S5+13u5KGU1gk7Rcm9cE+R7vL/OT7uP35qrOOD4GC5bJMWc0dRAgW6gWhOZ8vhnEq6k1yngg9qv3nauPxUsg==, tarball: https://registry.npmjs.org/halfcode-compiler.xnl/-/halfcode-compiler.xnl-0.2.2.tgz}
+  fast-deep-equal@3.1.3:
+    resolution: {integrity: sha512-f3qQ9oQy9j2AhBe/H9VC91wLmKBCCU/gDOnKNAYG5hswO7BLKj09Hc5HYNz9cGI++xlpDCIgDaitVs03ATR84Q==, tarball: https://registry.npmjs.org/fast-deep-equal/-/fast-deep-equal-3.1.3.tgz}
 
-  halfcode-compiler.xnl@0.2.3:
-    resolution: {integrity: sha512-ebKnVKK+yfgKIWpNagkr5aMwVbJWqj/A7m7MqTslvB60BmOZYPwRqg+DxWXblh3n3ymH/a3TSGp26fFw9NPP2g==, tarball: https://registry.npmjs.org/halfcode-compiler.xnl/-/halfcode-compiler.xnl-0.2.3.tgz}
+  fast-uri@3.1.6:
+    resolution: {integrity: sha512-7Ical1vFEMr0onbVzEDIreM22I4khW+fzyQPwvAFWBp1iwdshSZRsL4jjRvPG9JP1uiqMHRto+YU6R2/CzDz5Q==, tarball: https://registry.npmjs.org/fast-uri/-/fast-uri-3.1.6.tgz}
 
-  holarchy-core-contract@0.1.1:
-    resolution: {integrity: sha512-9nFI6XjR/Z3JGtY4lgyvUYLA7CIEmIDWHAfNX0j27dM/hSTVt77grkDRM0x2oXq9AmMjEkedmb9G3wF1SUVDNA==, tarball: https://registry.npmjs.org/holarchy-core-contract/-/holarchy-core-contract-0.1.1.tgz}
+  flow-step-space-contract@0.1.1:
+    resolution: {integrity: sha512-+1jScIEiFhaqNO5cmt91hbSiXZ0UTzlrDsSahU5C9PP2bJGdM4Ks37GJqvUwrrRNl3iGq6eE3O01XObu05sThA==, tarball: https://registry.npmjs.org/flow-step-space-contract/-/flow-step-space-contract-0.1.1.tgz}
+
+  flow-step-space-logic@0.1.1:
+    resolution: {integrity: sha512-NkmNtM6aaupI9/IMKneIlRQlqRBR5Sy7aSmdj86HesA8BVNwv98OxWM3MumxMNeuBiMPyaQ/kFxR7K2HA+vtng==, tarball: https://registry.npmjs.org/flow-step-space-logic/-/flow-step-space-logic-0.1.1.tgz}
+
+  halfcode-compiler.xnl@0.3.2:
+    resolution: {integrity: sha512-hNUQ0GI4niD5AmzdzLkLzpOycXCxUW13lh1e5mgUbGSL4wJ8CurB4CKfQubvj0a3ge67qHPXzg7RnKkQnxdvcg==, tarball: https://registry.npmjs.org/halfcode-compiler.xnl/-/halfcode-compiler.xnl-0.3.2.tgz}
+
+  instant-ctrl-flow-contract@0.1.2:
+    resolution: {integrity: sha512-u/+N1rmixDAbHLhDECRD/gnSMljgC9FIlEmVbFMiyhx2rnUvpVkZ5klF7+4/lVoXeQeEGU9+lC8tNj3YthCU9w==, tarball: https://registry.npmjs.org/instant-ctrl-flow-contract/-/instant-ctrl-flow-contract-0.1.2.tgz}
+
+  instant-ctrl-flow-logic@0.1.5:
+    resolution: {integrity: sha512-ZWe47vKismA5Z7etoyfipenJ0fyKPujQOAb90ySbICEhTjfFhKBhaboeA7ZrzskalKtgsMADSezG1crfoWw3eg==, tarball: https://registry.npmjs.org/instant-ctrl-flow-logic/-/instant-ctrl-flow-logic-0.1.5.tgz}
+
+  json-schema-traverse@1.0.0:
+    resolution: {integrity: sha512-NM8/P9n3XjXhIZn1lLhkFaACTOURQXjWhV4BA/RnOv8xvgqtqpAX9IO4mRQxSx1Rlo4tqzeqb0sOlruaOy3dug==, tarball: https://registry.npmjs.org/json-schema-traverse/-/json-schema-traverse-1.0.0.tgz}
+
+  require-from-string@2.0.2:
+    resolution: {integrity: sha512-Xf0nWe6RseziFMu+Ap9biiUbmplq6S9/p+7w7YXP/JBHhrUDDUhwa+vANyubuqfZWTveU//DYVGsDG7RKL/vEw==, tarball: https://registry.npmjs.org/require-from-string/-/require-from-string-2.0.2.tgz}
+    engines: {node: '>=0.10.0'}
+
+  task-manager-contract@0.1.3:
+    resolution: {integrity: sha512-C9Z3Le3XEYzk0n8SYsCH4n3IHCjZrTojSYy1VwVPouMraeYHIqLAZlRlKVaUT7B1fqmCpaPKxsJCB2FQ2dTGDg==, tarball: https://registry.npmjs.org/task-manager-contract/-/task-manager-contract-0.1.3.tgz}
+
+  task-manager-logic@0.1.6:
+    resolution: {integrity: sha512-KJQucUNNU4uHM+RVK+nFd/ifvrZx8XrL+zEBXV62h5Dg0leISZlBATItpZTVDYlADDXFpTKsoTFTI2n8laXqdQ==, tarball: https://registry.npmjs.org/task-manager-logic/-/task-manager-logic-0.1.6.tgz}
 
   typescript@5.9.3:
     resolution: {integrity: sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==, tarball: https://registry.npmjs.org/typescript/-/typescript-5.9.3.tgz}
@@ -330,8 +378,17 @@ packages:
   undici-types@8.3.0:
     resolution: {integrity: sha512-j375ScV60dom+YkPFIfTLcOiPxkN/buHz5GobjLhixFuANaNs3C9l4GmrWqejgXWJ7BbJcFYpTEUkS1Ge8bpZQ==, tarball: https://registry.npmjs.org/undici-types/-/undici-types-8.3.0.tgz}
 
+  work-ctrl-flow-contract@0.1.3:
+    resolution: {integrity: sha512-D4+2VH+zGg5OO64AafL/q2xn5cjie1F7CycPRG+0AopnAj/TIkIrR+7QaKAd2KlpVHohXgSuepp3OOI2gPlhzw==, tarball: https://registry.npmjs.org/work-ctrl-flow-contract/-/work-ctrl-flow-contract-0.1.3.tgz}
+
+  work-ctrl-flow-logic@0.1.4:
+    resolution: {integrity: sha512-S7GkOW/BPoxJhsOKuR2X5HpiUovVLJDq5nrc0eomeZzVfEsdhnfOdAOBKW84D+bOxGaj+zlddzVrSYvvjiEsNg==, tarball: https://registry.npmjs.org/work-ctrl-flow-logic/-/work-ctrl-flow-logic-0.1.4.tgz}
+
   xnl-core@0.1.11:
     resolution: {integrity: sha512-ktOwkvYWe0dMBICBO2aqEX+qlLtOo1uMHHXKz/MDsn5DZhAt82f4R/mkvFEPis1e6LdY7vB+RxqsII4Jz8ahDw==, tarball: https://registry.npmjs.org/xnl-core/-/xnl-core-0.1.11.tgz}
+
+  xnl-core@0.1.13:
+    resolution: {integrity: sha512-qPXe/lU2fmDmqjcaIk6UgfcpFXYpFoU7h2rWjwcUAGcFqFDfw2D5RCGXOTFMt8onyOH/iZo21VOT+QabsA8LpA==, tarball: https://registry.npmjs.org/xnl-core/-/xnl-core-0.1.13.tgz}
 
   yaml@2.9.0:
     resolution: {integrity: sha512-2AvhNX3mb8zd6Zy7INTtSpl1F15HW6Wnqj0srWlkKLcpYl/gMIMJiyuGq2KeI2YFxUPjdlB+3Lc10seMLtL4cA==, tarball: https://registry.npmjs.org/yaml/-/yaml-2.9.0.tgz}
@@ -344,32 +401,79 @@ snapshots:
     dependencies:
       undici-types: 8.3.0
 
+  ajv@8.20.0:
+    dependencies:
+      fast-deep-equal: 3.1.3
+      fast-uri: 3.1.6
+      json-schema-traverse: 1.0.0
+      require-from-string: 2.0.2
+
   bun-types@1.3.14:
     dependencies:
       '@types/node': 26.1.2
 
-  depa-domain-protocol@0.1.0: {}
+  depa-behavior-tree@0.1.1:
+    dependencies:
+      depa-processor: 0.1.1
 
   depa-processor@0.1.1: {}
 
-  halfcode-compiler.xnl@0.2.2:
+  fast-deep-equal@3.1.3: {}
+
+  fast-uri@3.1.6: {}
+
+  flow-step-space-contract@0.1.1: {}
+
+  flow-step-space-logic@0.1.1:
+    dependencies:
+      flow-step-space-contract: 0.1.1
+      xnl-core: 0.1.11
+
+  halfcode-compiler.xnl@0.3.2:
     dependencies:
       typescript: 5.9.3
       yaml: 2.9.0
 
-  halfcode-compiler.xnl@0.2.3:
+  instant-ctrl-flow-contract@0.1.2:
     dependencies:
-      typescript: 5.9.3
-      yaml: 2.9.0
+      flow-step-space-contract: 0.1.1
 
-  holarchy-core-contract@0.1.1:
+  instant-ctrl-flow-logic@0.1.5:
     dependencies:
-      depa-domain-protocol: 0.1.0
+      depa-behavior-tree: 0.1.1
+      flow-step-space-contract: 0.1.1
+      flow-step-space-logic: 0.1.1
+      instant-ctrl-flow-contract: 0.1.2
+      xnl-core: 0.1.11
+
+  json-schema-traverse@1.0.0: {}
+
+  require-from-string@2.0.2: {}
+
+  task-manager-contract@0.1.3: {}
+
+  task-manager-logic@0.1.6:
+    dependencies:
+      task-manager-contract: 0.1.3
 
   typescript@5.9.3: {}
 
   undici-types@8.3.0: {}
 
+  work-ctrl-flow-contract@0.1.3:
+    dependencies:
+      instant-ctrl-flow-contract: 0.1.2
+
+  work-ctrl-flow-logic@0.1.4:
+    dependencies:
+      depa-behavior-tree: 0.1.1
+      flow-step-space-logic: 0.1.1
+      instant-ctrl-flow-contract: 0.1.2
+      instant-ctrl-flow-logic: 0.1.5
+      work-ctrl-flow-contract: 0.1.3
+
   xnl-core@0.1.11: {}
+
+  xnl-core@0.1.13: {}
 
   yaml@2.9.0: {}

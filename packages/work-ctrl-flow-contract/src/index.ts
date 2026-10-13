@@ -177,6 +177,8 @@ export interface LaneFact {
   /** Isolated data-chain state resumed by this lane. */
   flowState?: unknown;
   output?: unknown;
+  /** 已占用并发槽；等待中的 lane 仍持有槽。旧快照由原等待事实识别。 */
+  started?: boolean;
 }
 
 export interface WinnerFact {
@@ -207,6 +209,8 @@ export interface CompositeInvocationFact {
   cursor?: number;
   /** Stable child instance id for CallFlow. */
   childTreeId?: string;
+  /** 首次展开冻结预算和数量；模板来自 instance 的不可变定义。 */
+  expansion?: { itemCount: number; concurrency: number; maxItems?: number };
   updatedAtMs: number;
 }
 

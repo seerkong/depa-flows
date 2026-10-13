@@ -13,30 +13,29 @@ async function readManifest(path: string): Promise<PackageManifest> {
 }
 
 describe('AI workflow public package metadata', () => {
-  test('uses exact registry-installable dependencies for the Halfcode 0.3 contract and logic candidates', async () => {
+  test('uses exact approved prepublication dependencies for the Halfcode 0.3 contract and logic candidates', async () => {
     const contract = await readManifest(join(import.meta.dir, '../../ai-workflow-contract/package.json'));
     const logic = await readManifest(join(import.meta.dir, '../package.json'));
 
-    expect(contract.version).toBe('0.2.1');
+    expect(contract.version).toBe('0.3.0-simplification.0');
     expect(contract.dependencies).toEqual({
       'eager-data-flow-contract': '0.1.4',
-      'halfcode-compiler.xnl': '0.3.1',
-      'task-manager-contract': '0.1.3',
-      'work-ctrl-flow-contract': '0.1.3',
+      'halfcode-compiler.xnl': '0.3.2',
+      'task-manager-contract': '0.1.4',
+      'work-ctrl-flow-contract': '0.1.4',
     });
-    expect(logic.version).toBe('0.2.1');
+    expect(logic.version).toBe('0.3.0-simplification.0');
     expect(logic.exports?.['./agent-code-execution']).toBe('./src/agent-code-execution.ts');
     expect(logic.dependencies).toEqual({
-      'ai-workflow-contract': '0.2.1',
+      'ai-workflow-contract': '0.3.0-simplification.0',
       ajv: '8.20.0',
       'flow-step-space-contract': '0.1.1',
-      'flow-step-space-logic': '0.1.1',
-      'halfcode-compiler.xnl': '0.3.1',
-      'holarchy-core-contract': '0.2.0',
-      'task-manager-contract': '0.1.3',
-      'task-manager-logic': '0.1.6',
-      'work-ctrl-flow-contract': '0.1.3',
-      'work-ctrl-flow-logic': '0.1.5',
+      'flow-step-space-logic': '0.1.2',
+      'halfcode-compiler.xnl': '0.3.2',
+      'task-manager-contract': '0.1.4',
+      'task-manager-logic': '0.1.7',
+      'work-ctrl-flow-contract': '0.1.4',
+      'work-ctrl-flow-logic': '0.1.6',
     });
 
     for (const dependency of [
@@ -54,40 +53,41 @@ describe('AI workflow public package metadata', () => {
     const ctrl = await readManifest(join(import.meta.dir, '../../ai-ctrl-workflow-logic/package.json'));
     const data = await readManifest(join(import.meta.dir, '../../ai-data-workflow-logic/package.json'));
 
-    expect(ctrlContract.version).toBe('0.2.0');
+    expect(ctrlContract.version).toBe('0.3.0-simplification.0');
     expect(ctrlContract.dependencies).toEqual({
-      'ai-workflow-contract': '0.2.0',
-      'work-ctrl-flow-contract': '0.1.3',
+      'ai-workflow-contract': '0.3.0-simplification.0',
+      'work-ctrl-flow-contract': '0.1.4',
     });
-    expect(dataContract.version).toBe('0.2.0');
+    expect(dataContract.version).toBe('0.3.0-simplification.0');
     expect(dataContract.dependencies).toEqual({
-      'ai-workflow-contract': '0.2.0',
+      'ai-workflow-contract': '0.3.0-simplification.0',
       'eager-data-flow-contract': '0.1.4',
     });
-    expect(ctrl.version).toBe('0.2.0');
+    expect(ctrl.version).toBe('0.3.0-simplification.0');
     expect(ctrl.dependencies).toEqual({
-      'ai-ctrl-workflow-contract': '0.2.0',
-      'ai-workflow-contract': '0.2.1',
-      'ai-workflow-logic': '0.2.1',
-      'flow-step-space-logic': '0.1.1',
-      'instant-ctrl-flow-contract': '0.1.2',
-      'instant-ctrl-flow-logic': '0.1.6',
-      'task-manager-contract': '0.1.3',
-      'task-manager-logic': '0.1.6',
-      'work-ctrl-flow-contract': '0.1.3',
-      'work-ctrl-flow-logic': '0.1.5',
+      'depa-behavior-tree': '0.1.2',
+      'ai-ctrl-workflow-contract': '0.3.0-simplification.0',
+      'ai-workflow-contract': '0.3.0-simplification.0',
+      'ai-workflow-logic': '0.3.0-simplification.0',
+      'flow-step-space-logic': '0.1.2',
+      'instant-ctrl-flow-contract': '0.1.3',
+      'instant-ctrl-flow-logic': '0.1.7',
+      'task-manager-contract': '0.1.4',
+      'task-manager-logic': '0.1.7',
+      'work-ctrl-flow-contract': '0.1.4',
+      'work-ctrl-flow-logic': '0.1.6',
     });
-    expect(data.version).toBe('0.2.0');
+    expect(data.version).toBe('0.3.0-simplification.0');
     expect(data.dependencies).toEqual({
-      'ai-data-workflow-contract': '0.2.0',
-      'ai-workflow-contract': '0.2.1',
-      'ai-workflow-logic': '0.2.1',
+      'ai-data-workflow-contract': '0.3.0-simplification.0',
+      'ai-workflow-contract': '0.3.0-simplification.0',
+      'ai-workflow-logic': '0.3.0-simplification.0',
       'eager-data-flow-contract': '0.1.4',
-      'eager-data-flow-logic': '0.1.7',
-      'flow-step-space-logic': '0.1.1',
-      'task-manager-contract': '0.1.3',
-      'task-manager-logic': '0.1.6',
-      'work-ctrl-flow-logic': '0.1.5',
+      'eager-data-flow-logic': '0.1.8',
+      'flow-step-space-logic': '0.1.2',
+      'task-manager-contract': '0.1.4',
+      'task-manager-logic': '0.1.7',
+      'work-ctrl-flow-logic': '0.1.6',
     });
   });
 
@@ -112,78 +112,198 @@ describe('AI workflow public package metadata', () => {
       import.meta.dir,
       '../../ai-workflow-flow-dsl-reference/package.json',
     ));
-    expect(flowDslReference.version).toBe('0.2.0');
+    expect(flowDslReference.version).toBe('0.2.1');
     expect(flowDslReference.dependencies).toEqual({
-      'halfcode-compiler.xnl': '0.3.0',
+      'halfcode-compiler.xnl': '0.3.2',
     });
   });
 
   test('prepares the BP and task runtime patch release without registry selection', async () => {
     const expected = {
-      'task-manager-contract': { version: '0.1.3', dependencies: undefined },
-      'task-manager-logic': {
-        version: '0.1.6',
-        dependencies: { 'task-manager-contract': '0.1.3' },
+      "task-manager-contract": {
+        "version": "0.1.4",
+        "dependencies": undefined
       },
-      'task-manager-file-support': {
-        version: '0.1.4',
-        dependencies: {
-          'task-manager-contract': '0.1.3',
-          'task-manager-logic': '0.1.6',
-        },
+      "task-manager-logic": {
+        "version": "0.1.7",
+        "dependencies": {
+          "task-manager-contract": "0.1.4"
+        }
       },
-      'depa-behavior-tree': {
-        version: '0.1.1',
-        dependencies: { 'depa-processor': '0.1.1' },
+      "task-manager-file-support": {
+        "version": "0.1.7",
+        "dependencies": {
+          "task-manager-contract": "0.1.4",
+          "task-manager-logic": "0.1.7"
+        }
       },
-      'bp-ctrl-flow-contract': {
-        version: '0.1.3',
-        dependencies: {
-          'task-manager-contract': '0.1.3',
-          'work-ctrl-flow-contract': '0.1.3',
-        },
+      "ai-workflow-contract": {
+        "version": "0.3.0-simplification.0",
+        "dependencies": {
+          "eager-data-flow-contract": "0.1.4",
+          "halfcode-compiler.xnl": "0.3.2",
+          "task-manager-contract": "0.1.4",
+          "work-ctrl-flow-contract": "0.1.4"
+        }
       },
-      'bp-ctrl-flow-logic': {
-        version: '0.1.7',
-        dependencies: {
-          'bp-ctrl-flow-contract': '0.1.3',
-          'depa-behavior-tree': '0.1.1',
-          'instant-ctrl-flow-contract': '0.1.2',
-          'instant-ctrl-flow-logic': '0.1.5',
-          'task-manager-contract': '0.1.3',
-          'task-manager-logic': '0.1.6',
-          'work-ctrl-flow-contract': '0.1.3',
-          'work-ctrl-flow-logic': '0.1.4',
-        },
+      "ai-workflow-logic": {
+        "version": "0.3.0-simplification.0",
+        "dependencies": {
+          "ai-workflow-contract": "0.3.0-simplification.0",
+          "ajv": "8.20.0",
+          "flow-step-space-contract": "0.1.1",
+          "flow-step-space-logic": "0.1.2",
+          "halfcode-compiler.xnl": "0.3.2",
+          "task-manager-contract": "0.1.4",
+          "task-manager-logic": "0.1.7",
+          "work-ctrl-flow-contract": "0.1.4",
+          "work-ctrl-flow-logic": "0.1.6"
+        }
       },
-      'instant-ctrl-flow-logic': {
-        version: '0.1.6',
-        dependencies: {
-          'port-control-graph-logic': '0.1.0',
-          'depa-behavior-tree': '0.1.1',
-          'flow-step-space-contract': '0.1.1',
-          'flow-step-space-logic': '0.1.1',
-          'instant-ctrl-flow-contract': '0.1.2',
-          'xnl-core': '^0.1.8',
-        },
+      "ai-ctrl-workflow-contract": {
+        "version": "0.3.0-simplification.0",
+        "dependencies": {
+          "ai-workflow-contract": "0.3.0-simplification.0",
+          "work-ctrl-flow-contract": "0.1.4"
+        }
       },
-      'work-ctrl-flow-logic': {
-        version: '0.1.5',
-        dependencies: {
-          'depa-behavior-tree': '0.1.1',
-          'flow-step-space-logic': '0.1.1',
-          'instant-ctrl-flow-contract': '0.1.2',
-          'instant-ctrl-flow-logic': '0.1.6',
-          'work-ctrl-flow-contract': '0.1.3',
-        },
+      "ai-ctrl-workflow-logic": {
+        "version": "0.3.0-simplification.0",
+        "dependencies": {
+          "depa-behavior-tree": "0.1.2",
+          "ai-ctrl-workflow-contract": "0.3.0-simplification.0",
+          "ai-workflow-contract": "0.3.0-simplification.0",
+          "ai-workflow-logic": "0.3.0-simplification.0",
+          "flow-step-space-logic": "0.1.2",
+          "instant-ctrl-flow-contract": "0.1.3",
+          "instant-ctrl-flow-logic": "0.1.7",
+          "task-manager-contract": "0.1.4",
+          "task-manager-logic": "0.1.7",
+          "work-ctrl-flow-contract": "0.1.4",
+          "work-ctrl-flow-logic": "0.1.6"
+        }
       },
+      "ai-data-workflow-contract": {
+        "version": "0.3.0-simplification.0",
+        "dependencies": {
+          "ai-workflow-contract": "0.3.0-simplification.0",
+          "eager-data-flow-contract": "0.1.4"
+        }
+      },
+      "ai-data-workflow-logic": {
+        "version": "0.3.0-simplification.0",
+        "dependencies": {
+          "ai-data-workflow-contract": "0.3.0-simplification.0",
+          "ai-workflow-contract": "0.3.0-simplification.0",
+          "ai-workflow-logic": "0.3.0-simplification.0",
+          "eager-data-flow-contract": "0.1.4",
+          "eager-data-flow-logic": "0.1.8",
+          "flow-step-space-logic": "0.1.2",
+          "task-manager-contract": "0.1.4",
+          "task-manager-logic": "0.1.7",
+          "work-ctrl-flow-logic": "0.1.6"
+        }
+      },
+      "instant-ctrl-flow-contract": {
+        "version": "0.1.3",
+        "dependencies": {
+          "flow-step-space-contract": "0.1.1"
+        }
+      },
+      "instant-ctrl-flow-logic": {
+        "version": "0.1.7",
+        "dependencies": {
+          "depa-behavior-tree": "0.1.2",
+          "flow-step-space-contract": "0.1.1",
+          "flow-step-space-logic": "0.1.2",
+          "instant-ctrl-flow-contract": "0.1.3",
+          "xnl-core": "0.1.13",
+          "port-control-graph-logic": "0.1.0"
+        }
+      },
+      "work-ctrl-flow-contract": {
+        "version": "0.1.4",
+        "dependencies": {
+          "instant-ctrl-flow-contract": "0.1.3"
+        }
+      },
+      "work-ctrl-flow-logic": {
+        "version": "0.1.6",
+        "dependencies": {
+          "depa-behavior-tree": "0.1.2",
+          "flow-step-space-logic": "0.1.2",
+          "instant-ctrl-flow-contract": "0.1.3",
+          "instant-ctrl-flow-logic": "0.1.7",
+          "work-ctrl-flow-contract": "0.1.4"
+        }
+      },
+      "flow-step-space-logic": {
+        "version": "0.1.2",
+        "dependencies": {
+          "flow-step-space-contract": "0.1.1",
+          "xnl-core": "0.1.13"
+        }
+      },
+      "eager-data-flow-logic": {
+        "version": "0.1.8",
+        "dependencies": {
+          "eager-data-flow-contract": "0.1.4",
+          "flow-step-space-logic": "0.1.2",
+          "xnl-core": "0.1.13"
+        }
+      },
+      "depa-behavior-tree": {
+        "version": "0.1.2",
+        "dependencies": {
+          "depa-processor": "0.1.1"
+        }
+      },
+      "port-control-graph-contract": {
+        "version": "0.1.0",
+        "dependencies": undefined
+      },
+      "port-control-graph-logic": {
+        "version": "0.1.0",
+        "dependencies": {
+          "port-control-graph-contract": "0.1.0"
+        }
+      },
+      "ai-workflow-flow-dsl-reference": {
+        "version": "0.2.1",
+        "dependencies": {
+          "halfcode-compiler.xnl": "0.3.2"
+        }
+      },
+      "bp-ctrl-flow-contract": {
+        "version": "0.1.3",
+        "dependencies": {
+          "task-manager-contract": "0.1.3",
+          "work-ctrl-flow-contract": "0.1.3"
+        }
+      },
+      "bp-ctrl-flow-logic": {
+        "version": "0.1.7",
+        "dependencies": {
+          "bp-ctrl-flow-contract": "0.1.3",
+          "depa-behavior-tree": "0.1.1",
+          "instant-ctrl-flow-contract": "0.1.2",
+          "instant-ctrl-flow-logic": "0.1.5",
+          "task-manager-contract": "0.1.3",
+          "task-manager-logic": "0.1.6",
+          "work-ctrl-flow-contract": "0.1.3",
+          "work-ctrl-flow-logic": "0.1.4"
+        }
+      }
     } as const;
 
     for (const [name, release] of Object.entries(expected)) {
       const manifest = await readManifest(join(import.meta.dir, `../../${name}/package.json`));
       expect(manifest.version).toBe(release.version);
       expect(manifest.dependencies).toEqual(release.dependencies);
-      expect(manifest.publishConfig).toEqual({ access: 'public' });
+      // 首次graph候选沿用无publishConfig的npm默认；既有公开包仍要求显式public。
+      expect(manifest.publishConfig).toEqual(
+        name.startsWith('port-control-graph-') ? undefined : { access: 'public' },
+      );
       for (const dependency of Object.values(manifest.dependencies ?? {})) {
         expect(dependency.startsWith('workspace:')).toBe(false);
         expect(dependency.startsWith('file:')).toBe(false);

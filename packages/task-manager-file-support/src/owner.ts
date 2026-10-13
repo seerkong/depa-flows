@@ -13,6 +13,7 @@ import type {
   TaskSpaceCommitResult,
   TaskSpaceId,
   TaskSpaceOwnerPort,
+  TaskSpaceDirectoryPort,
   TaskSpaceSnapshot,
 } from 'task-manager-contract';
 import { deepFrozenCanonicalOwnDataClone } from 'task-manager-contract';
@@ -117,7 +118,7 @@ interface TaskSpaceJournal {
   readonly entries: readonly JournalEntry[];
 }
 
-export class FileTaskSpaceOwner implements TaskSpaceOwnerPort {
+export class FileTaskSpaceOwner implements TaskSpaceOwnerPort,TaskSpaceDirectoryPort {
   readonly #prepared: PreparedFileTaskSpaceRoot;
   readonly #lockOptions: FileTaskSpaceLockOptions;
   readonly #faultInjector?: (point: FileTaskSpaceFaultPoint) => void;
@@ -134,6 +135,37 @@ export class FileTaskSpaceOwner implements TaskSpaceOwnerPort {
 
   diagnosticPaths(taskSpaceId: TaskSpaceId): FileTaskSpaceDiagnosticPaths {
     return diagnosticPaths(this.#prepared, taskSpaceId);
+  }
+
+  /** Bounded readonly discovery. Incomplete creations are not public spaces. */
+  async listTaskSpaceIds(input:Readonly<{maxEntries?:number}>={}):Promise<readonly TaskSpaceId[]>{
+    const maximum=input.maxEntries??1000;
+    if(!Number.isSafeInteger(maximum)||maximum<1||maximum>10000)throw new FileTaskSpaceError('directory-capacity','directory budget must be within 1..10000');
+    const ids:string[]=[];let count=0;
+    const directory=fs.opendirSync(this.#prepared.spacesDir);
+    try{
+      let entry:fs.Dirent|null;
+      while((entry=directory.readSync())!==null){
+        if(++count>maximum)throw new FileTaskSpaceError('directory-capacity','TaskSpace directory exceeds its budget');
+        if(!entry.name.startsWith('space-'))continue;
+        if(entry.isSymbolicLink()||!entry.isDirectory())throw new FileTaskSpaceError('path-boundary','TaskSpace directory entry is not a regular directory');
+        let id:string;
+        try{id=decodeURIComponent(entry.name.slice(6));}catch{throw new FileTaskSpaceError('path-boundary','TaskSpace directory identity is malformed');}
+        if(!id||entry.name!=='space-'+encodeURIComponent(id))throw new FileTaskSpaceError('path-boundary','TaskSpace directory identity is not canonical');
+        const paths=this.diagnosticPaths(id);
+        if(!fs.existsSync(paths.headFile))continue;
+        assertRegularFile(paths.headFile);
+        const fd=fs.openSync(paths.headFile,fs.constants.O_RDONLY|fs.constants.O_NOFOLLOW);
+        try{
+          const bytes=Buffer.alloc(16385),length=fs.readSync(fd,bytes,0,bytes.length,0);
+          if(length>16384)throw new FileTaskSpaceError('directory-capacity','TaskSpace directory head exceeds its budget');
+          const head=parseCanonicalJson<TaskSpaceHead>(bytes.subarray(0,length),'directory head');
+          if(head.kind!=='task-space-head'||head.schemaVersion!==1||head.taskSpaceId!==id||!Number.isSafeInteger(head.revision)||head.revision<0)corrupt('directory head identity is invalid');
+          ids.push(id);
+        }finally{fs.closeSync(fd);}
+      }
+    }finally{directory.closeSync();}
+    return Object.freeze(ids.sort());
   }
 
   async readSnapshot(taskSpaceId: TaskSpaceId): Promise<TaskSpaceSnapshot | undefined> {

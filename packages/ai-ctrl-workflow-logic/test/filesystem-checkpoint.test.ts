@@ -284,7 +284,7 @@ describe('materialized AI Ctrl canonical execution', () => {
     ))).toEqual(originalBytes);
   });
 
-  test('reuses a named Agent through ordinary Run nodes after fresh resume', async () => {
+  for(const entry of ['legacy','node-task'] as const)test(`reuses a named Agent through ordinary Run nodes after fresh resume (${entry})`, async () => {
     const storeRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-ctrl-agent-facade-'));
     const source = path.join(storeRoot, 'source');
     fs.mkdirSync(source);
@@ -317,7 +317,7 @@ describe('materialized AI Ctrl canonical execution', () => {
       agentEffects,
       agentTaskProofs: proofs ?? undefined,
       importModule: async () => ({
-        collectRequest: (nodeRuntime: any, input: any, config: any) => nodeRuntime.ai.effects.runAgent(input, config),
+        collectRequest: (nodeRuntime: any, input: any, config: any) => entry==='node-task'?nodeRuntime.ai.tasks.invoke(input,config):nodeRuntime.ai.effects.runAgent(input, config),
       }),
     });
     expect(() => create(true, null)).toThrow('AI_AGENT_TASK_PROOF_REQUIRED');

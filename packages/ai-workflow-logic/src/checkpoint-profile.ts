@@ -18,6 +18,7 @@ export interface FrozenRunStepExtensionDefinition {
 export interface FrozenFlowRunProfileAuthority {
   readonly profileKind: FlowRunProfileState['kind'];
   readonly definitionStepIds: readonly string[];
+  readonly definitionInvocationOwners?: Readonly<Record<string, string>>;
   readonly binding?: FlowClosedObject;
   readonly extensionsByStepId: Readonly<
     Record<string, Readonly<Record<string, FrozenRunStepExtensionDefinition>>>
@@ -103,6 +104,8 @@ export function validateCheckpointAgainstFrozenProfile(
   if (ids.some((id) => typeof id !== 'string' || !id || id !== id.trim()) || new Set(ids).size !== ids.length) {
     throw new FlowRunCheckpointTransitionError('Frozen profile step membership is invalid.');
   }
+  if (Object.entries(authority.definitionInvocationOwners ?? {}).some(([key, owner]) => !key || !ids.includes(owner)))
+    throw new FlowRunCheckpointTransitionError('Frozen compiled action ownership is invalid.');
   for (const stepId of Object.keys(authority.extensionsByStepId)) {
     if (!ids.includes(stepId)) {
       throw new FlowRunCheckpointTransitionError(`Frozen extension step ${stepId} is not a definition member.`);

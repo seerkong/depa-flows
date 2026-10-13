@@ -1,6 +1,6 @@
 {
   "name": "instant-ctrl-flow-contract",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "private": false,
   "description": "InstantCtrlFlow 契约：纯类型，零依赖",
   "type": "module",

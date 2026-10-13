@@ -1,4 +1,4 @@
-import { SingleEntryGraph } from "depa-processor/algo";
+import { createAdjacencyProjection } from "./adjacency";
 import type {
   ControlGraphRuntime,
   ControlShape,
@@ -32,14 +32,14 @@ export function lowerPortControlGraph<N, I, P, E>(
   const nodes = new Map<I, N>();
   const shapes = new Map<I, ControlShape<P>>();
   const outgoing = new Map<I, Map<P, I>>();
-  const projection = new SingleEntryGraph<{ GetVertexId(): I }, I>();
+  const projection = createAdjacencyProjection<I>();
   for (const n of graph.nodes) {
     const id = runtime.nodeId(n);
     if (nodes.has(id))
       fail("duplicate-node", "node identity must be unique", id);
     nodes.set(id, n);
     shapes.set(id, runtime.shape(n));
-    projection.AddVertex({ GetVertexId: () => id });
+    projection.addVertex(id);
   }
   if (!nodes.has(graph.entry))
     fail("missing-entry", "entry must name a node", graph.entry);
@@ -81,7 +81,7 @@ export function lowerPortControlGraph<N, I, P, E>(
       );
     ports.set(edge.from.port, edge.to.node);
     outgoing.set(edge.from.node, ports);
-    projection.AddEdge(edge.from.node, edge.to.node);
+    projection.addEdge(edge.from.node, edge.to.node);
   }
   for (const [id, shape] of shapes) {
     const branches = shape.branches ?? [];
@@ -133,8 +133,7 @@ export function lowerPortControlGraph<N, I, P, E>(
       fail("exit-has-next", "flow exit cannot have outgoing edges", id);
   }
   if (diagnostics.length) return { ok: false, diagnostics };
-  projection.SetEntryVertexId(graph.entry);
-  for (const id of projection.GetUnreachableVertexeIds())
+  for (const id of projection.unreachableFrom(graph.entry))
     fail("unreachable-node", "node is not reachable from entry", id);
   const color = new Map<I, number>();
   const visit = (id: I) => {
@@ -148,7 +147,7 @@ export function lowerPortControlGraph<N, I, P, E>(
     }
     if (color.get(id) === 2) return;
     color.set(id, 1);
-    for (const next of projection.GetNextIds(id)) visit(next);
+    for (const next of projection.nextIds(id)) visit(next);
     color.set(id, 2);
   };
   visit(graph.entry);
@@ -201,9 +200,7 @@ export function lowerPortControlGraph<N, I, P, E>(
           !common.some(
             (c) =>
               c === explicit ||
-              projection
-                .QueryReachableVertexIdsFromStartNodeId(c, true)
-                .has(explicit),
+              projection.reachableFrom(c).has(explicit),
           )
         )
           fail(

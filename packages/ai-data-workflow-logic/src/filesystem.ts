@@ -40,6 +40,7 @@ import {
   normalizeAIWorkflowProfileDurableState,
   normalizeFlowClosedObject,
   normalizeFlowClosedValue,
+  WorkflowDelegationSuspendedError,
   type FlowRunProfileAuthorityPort,
   type FlowRunProfileAuthorityRequest,
   type FrozenFlowRunProfileAuthority,
@@ -339,7 +340,8 @@ async function executeAIDataCheckpoint(
         return commitGraph((current) => {
           const node = current.nodes[nodeId];
           if (!node) throw new Error(`AI Data Workflow node ${nodeId} does not exist in the durable graph.`);
-          if (cause instanceof AIDataChildInvocationSuspendedError
+          if (findDelegationSuspension(cause)
+            || cause instanceof AIDataChildInvocationSuspendedError
             || cause instanceof AIDataChildInvocationTerminalFailure
             || findCheckpointObserverError(cause)) return current;
           return recordAIDataWorkflowNodeResult(current, nodeId, {
@@ -351,6 +353,7 @@ async function executeAIDataCheckpoint(
       },
     });
   } catch (error) {
+    if (findDelegationSuspension(error)) return { checkpoint: accepted, graph };
     const observerError = findCheckpointObserverError(error);
     if (observerError) throw observerError.cause;
     throw error;
@@ -369,6 +372,14 @@ class AIDataChildInvocationSuspendedError extends Error {
     super(`AI Data child invocation ${nodeId} is ${status}; continue the parent checkpoint to resume it.`);
     this.name = 'AIDataChildInvocationSuspendedError';
   }
+}
+
+function findDelegationSuspension(value: unknown, seen = new Set<unknown>()): WorkflowDelegationSuspendedError | undefined {
+  if (value instanceof WorkflowDelegationSuspendedError) return value;
+  if (!value || typeof value !== 'object' || seen.has(value)) return undefined;
+  seen.add(value);
+  if ('cause' in value) return findDelegationSuspension(value.cause, seen);
+  return undefined;
 }
 
 class AIDataChildInvocationTerminalFailure extends Error {

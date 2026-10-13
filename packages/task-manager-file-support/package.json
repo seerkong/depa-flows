@@ -1,6 +1,6 @@
 {
   "name": "task-manager-file-support",
-  "version": "0.1.5",
+  "version": "0.1.7",
   "private": false,
   "description": "Recoverable local-file TaskSpace owner for the profile-neutral task manager runtime",
   "type": "module",
@@ -9,8 +9,8 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "task-manager-contract": "0.1.3",
-    "task-manager-logic": "0.1.6"
+    "task-manager-contract": "0.1.4",
+    "task-manager-logic": "0.1.7"
   },
   "files": [
     "src"

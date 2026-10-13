@@ -9,7 +9,6 @@
     "src"
   ],
   "dependencies": {
-    "port-control-graph-contract": "0.1.0",
-    "depa-processor": "0.1.1"
+    "port-control-graph-contract": "0.1.0"
   }
 }

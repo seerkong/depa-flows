@@ -1,6 +1,6 @@
 {
   "name": "ai-workflow-logic",
-  "version": "0.2.1",
+  "version": "0.3.0-simplification.0",
   "private": false,
   "description": "AI workflow domain projections and pure runtime helpers with an explicit Halfcode filesystem adapter",
   "type": "module",
@@ -15,16 +15,15 @@
     "./definitions": "./src/definitions.ts"
   },
   "dependencies": {
-    "ai-workflow-contract": "0.2.1",
+    "ai-workflow-contract": "0.3.0-simplification.0",
     "ajv": "8.20.0",
     "flow-step-space-contract": "0.1.1",
-    "flow-step-space-logic": "0.1.1",
-    "halfcode-compiler.xnl": "0.3.1",
-    "holarchy-core-contract": "0.2.0",
-    "task-manager-contract": "0.1.3",
-    "task-manager-logic": "0.1.6",
-    "work-ctrl-flow-contract": "0.1.3",
-    "work-ctrl-flow-logic": "0.1.5"
+    "flow-step-space-logic": "0.1.2",
+    "halfcode-compiler.xnl": "0.3.2",
+    "task-manager-contract": "0.1.4",
+    "task-manager-logic": "0.1.7",
+    "work-ctrl-flow-contract": "0.1.4",
+    "work-ctrl-flow-logic": "0.1.6"
   },
   "files": [
     "src"

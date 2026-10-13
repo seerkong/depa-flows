@@ -74,3 +74,8 @@ export interface TaskSpaceOwnerPort {
   readArtifact(taskSpaceId: TaskSpaceId, digest: TaskArtifactDigest): Promise<TaskArtifactBody | undefined>;
   compareAndSwap(commit: TaskSpaceCommit): Promise<TaskSpaceCommitResult>;
 }
+
+/** Optional bounded discovery; authority and authorization stay with the host. */
+export interface TaskSpaceDirectoryPort {
+  listTaskSpaceIds(input?:Readonly<{maxEntries?:number}>):Promise<readonly TaskSpaceId[]>;
+}

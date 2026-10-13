@@ -20,7 +20,5 @@
   "include": [
     "../examples/xnl-bundles/ai-ctrl-workflow/flow-code/agent.ts",
     "../examples/xnl-bundles/ai-data-workflow/flow-code/evidence.ts",
-    "../examples/xnl-bundles/ai-ctrl-holon-task/flow-code/holon-task.ts",
-    "../examples/xnl-bundles/ai-data-holon-task/flow-code/holon-task.ts"
   ]
 }

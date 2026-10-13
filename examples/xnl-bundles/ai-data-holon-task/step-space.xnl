@@ -1,5 +1,0 @@
-<StepSpace #depa.examples.HolonTaskResultDataSteps apiVersion="depa.flows/v1" version="1" [
-  <StepRef #entry { src = "steps/entry/step.xnl" }>
-  <StepRef #consume-task { src = "steps/consume-task/step.xnl" }>
-  <StepRef #return { src = "steps/return/step.xnl" }>
-]>

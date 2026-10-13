@@ -4,6 +4,7 @@ import type {
   TaskArtifactRef,
   TaskClaimToken,
   TaskCommandId,
+  TaskCommandDigest,
   TaskFailure,
   TaskId,
   TaskPlan,
@@ -12,6 +13,7 @@ import type {
   TaskSpaceDefinition,
   TaskSpaceId,
   TaskTimestamp,
+  TaskRootBinding,
 } from './kernel.js';
 
 export const TASK_COMMAND_KINDS = Object.freeze([
@@ -26,6 +28,8 @@ export const TASK_COMMAND_KINDS = Object.freeze([
   'task.fail',
   'task.cancel',
   'task.replan',
+  'task.root-control',
+  'task.prepare',
 ] as const);
 
 export type TaskCommandKind = (typeof TASK_COMMAND_KINDS)[number];
@@ -34,10 +38,20 @@ interface TaskCommandBase<Kind extends TaskCommandKind> {
   readonly kind: Kind;
   readonly commandId: TaskCommandId;
   readonly taskSpaceId: TaskSpaceId;
+  /** Optional adapter intent proof, retained by the same canonical receipt. */
+  readonly intentDigest?: TaskCommandDigest;
 }
 
 interface VersionedTaskCommandBase<Kind extends TaskCommandKind> extends TaskCommandBase<Kind> {
   readonly expectedRevision: TaskRevision;
+}
+
+/** Freeze a Ready leaf's runtime profile under the exact managed root binding. */
+export interface PrepareTaskCommand extends VersionedTaskCommandBase<'task.prepare'> {
+  readonly taskId: TaskId;
+  readonly rootBindingId: string;
+  readonly preparedAt: TaskTimestamp;
+  readonly profile: TaskProfileEnvelope;
 }
 
 export interface CreateTaskSpaceCommand<Profile extends TaskProfileEnvelope = TaskProfileEnvelope>
@@ -120,6 +134,8 @@ export interface FailTaskCommand extends ClaimedTaskCommandBase<'task.fail'> {
 }
 
 export interface CancelTaskCommand extends VersionedTaskCommandBase<'task.cancel'> {
+  /** Cancel outstanding descendants atomically with the selected task. */
+  readonly cascade?: true;
   readonly taskId: TaskId;
   readonly cancelledAt: TaskTimestamp;
   readonly reason: string;
@@ -133,6 +149,19 @@ export interface ReplanTaskCommand extends VersionedTaskCommandBase<'task.replan
   readonly artifactBodies?: readonly TaskArtifactBody[];
 }
 
+export interface ControlTaskRootCommand extends VersionedTaskCommandBase<'task.root-control'> {
+  readonly artifactBodies?: readonly TaskArtifactBody[];
+  readonly taskId: TaskId;
+  readonly expectedControlRevision: number;
+  readonly occurredAt: TaskTimestamp;
+  readonly action:
+    | Readonly<{kind:'bind';binding:TaskRootBinding}>
+    | Readonly<{kind:'pause'}>
+    | Readonly<{kind:'resume';bindingId:string}>
+    | Readonly<{kind:'record';bindingId:string}>
+    | Readonly<{kind:'release';bindingId:string}>;
+}
+
 export type TaskCommand<Profile extends TaskProfileEnvelope = TaskProfileEnvelope> =
   | CreateTaskSpaceCommand<Profile>
   | PatchTaskSpaceCommand<Profile>
@@ -144,4 +173,6 @@ export type TaskCommand<Profile extends TaskProfileEnvelope = TaskProfileEnvelop
   | SettleTaskCommand
   | FailTaskCommand
   | CancelTaskCommand
-  | ReplanTaskCommand;
+  | ReplanTaskCommand
+  | ControlTaskRootCommand
+  | PrepareTaskCommand;

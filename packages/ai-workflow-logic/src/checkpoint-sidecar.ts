@@ -42,7 +42,14 @@ export interface FlowRunCheckpointSidecarReceipt {
 }
 export interface CheckpointSidecarEncodeConfig {
   readonly definitionStepIds?: readonly string[];
+  readonly definitionInvocationOwners?: Readonly<Record<string, string>>;
   readonly previousMaterialRecordDigests?: readonly DefinitionStepDigest[];
+}
+export interface CheckpointSidecarReadConfig {
+  readonly ctrlMembership?: (head: FlowRunCheckpointHead, kind: 'WorkCtrlFlow' | 'AICtrlWorkflow') => {
+    readonly definitionStepIds: readonly string[];
+    readonly invocationOwners: Readonly<Record<string, string>>;
+  };
 }
 type EncodedCheckpoint = {
   readonly head: FlowRunCheckpointHead;
@@ -123,12 +130,12 @@ function dataMembership(
 const ORCHESTRATION_FIELDS = ['attempts', 'deadlines', 'lanes', 'winners', 'cancellations', 'composites'] as const;
 type OrchestrationField = typeof ORCHESTRATION_FIELDS[number];
 
-function runtimeCtrlMembers(orchestrationValue: unknown, definitionStepIds: readonly string[]): readonly string[] {
+function runtimeCtrlMembers(orchestrationValue: unknown, definitionStepIds: readonly string[], invocationOwners: Readonly<Record<string, string>> = {}, waitOwners:ReadonlyMap<string,string>=new Map()): readonly string[] {
   const orchestration = object(orchestrationValue, 'ctrl orchestration');
   const members = new Set<string>();
   for (const field of ORCHESTRATION_FIELDS) {
     for (const [identity] of entries(orchestration[field], `ctrl orchestration.${field}`)) {
-      if (!definitionOwner(identity, definitionStepIds)) members.add(identity);
+      if (!definitionOwner(identity, definitionStepIds, invocationOwners)&&!waitOwners.has(identity)) members.add(identity);
     }
   }
   return [...members].sort(compare);
@@ -161,22 +168,55 @@ function createRunStepLeaf(
   });
   return { leaf, materialRecords: [coreRecord, ...extensionRecords.map(({ record }) => record)] as readonly ImmutableStepRecord[] };
 }
-function definitionOwner(invocationKey: string, definitionStepIds: readonly string[]): string | undefined {
+function definitionOwner(invocationKey: string, definitionStepIds: readonly string[], invocationOwners: Readonly<Record<string, string>> = {}): string | undefined {
   const visit = invocationKey.lastIndexOf('#');
   const stablePath = visit >= 0 ? invocationKey.slice(0, visit) : invocationKey;
   const id = stablePath.slice(stablePath.lastIndexOf('/') + 1);
-  return definitionStepIds.includes(id) ? id : undefined;
+  const owner = invocationOwners[id];
+  return definitionStepIds.includes(id) ? id : owner && definitionStepIds.includes(owner) ? owner : undefined;
 }
 
-function partitionCtrl(checkpoint: AIWorkflowFlowRunCheckpoint, idsValue?: readonly string[]) {
+/** Dynamic waits belong to the exact compiled action that created their native handle, never a prefix wildcard. */
+function delegationWaitOwners(snapshotValue:unknown,definitionStepIds:readonly string[],invocationOwners:Readonly<Record<string,string>>,aiValue?:unknown):ReadonlyMap<string,string>{
+  const snapshot=object(snapshotValue,'ctrl snapshot'),owners=new Map<string,string>();
+  for(const field of ['closedWaitHandles','openWaitHandles']){
+    const handles=snapshot[field];if(!Array.isArray(handles))throw Error('Ctrl wait handles must be an array.');
+    for(const value of handles){
+      const handle=object(value,'ctrl wait handle');
+      if(!handle.metadata||typeof handle.metadata!=='object'||Array.isArray(handle.metadata))continue;
+      const metadata=object(handle.metadata,'ctrl wait metadata');
+      if(metadata.workflowDelegation===undefined)continue;
+      const delegated=object(metadata.workflowDelegation,'ctrl delegation wait');
+      const action=delegated.actionInvocationKey,invocation=delegated.invocationKey;
+      if(delegated.kind!=='workflow.task-delegation/v1'||typeof action!=='string'||typeof invocation!=='string'||typeof handle.invocationKey!=='string'||typeof handle.nodeKey!=='string'||handle.waitKind!=='external-job'||handle.signalKind!=='workflow.delegation.observe'||handle.signalKey!==action)throw Error('Ctrl delegation wait identity is invalid.');
+      const owner=definitionOwner(action,definitionStepIds,invocationOwners);
+      const actionPath=action.slice(0,action.lastIndexOf('#')),scope=actionPath.slice(0,actionPath.lastIndexOf('/')+1),node=actionPath.slice(actionPath.lastIndexOf('/')+1);
+      const prefix=`${node}:delegation:`;
+      if(!owner||definitionOwner(invocation,definitionStepIds,invocationOwners)!==owner||!handle.nodeKey.startsWith(prefix)||!/^(0|[1-9][0-9]*)$/.test(handle.nodeKey.slice(prefix.length))||!handle.invocationKey.startsWith(`${scope}${handle.nodeKey}#`)||!/^(0|[1-9][0-9]*)$/.test(handle.invocationKey.slice(`${scope}${handle.nodeKey}#`.length)))throw Error('Ctrl delegation wait is not owned by its frozen action.');
+      if(aiValue!==undefined){
+        const ai=object(aiValue,'ctrl AI state'),records=object(ai.delegationsByKey??{},'ctrl delegations'),record=object(records[invocation],'ctrl delegation record');
+        if(!Array.isArray(record.attempts)||record.attempts.length===0)throw Error('Ctrl delegation wait has no accepted invocation.');
+        const attempt=object(record.attempts.at(-1),'ctrl delegation attempt'),request=object(attempt.request,'ctrl delegation request'),lineage=object(request.lineage,'ctrl delegation lineage');
+        if(attempt.dispatchClaimed!==true||lineage.invocationKey!==invocation||lineage.nodeId!==owner)throw Error('Ctrl delegation wait receipt does not match its frozen action.');
+      }
+      if(owners.has(handle.invocationKey))throw Error('Ctrl delegation wait identity is duplicated.');
+      owners.set(handle.invocationKey,owner);
+    }
+  }
+  return owners;
+}
+
+function partitionCtrl(checkpoint: AIWorkflowFlowRunCheckpoint, idsValue?: readonly string[], invocationOwners: Readonly<Record<string, string>> = {}) {
   if (!idsValue?.length || idsValue.some((id) => typeof id !== 'string' || !id) || new Set(idsValue).size !== idsValue.length) {
     throw new Error('Ctrl sidecar requires unique frozen definition step identities.');
   }
   if (checkpoint.profile.kind !== 'WorkCtrlFlow' && checkpoint.profile.kind !== 'AICtrlWorkflow') throw new Error('Ctrl profile expected.');
   const definitionStepIds = [...idsValue];
+  if (Object.entries(invocationOwners).some(([key, owner]) => !key || !definitionStepIds.includes(owner))) throw new Error('Ctrl compiled action ownership is invalid.');
   const snapshot = checkpoint.profile.snapshot as FlowClosedObject;
   const { branchDecisions, nodeResults, waitResults, orchestration, ...snapshotControl } = snapshot;
-  const runtimeMembers = runtimeCtrlMembers(orchestration, definitionStepIds);
+  const waitOwners=delegationWaitOwners(snapshot,definitionStepIds,invocationOwners,checkpoint.profile.kind==='AICtrlWorkflow'?checkpoint.profile.ai:undefined);
+  const runtimeMembers = runtimeCtrlMembers(orchestration, definitionStepIds, invocationOwners,waitOwners);
   const memberIds = [...definitionStepIds.map((id) => `definition:${id}`), ...runtimeMembers.map((id) => `runtime:${id}`)].sort(compare);
   const facts = new Map(memberIds.map((id) => [id, {
     branchDecisions: {},
@@ -186,7 +226,7 @@ function partitionCtrl(checkpoint: AIWorkflowFlowRunCheckpoint, idsValue?: reado
   }]));
   const runtimeSet = new Set(runtimeMembers);
   const ownerOf = (identity: string) => {
-    const owner = definitionOwner(identity, definitionStepIds);
+    const owner = definitionOwner(identity, definitionStepIds, invocationOwners)??waitOwners.get(identity);
     return owner ? `definition:${owner}` : runtimeSet.has(identity) ? `runtime:${identity}` : undefined;
   };
   const place = (field: 'branchDecisions' | 'nodeResults' | 'waitResults', value: unknown) => {
@@ -223,6 +263,7 @@ function partitionCtrl(checkpoint: AIWorkflowFlowRunCheckpoint, idsValue?: reado
       profile: {
         kind: checkpoint.profile.kind,
         definitionStepIds,
+        ...(Object.keys(invocationOwners).length ? { definitionInvocationOwners: invocationOwners } : {}),
         snapshot: {
           ...snapshotControl,
           orchestration: Object.fromEntries(ORCHESTRATION_FIELDS.map((field) => [field, {}])),
@@ -269,6 +310,7 @@ function reconstruct(
   records: readonly ImmutableStepRecord[],
   controlRecords: ReadonlyMap<DefinitionStepDigest, ImmutableStepRecord>,
   readMaterial: (digest: DefinitionStepDigest) => ImmutableStepRecord,
+  config: CheckpointSidecarReadConfig,
 ): AIWorkflowFlowRunCheckpoint {
   const control = object(head.control, 'checkpoint control');
   if (control.schemaVersion !== 'depa.flow-run-checkpoint-control/v1') throw new Error('Checkpoint control schema is invalid.');
@@ -339,7 +381,15 @@ function reconstruct(
     if (!Array.isArray(profileControl.definitionStepIds) || profileControl.definitionStepIds.some((id) => typeof id !== 'string' || !id)) throw new Error('Ctrl definition membership is invalid.');
     const definitionStepIds = profileControl.definitionStepIds as readonly string[];
     if (new Set(definitionStepIds).size !== definitionStepIds.length) throw new Error('Ctrl definition membership is duplicated.');
+    const savedOwners = object(profileControl.definitionInvocationOwners ?? {}, 'ctrl compiled action owners');
+    if (Object.values(savedOwners).some(owner => typeof owner !== 'string' || !definitionStepIds.includes(owner))) throw new Error('Ctrl compiled action owner is invalid.');
+    const membership = config.ctrlMembership?.(head, profileControl.kind);
+    if (membership && (canonicalJson([...definitionStepIds].sort(compare)) !== canonicalJson([...membership.definitionStepIds].sort(compare))
+      || profileControl.definitionInvocationOwners !== undefined && canonicalJson(savedOwners) !== canonicalJson(membership.invocationOwners)))
+      throw new Error('Ctrl sidecar ownership differs from the frozen compiled definition.');
+    const invocationOwners = membership?.invocationOwners ?? savedOwners as Readonly<Record<string, string>>;
     const snapshotControl = object(profileControl.snapshot, 'ctrl snapshot control');
+    const waitOwners=delegationWaitOwners(snapshotControl,definitionStepIds,invocationOwners,profileControl.kind==='AICtrlWorkflow'?profileControl.ai:undefined);
     const orchestrationOutput = Object.fromEntries(
       ORCHESTRATION_FIELDS.map((field) => [field, {}]),
     ) as Record<OrchestrationField, Record<string, FlowClosedValue>>;
@@ -365,7 +415,7 @@ function reconstruct(
       actual.push(value.memberId);
       for (const field of ['branchDecisions', 'nodeResults', 'waitResults'] as const) {
         for (const [key, fact] of entries(value[field], `ctrl ${field}`)) {
-          const owner = definitionOwner(key, definitionStepIds);
+          const owner = definitionOwner(key, definitionStepIds, invocationOwners)??waitOwners.get(key);
           if (projectedDefinition !== null ? owner !== projectedDefinition : value.memberId !== `runtime:${key}`) throw new Error(`Ctrl ${field} member is invalid.`);
           if (Object.prototype.hasOwnProperty.call(output[field], key)) throw new Error(`Ctrl ${field} member is duplicated.`);
           output[field][key] = fact;
@@ -374,14 +424,14 @@ function reconstruct(
       const recordOrchestration = object(value.orchestration, 'ctrl record orchestration');
       for (const field of ORCHESTRATION_FIELDS) {
         for (const [key, fact] of entries(recordOrchestration[field], `ctrl orchestration.${field}`)) {
-          const owner = definitionOwner(key, definitionStepIds);
+          const owner = definitionOwner(key, definitionStepIds, invocationOwners)??waitOwners.get(key);
           if (projectedDefinition !== null ? owner !== projectedDefinition : value.memberId !== `runtime:${key}`) throw new Error(`Ctrl orchestration.${field} member is invalid.`);
           if (Object.prototype.hasOwnProperty.call(orchestrationOutput[field], key)) throw new Error(`Ctrl orchestration.${field} member is duplicated.`);
           orchestrationOutput[field][key] = fact;
         }
       }
     }
-    const runtimeMembers = runtimeCtrlMembers(orchestrationOutput, definitionStepIds);
+    const runtimeMembers = runtimeCtrlMembers(orchestrationOutput, definitionStepIds, invocationOwners,waitOwners);
     const expected = [...definitionStepIds.map((id) => `definition:${id}`), ...runtimeMembers.map((id) => `runtime:${id}`)].sort(compare);
     if (canonicalJson(expected) !== canonicalJson(actual.sort(compare))) throw new Error('Ctrl sidecar membership is invalid.');
     const snapshot: FlowClosedObject = { ...snapshotControl, ...output };
@@ -469,9 +519,20 @@ function runEvent(runtime: CheckpointDurabilityRuntime | undefined, event: Check
   runtime?.beforeEvent?.(event); operation(); runtime?.onEvent?.(event);
 }
 function syncDirectory(directory: string, role: CheckpointDurabilityRole, runtime?: CheckpointDurabilityRuntime): void {
-  let fd: number | undefined;
-  try { fd = fs.openSync(directory, fs.constants.O_RDONLY); runEvent(runtime, { operation: 'directory-fsync', role, path: directory }, () => fs.fsyncSync(fd!)); }
-  finally { if (fd !== undefined) fs.closeSync(fd); }
+  runEvent(runtime, { operation: 'directory-fsync', role, path: directory }, () => {
+    let fd: number | undefined;
+    try {
+      fd = fs.openSync(directory, fs.constants.O_RDONLY);
+      fs.fsyncSync(fd);
+    } catch (error) {
+      // Windows may reject either opening or syncing a directory. File-data
+      // fsync and durability observers retain their original failure behavior.
+      const code = (error as NodeJS.ErrnoException).code;
+      if (process.platform !== 'win32' || !code || !['EPERM', 'EINVAL', 'ENOTSUP', 'EISDIR'].includes(code)) throw error;
+    } finally {
+      if (fd !== undefined) fs.closeSync(fd);
+    }
+  });
 }
 export function createDirectoryDurably(directory: string, role: CheckpointDurabilityRole, runtime?: CheckpointDurabilityRuntime): void {
   runEvent(runtime, { operation: 'directory-create', role, path: directory }, () => fs.mkdirSync(directory));
@@ -500,7 +561,7 @@ function writeImmutable(file: string, value: unknown, role: 'record' | 'tree' | 
 
 export function encodeCheckpointSidecars(checkpointValue: AIWorkflowFlowRunCheckpoint, previousTree: StepMerkleTree | undefined, config: CheckpointSidecarEncodeConfig = {}): EncodedCheckpoint {
   const checkpoint = normalizeFlowRunCheckpoint(checkpointValue);
-  const partitioned = checkpoint.profile.kind === 'AIDataWorkflow' ? partitionData(checkpoint, config.definitionStepIds) : partitionCtrl(checkpoint, config.definitionStepIds);
+  const partitioned = checkpoint.profile.kind === 'AIDataWorkflow' ? partitionData(checkpoint, config.definitionStepIds) : partitionCtrl(checkpoint, config.definitionStepIds, config.definitionInvocationOwners);
   const tree = buildStepMerkleTree(partitioned.records); const treeDiff = diffStepMerkleTrees(previousTree, tree);
   const previousRecords = new Set<string>(); Object.values(previousTree?.nodes ?? {}).forEach((node) => { if (node.kind === 'leaf') previousRecords.add(node.recordDigest); });
   const addedRecordDigests = partitioned.records.map((record) => record.digest).filter((value) => !previousRecords.has(value)).sort(compare);
@@ -525,7 +586,7 @@ function assertReceipt(root: string, head: FlowRunCheckpointHead): Record<string
   if (value.schemaVersion !== 'depa.flow-run-checkpoint-sidecar-receipt/v1' || value.version !== head.version || value.rootDigest !== head.runStepStateRootDigest || value.logicalDigest !== head.logicalDigest || (value.previousRootDigest !== null && (typeof value.previousRootDigest !== 'string' || !/^sha256:[0-9a-f]{64}$/.test(value.previousRootDigest)))) throw new Error('Receipt does not bind head.');
   return value;
 }
-export function readCheckpointHeadAndLogical(file: string) {
+export function readCheckpointHeadAndLogical(file: string, config: CheckpointSidecarReadConfig = {}) {
   const head = normalizeHead(readJson(file)); const root = path.join(path.dirname(file), 'step-space'); const receipt = assertReceipt(root, head);
   const controlRecords = new Map<DefinitionStepDigest, ImmutableStepRecord>();
   for (const value of receipt.controlRecordDigests as readonly DefinitionStepDigest[]) {
@@ -536,7 +597,7 @@ export function readCheckpointHeadAndLogical(file: string) {
     materialDigests.add(value);
     return readRecord(path.join(root, 'records'), value);
   };
-  const checkpoint = reconstruct(head, collectRecords(root, head.runStepStateRootDigest), controlRecords, readMaterial);
+  const checkpoint = reconstruct(head, collectRecords(root, head.runStepStateRootDigest), controlRecords, readMaterial, config);
   if (digest(checkpoint) !== head.logicalDigest || checkpoint.instanceId !== head.instanceId || checkpoint.runId !== head.runId || checkpoint.version !== head.version || canonicalJson(checkpoint.definition) !== canonicalJson(head.definition)) throw new Error('Head and logical checkpoint differ.');
   const nodes: Record<string, StepMerkleNode> = {}; const leafByKey: Record<string, DefinitionStepDigest> = {}; const keyOrder: string[] = [];
   const visit = (value: DefinitionStepDigest): void => { if (nodes[value]) return; const node = readNode(path.join(root, 'trees'), value); nodes[value] = node; if (node.kind === 'leaf') { leafByKey[node.key] = value; keyOrder.push(node.key); } else { visit(node.leftDigest); visit(node.rightDigest); } };

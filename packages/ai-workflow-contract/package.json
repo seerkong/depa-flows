@@ -1,6 +1,6 @@
 {
   "name": "ai-workflow-contract",
-  "version": "0.2.1",
+  "version": "0.3.0-simplification.0",
   "private": false,
   "description": "Shared AI workflow contracts over WorkCtrlFlow and EagerDataFlow substrates",
   "type": "module",
@@ -11,9 +11,9 @@
   },
   "dependencies": {
     "eager-data-flow-contract": "0.1.4",
-    "halfcode-compiler.xnl": "0.3.1",
-    "task-manager-contract": "0.1.3",
-    "work-ctrl-flow-contract": "0.1.3"
+    "halfcode-compiler.xnl": "0.3.2",
+    "task-manager-contract": "0.1.4",
+    "work-ctrl-flow-contract": "0.1.4"
   },
   "files": [
     "src"

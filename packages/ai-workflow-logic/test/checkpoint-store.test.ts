@@ -83,6 +83,24 @@ function checkpoint(version: number, state: string): AIWorkflowFlowRunCheckpoint
 }
 
 describe('canonical FlowRunCheckpoint store', () => {
+  test('freezes ForEach budget and item provenance in the canonical owner and rejects corrupt expansion', async () => {
+    function expanded(version: number, budget = 2, item = 'first', started = true): AIWorkflowFlowRunCheckpoint {
+      const value = checkpoint(version, 'Waiting');
+      if (value.profile.kind !== 'AICtrlWorkflow') throw Error('test requires Ctrl profile');
+      const orchestration = {
+        attempts: {}, deadlines: {}, winners: {}, cancellations: {},
+        lanes: { 'map#0/0': { invocationKey: 'map#0', laneId: '0', bodyId: 'item:0', status: 'Open', item, started } },
+        composites: { 'map#0': { invocationKey: 'map#0', primitive: 'ForEach', bodyId: 'body', status: 'Waiting', updatedAtMs: version, expansion: { itemCount: 1, maxItems: budget, concurrency: 1 } } },
+      };
+      return { ...value, controllerSidecars: { ...value.controllerSidecars, orchestration }, profile: { ...value.profile, snapshot: { ...value.profile.snapshot, orchestration } } };
+    }
+    const store = new InMemoryFlowRunCheckpointStore();
+    await store.commit({ expectedVersion: null, checkpoint: expanded(0) });
+    for (const candidate of [expanded(1, 3), expanded(1, 2, 'changed'), expanded(1, 2, 'first', false)]) {
+      await expect(store.commit({ expectedVersion: 0, checkpoint: candidate })).rejects.toBeInstanceOf(FlowRunCheckpointTransitionError);
+    }
+    await expect(store.commit({ expectedVersion: 0, checkpoint: expanded(1) })).resolves.toMatchObject({ version: 1 });
+  });
   test('compares Unicode extension membership by explicit code-unit order', async () => {
     const extensionCodecs = {
       resolve: (kind: string) => kind === 'example.note' ? {

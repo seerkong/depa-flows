@@ -1,4 +1,5 @@
 export * from './core.js';
+export * from './delegation.js';
 export { resolveAIAgentExecutionResources } from './agent-execution-resources.js';
 export type { AIAgentExecutionResourceObservation, ResolveAIAgentExecutionResourcesRuntime, ResolveAIAgentExecutionResourcesInput } from './agent-execution-resources.js';
 export {

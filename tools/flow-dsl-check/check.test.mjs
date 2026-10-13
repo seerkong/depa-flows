@@ -19,8 +19,6 @@ const canonicalDemos = {
   'eager-data-flow-parent': 'EagerDataFlow',
   'ai-ctrl-workflow': 'AICtrlWorkflow',
   'ai-data-workflow': 'AIDataWorkflow',
-  'ai-ctrl-holon-task': 'AICtrlWorkflow',
-  'ai-data-holon-task': 'AIDataWorkflow',
 };
 
 function temporaryBundle(form, body, extraFiles = {}) {
@@ -178,12 +176,10 @@ describe('definition, instance and run documentation', () => {
     path.join(ROOT, 'examples/xnl-bundles/order-fulfillment/README.md'),
     path.join(ROOT, 'examples/xnl-bundles/ai-ctrl-workflow/README.md'),
     path.join(ROOT, 'examples/xnl-bundles/ai-data-workflow/README.md'),
-    path.join(ROOT, 'examples/xnl-bundles/ai-ctrl-holon-task/README.md'),
-    path.join(ROOT, 'examples/xnl-bundles/ai-data-holon-task/README.md'),
   ];
 
-  test('keeps the nine source bundles valid and links their runtime projection guide', () => {
-    expect(Object.keys(canonicalDemos)).toHaveLength(9);
+  test('keeps the seven source bundles valid and links their runtime projection guide', () => {
+    expect(Object.keys(canonicalDemos)).toHaveLength(7);
     expect(fs.readFileSync(path.join(ROOT, 'docs/flow-dsl/README.md'), 'utf8'))
       .toContain('[spec/flow-core/instance-run.md](spec/flow-core/instance-run.md)');
     expect(fs.readFileSync(path.join(ROOT, 'examples/xnl-bundles/README.md'), 'utf8'))

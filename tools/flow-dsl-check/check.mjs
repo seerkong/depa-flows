@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 // flow-dsl-check CLI：校验流定义 bundle。
-// 用法：bun tools/flow-dsl-check/check.mjs <bundle-dir>...
+// 用法：bun tools/flow-dsl-check/check.mjs [bundle-dir]...
+//       无参数时检查仓库全部 canonical examples。
 //       目录若无 .xnl 但含子目录，则视为 bundle 集合逐个校验。
 import fs from 'node:fs';
 import path from 'node:path';
@@ -43,11 +44,8 @@ export function checkDir(dir, runtime = FLOW_DSL_CHECK_RUNTIME) {
 const isBundleDir = (d) => fs.readdirSync(d).some((f) => f.endsWith('.xnl'));
 
 if (import.meta.main) {
-  const args = process.argv.slice(2);
-  if (!args.length) {
-    console.error('usage: bun tools/flow-dsl-check/check.mjs <bundle-dir>...');
-    process.exit(2);
-  }
+  const supplied = process.argv.slice(2);
+  const args = supplied.length ? supplied : [path.resolve(import.meta.dir, '../../examples/xnl-bundles')];
   const targets = args.flatMap((a) => {
     if (!fs.existsSync(a) || !fs.statSync(a).isDirectory()) {
       console.error(`not a directory: ${a}`);
@@ -58,6 +56,11 @@ if (import.meta.main) {
       .filter((e) => e.isDirectory() && isBundleDir(path.join(a, e.name)))
       .map((e) => path.join(a, e.name));
   });
+
+  if (!targets.length) {
+    console.error('no flow bundles found');
+    process.exit(2);
+  }
 
   let bad = 0;
   for (const dir of targets) {

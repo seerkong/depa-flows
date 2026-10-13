@@ -7,6 +7,7 @@ import type {
   AIAgentProcessorRuntime,
   AIWorkflowFlowRunCheckpoint,
   FlowRunCheckpointStore,
+  FlowClosedObject,
 } from 'ai-workflow-contract';
 import {
   AIAgentInvocationError,
@@ -58,8 +59,8 @@ function harness(initialAI = {
   instancesById: {},
   instanceIdByName: {},
   invocationsByKey: {},
-}) {
-  let current = checkpoint(initialAI);
+}, config: FlowClosedObject = {}) {
+  let current: AIWorkflowFlowRunCheckpoint = { ...checkpoint(initialAI), config };
   const store: FlowRunCheckpointStore<any> = {
     async load() { return current; },
     async commit(input) {
@@ -104,6 +105,14 @@ function harness(initialAI = {
 }
 
 describe('typed Agent invocation processors', () => {
+  test('legacy Agent APIs cannot silently bypass an explicitly frozen task source', async () => {
+    const h = harness(undefined, { workflowDelegations: { draft: { source: 'explicit-owner-binding' } } });
+    const config = { agentDefinitionRef: 'resource://demo.Agent' } as const;
+    await expect(runAgent(h.runtime, { task: 'one' }, config)).rejects.toThrow('This node has an explicit task source');
+    await expect(runTargetedAgent(h.runtime, { byId: 'agent-1' }, { kind: 'ai.agent', payload: { task: 'one' } }, config)).rejects.toThrow('This node has an explicit task source');
+    expect(h.calls).toEqual([]);
+    expect(h.read().version).toBe(0);
+  });
   test('normalizes the closed selector union before resolving state', () => {
     expect(normalizeAIAgentSelector({ byId: 'agent-1' })).toEqual({ byId: 'agent-1' });
     expect(normalizeAIAgentSelector({ byName: 'reviewer' })).toEqual({ byName: 'reviewer' });

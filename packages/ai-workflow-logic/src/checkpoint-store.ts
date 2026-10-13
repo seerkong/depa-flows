@@ -34,22 +34,38 @@ export interface WorkCtrlFlowCheckpointStoreOptions {
   readonly projectOutput?: (snapshot: WorkCtrlFlowSnapshot) => FlowClosedValue;
 }
 
-/** Removes optional undefined object fields without relaxing the closed-data validator. */
+/** Projects engine-owned faults and optional fields; business values remain subject to closed-data validation. */
 export function projectWorkCtrlSnapshotToCheckpointData(
   snapshot: WorkCtrlFlowSnapshot,
 ): WorkCtrlFlowSnapshot {
+  const projectState = (state: unknown): unknown => {
+    if (!state || typeof state !== 'object') return state;
+    const fault: unknown = Object.getOwnPropertyDescriptor(state,'fault')?.value;
+    if(!(fault instanceof Error))return state;
+    const code: unknown = Object.getOwnPropertyDescriptor(fault, 'code')?.value;
+    return { ...state, fault: { name: fault.name, message: fault.message, ...(typeof code === 'string' ? { code } : {}) } };
+  };
   const visit = (value: unknown): unknown => {
-    if (Array.isArray(value)) return value.map(visit);
+    if (Array.isArray(value)) {
+      if(Reflect.ownKeys(value).length!==value.length+1)return value;
+      const items:unknown[]=[];
+      for(let index=0;index<value.length;index++){
+        const descriptor=Object.getOwnPropertyDescriptor(value,String(index));
+        if(!descriptor||!('value'in descriptor))return value;
+        items.push(visit(descriptor.value));
+      }
+      return items;
+    }
     if (value === null || typeof value !== 'object') return value;
     const prototype = Object.getPrototypeOf(value);
     if (prototype !== Object.prototype && prototype !== null) return value;
-    return Object.fromEntries(
-      Object.entries(value)
-        .filter(([, nested]) => nested !== undefined)
-        .map(([key, nested]) => [key, visit(nested)]),
-    );
+    const descriptors=Object.getOwnPropertyDescriptors(value);
+    if(Reflect.ownKeys(value).some(key=>typeof key!=='string'||!('value'in descriptors[key]!)))return value;
+    return Object.fromEntries(Object.entries(descriptors).filter(([,descriptor])=>descriptor.value!==undefined).map(([key,descriptor])=>[key,visit(descriptor.value)]));
   };
-  return visit(snapshot) as WorkCtrlFlowSnapshot;
+  return visit({ ...snapshot, vars: { ...snapshot.vars, __flow_execution__: projectState(snapshot.vars.__flow_execution__) }, ...(snapshot.orchestration ? { orchestration: { ...snapshot.orchestration,
+    lanes: Object.fromEntries(Object.entries(snapshot.orchestration.lanes).map(([key, lane]) => [key, { ...lane, ...(lane.flowState === undefined ? {} : { flowState: projectState(lane.flowState) }) }])),
+  } } : {}) }) as WorkCtrlFlowSnapshot;
 }
 
 function workCtrlControllerSidecars(snapshot: WorkCtrlFlowSnapshot): FlowClosedObject {
@@ -283,6 +299,9 @@ function validateAIDataProfileTransition(
         `AI Data node ${nodeId} generation cannot decrease from ${node.generation} to ${candidate.generation}.`,
       );
     }
+    const waitContext=node.result&&typeof node.result==='object'?Object.getOwnPropertyDescriptor(node.result,'waitContext')?.value:undefined;
+    const nextContext=candidate.result&&typeof candidate.result==='object'?Object.getOwnPropertyDescriptor(candidate.result,'waitContext')?.value:undefined;
+    if(node.generation===candidate.generation&&waitContext!==undefined&&!sameClosedValue(waitContext,nextContext))throw new FlowRunCheckpointTransitionError(`AI Data native wait context ${nodeId}@${node.generation} is immutable.`);
   }
   const appendedPatches = after.patchHistory.slice(before.patchHistory.length);
   const appendedInvalidations = after.invalidations.filter((fact) =>
@@ -469,6 +488,7 @@ function validateAgentStateTransition(
     || (next.profile.kind !== 'AICtrlWorkflow' && next.profile.kind !== 'AIDataWorkflow')) return;
   const before = current.profile.ai;
   const after = next.profile.ai;
+  validateWorkflowDelegationTransition(before.delegationsByKey ?? {}, after.delegationsByKey ?? {});
   for (const [instanceId, instance] of Object.entries(before.instancesById)) {
     if (!sameClosedValue(instance, after.instancesById[instanceId])) {
       throw new FlowRunCheckpointTransitionError(`Accepted Agent instance ${instanceId} is immutable and cannot disappear.`);
@@ -553,7 +573,36 @@ export function validateFlowRunCheckpointTransition(
     );
   }
   validateStepExtensionTransition(current, next);
+  validateFrozenCtrlExpansion(current, next);
   validateAgentStateTransition(current, next);
+}
+
+function validateFrozenCtrlExpansion(current: AIWorkflowFlowRunCheckpoint, next: AIWorkflowFlowRunCheckpoint): void {
+  if (current.profile.kind === 'AIDataWorkflow' || next.profile.kind === 'AIDataWorkflow') return;
+  function object(value: FlowClosedValue | undefined): FlowClosedObject {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) throw new FlowRunCheckpointTransitionError('Ctrl orchestration facts are missing.');
+    return value as FlowClosedObject;
+  }
+  const before = object(current.profile.snapshot.orchestration);
+  const after = object(next.profile.snapshot.orchestration);
+  const composites = object(before.composites);
+  const nextComposites = object(after.composites);
+  const lanes = object(before.lanes), nextLanes = object(after.lanes);
+  for (const [key, value] of Object.entries(composites)) {
+    const fact = object(value);
+    if (!fact.expansion) continue;
+    const candidate = object(nextComposites[key]);
+    if (!sameClosedValue(fact.expansion, candidate.expansion)) throw new FlowRunCheckpointTransitionError(`ForEach ${key} cannot rewrite frozen expansion.`);
+    for (const [laneKey, value] of Object.entries(lanes)) {
+      const lane = object(value);
+      if (lane.invocationKey !== key) continue;
+      const candidateLane = object(nextLanes[laneKey]);
+      for (const field of ['invocationKey', 'laneId', 'bodyId', 'item']) {
+        if (!sameClosedValue(lane[field], candidateLane[field])) throw new FlowRunCheckpointTransitionError(`ForEach ${key} cannot rewrite frozen lane ${laneKey}.${field}.`);
+      }
+      if (lane.started === true && candidateLane.started !== true) throw new FlowRunCheckpointTransitionError(`ForEach ${key} cannot release an unsettled lane slot by rewriting its claim.`);
+    }
+  }
 }
 
 function validateStepExtensionTransition(
@@ -656,3 +705,4 @@ export async function projectFlowRunCheckpoint(
   const checkpoint = await loadFlowRunCheckpoint(runtime, input);
   return checkpoint === undefined ? undefined : normalizeFlowRunCheckpoint(checkpoint);
 }
+import { validateWorkflowDelegationTransition } from './delegation.js';

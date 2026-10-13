@@ -8,9 +8,11 @@ import type {
   AIAgentRunResult,
   AIAgentSelector,
   AIWorkflowAuthoredEffects,
+  AIWorkflowNodeTasks,
   AIWorkflowFlowRunCheckpoint,
   AIWorkflowProfileDurableState,
   FlowClosedValue,
+  FlowClosedObject,
 } from 'ai-workflow-contract';
 import {
   AIAgentInvocationError,
@@ -56,6 +58,37 @@ async function commitAI(runtime: AIAgentProcessorRuntime, checkpoint: AIWorkflow
 
 function same(left: unknown, right: unknown): boolean {
   return JSON.stringify(left) === JSON.stringify(right);
+}
+
+function assertNoTaskSourceOverride(checkpoint: AIWorkflowFlowRunCheckpoint, nodeId: string): void {
+  const object = (value: FlowClosedValue): value is FlowClosedObject => value !== null && typeof value === 'object' && !Array.isArray(value);
+  const bindings = object(checkpoint.config) ? checkpoint.config.workflowDelegations : undefined;
+  if (bindings && typeof bindings === 'object' && !Array.isArray(bindings) && Object.hasOwn(bindings, nodeId)) {
+    fail('AI_AGENT_TASK_DELEGATION_REQUIRED', 'checkpoint.config.workflowDelegations.' + nodeId,
+      'This node has an explicit task source. Use ai.delegation.delegateTask so its admitted owner and context cannot be silently ignored.');
+  }
+}
+
+/** The canonical instance index owns context reuse; the Host still owns the Actor. */
+function frozenAgentContext(checkpoint:AIWorkflowFlowRunCheckpoint,runtime:AIAgentProcessorRuntime,config:AIAgentEffectConfig):{name?:string;generation:number}|undefined {
+  const object=(value:FlowClosedValue|undefined):value is FlowClosedObject=>value!==undefined&&value!==null&&typeof value==='object'&&!Array.isArray(value);
+  const bindings=normalizeFlowClosedObject(checkpoint.config).workflowAgentContexts;
+  if(bindings===undefined)return;
+  if(!object(bindings))fail('AI_AGENT_CONTEXT_INVALID','checkpoint.config.workflowAgentContexts','Frozen Agent contexts must be an object.');
+  if(!Object.hasOwn(bindings,runtime.nodeId))return;
+  const choice=bindings[runtime.nodeId];
+  if(!object(choice)||choice.schemaVersion!=='workflow.agent-context/v1'
+    ||choice.agentDefinitionRef!==config.agentDefinitionRef||!['authored','shared','independent-per-generation'].includes(String(choice.sessionPolicy))
+    ||choice.nodeIdentity!==undefined&&choice.nodeIdentity!==true
+    ||Object.keys(choice).some(key=>!['schemaVersion','agentDefinitionRef','sessionPolicy','nodeIdentity'].includes(key)))
+    fail('AI_AGENT_CONTEXT_INVALID','checkpoint.config.workflowAgentContexts.'+runtime.nodeId,'Frozen Agent context must match the exact node task definition and supported policy.');
+  const generation=runtime.nodeContext?.generation??runtime.generation,scope=runtime.nodeContext?.scope??'';
+  if(generation===undefined||!Number.isSafeInteger(generation)||generation<0||typeof scope!=='string'||scope.normalize('NFC')!==scope)
+    fail('AI_AGENT_CONTEXT_IDENTITY_REQUIRED','runtime.nodeContext','A frozen Agent context requires its actual native generation and scope.');
+  if(choice.sessionPolicy==='authored')return {generation};
+  const name='workflow-agent-context:'+JSON.stringify([runtime.nodeId,scope,choice.sessionPolicy==='shared'?null:generation]);
+  if(config.instanceName!==undefined&&config.instanceName!==name)fail('AI_AGENT_CONTEXT_NAME_CONFLICT','config.instanceName','An explicit instance name cannot replace the frozen node context identity.');
+  return {name,generation};
 }
 
 function semanticFacts(config: AIAgentEffectConfig, invocationMetadata?: Readonly<Record<string, FlowClosedValue>>): Readonly<Record<string, FlowClosedValue>> {
@@ -201,11 +234,16 @@ async function complete(runtime: AIAgentProcessorRuntime, checkpoint: AIWorkflow
 
 export async function runAgent<Input extends FlowClosedValue = FlowClosedValue, Output extends FlowClosedValue = FlowClosedValue>(runtime: AIAgentProcessorRuntime, input: Input, configInput: AIAgentEffectConfig): Promise<AIAgentRunResult<Output>> {
   const inputValue = normalizeFlowClosedValue(input, 'input') as Input;
-  const config = normalizeAIAgentEffectConfig(configInput);
+  let config = normalizeAIAgentEffectConfig(configInput);
   assertTaskAuthority(runtime, config);
   let checkpoint = await loadCheckpoint(runtime);
+  assertNoTaskSourceOverride(checkpoint, runtime.nodeId);
+  const context=frozenAgentContext(checkpoint,runtime,config);
+  if(context){runtime={...runtime,generation:context.generation};if(context.name!==undefined)config={...config,instanceName:context.name}}
   let ai = profileAI(checkpoint);
   let receipt = ai.invocationsByKey[runtime.invocationKey];
+  if(context?.name!==undefined&&(receipt?.mode==='targeted'||!receipt&&ai.instanceIdByName[context.name]!==undefined))
+    return runTargetedAgent<Input,Output>(runtime,{byName:context.name},{kind:'ai.agent',payload:inputValue},config);
   if (receipt) {
     assertSameInvocation(receipt, runtime, 'new', inputValue, config);
     if (receipt.status === 'completed') return resultFromReceipt(ai, receipt) as AIAgentRunResult<Output>;
@@ -238,11 +276,15 @@ export async function runAgent<Input extends FlowClosedValue = FlowClosedValue, 
 export async function runTargetedAgent<Input extends FlowClosedValue = FlowClosedValue, Output extends FlowClosedValue = FlowClosedValue>(runtime: AIAgentProcessorRuntime, selectorInput: AIAgentSelector, invocationInput: AIAgentInvocation<Input>, configInput: AIAgentEffectConfig): Promise<AIAgentRunResult<Output>> {
   const selector = normalizeAIAgentSelector(selectorInput);
   const invocation = normalizeAIAgentInvocation<Input>(invocationInput);
-  const config = normalizeAIAgentEffectConfig(configInput);
+  let config = normalizeAIAgentEffectConfig(configInput);
   assertTaskAuthority(runtime, config);
   let checkpoint = await loadCheckpoint(runtime);
+  assertNoTaskSourceOverride(checkpoint, runtime.nodeId);
+  const context=frozenAgentContext(checkpoint,runtime,config);
+  if(context){runtime={...runtime,generation:context.generation};if(context.name!==undefined)config={...config,instanceName:context.name}}
   let ai = profileAI(checkpoint);
   const instance = resolveSelector(ai, selector, config);
+  if(context?.name!==undefined&&instance.instanceName!==context.name)fail('AI_AGENT_CONTEXT_TARGET_CONFLICT','selector','Target must be the original instance for this frozen node generation and scope.');
   let receipt = ai.invocationsByKey[runtime.invocationKey];
   if (receipt) {
     assertSameInvocation(receipt, runtime, 'targeted', invocation.payload, config, invocation.metadata);
@@ -279,4 +321,22 @@ export function bindAIAgentProcessors(runtime: AIAgentProcessorRuntime): AIWorkf
     runAgent: <Input extends FlowClosedValue, Output extends FlowClosedValue>(input: Input, config: AIAgentEffectConfig) => runAgent<Input, Output>(runtime, input, config),
     runTargetedAgent: <Input extends FlowClosedValue, Output extends FlowClosedValue>(selector: AIAgentSelector, invocation: AIAgentInvocation<Input>, config: AIAgentEffectConfig) => runTargetedAgent<Input, Output>(runtime, selector, invocation, config),
   });
+}
+
+/** Source selection is an immutable admission fact; authored input cannot select another owner. */
+export function bindWorkflowNodeTasks(runtime: AIAgentProcessorRuntime, delegation?: { delegateTask(input: FlowClosedValue): Promise<FlowClosedValue> }): AIWorkflowNodeTasks {
+  return Object.freeze({ async invoke(input: FlowClosedValue, configInput: AIAgentEffectConfig): Promise<FlowClosedValue> {
+    const config=normalizeAIAgentEffectConfig(configInput),value=normalizeFlowClosedValue(input);
+    assertTaskAuthority(runtime,config);
+    const checkpoint=await loadCheckpoint(runtime),closed=normalizeFlowClosedObject(checkpoint.config),bindings=closed.workflowDelegations;
+    if(bindings!==undefined&&(bindings===null||typeof bindings!=='object'||Array.isArray(bindings)))
+      fail('AI_AGENT_TASK_SOURCES_INVALID','checkpoint.config.workflowDelegations','Frozen node task sources must be an object.');
+    if(bindings&&Object.hasOwn(bindings,runtime.nodeId)){
+      if(Object.keys(config).some(key=>key!=='agentDefinitionRef'))
+        fail('AI_AGENT_TASK_EFFECT_OVERRIDE_UNSUPPORTED','config','Delegated tasks use their frozen materials, model and context; Agent instance or effect overrides cannot be ignored.');
+      if(!delegation)fail('AI_AGENT_TASK_OWNER_REQUIRED','runtime.delegation','The admitted node task owner is unavailable.');
+      return delegation.delegateTask(value);
+    }
+    return (await runAgent(runtime,value,config)).output;
+  }});
 }

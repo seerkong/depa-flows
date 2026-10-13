@@ -392,7 +392,20 @@ function loadCtrlFlowSources(
           note('invalid-timeout', `<Timeout #${id ?? ''}>.timeoutMs must be a non-negative number`);
         }
       }
-      if (node.tag === 'ForEach') requirePositiveInteger(node, 'concurrency');
+      if (node.tag === 'Until') {
+        requirePositiveInteger(node, 'maxIterations');
+        if (node.attributes?.onExhausted !== undefined && !['fail', 'complete'].includes(String(node.attributes.onExhausted))) {
+          note('invalid-on-exhausted', `<Until #${id ?? ''}>.onExhausted must be fail or complete`);
+        }
+      }
+      if (node.tag === 'ForEach') {
+        requirePositiveInteger(node, 'concurrency');
+        requirePositiveInteger(node, 'maxItems');
+        const maxItems = node.attributes?.maxItems;
+        if (maxItems !== undefined && (typeof maxItems !== 'number' || maxItems > 1000)) note('invalid-max-items', `<ForEach #${id ?? ''}>.maxItems must be 1..1000`);
+        const concurrency = node.attributes?.concurrency;
+        if (concurrency !== undefined && typeof concurrency === 'number' && concurrency > Math.min(32, typeof maxItems === 'number' ? maxItems : 1000)) note('invalid-concurrency', `<ForEach #${id ?? ''}>.concurrency exceeds its bounded capacity`);
+      }
       if (node.tag === 'CallFlow') {
         const target = node.attributes?.flow;
         if (typeof target !== 'string' || !/^(?:instant-ctrl-flow|work-ctrl-flow|bp-ctrl-flow):\/\/[\w.-]+$/.test(target)) {

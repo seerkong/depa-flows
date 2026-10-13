@@ -11,6 +11,7 @@ import type {
   TaskSpaceId,
   TaskTerminalStatus,
   TaskTimestamp,
+  TaskRootControl,
 } from './kernel.js';
 
 interface TaskReceiptBase<Kind extends string> {
@@ -18,6 +19,7 @@ interface TaskReceiptBase<Kind extends string> {
   readonly receiptId: TaskReceiptId;
   readonly commandId: TaskCommandId;
   readonly commandDigest: TaskCommandDigest;
+  readonly intentDigest?: TaskCommandDigest;
   readonly taskSpaceId: TaskSpaceId;
   readonly fromRevision: TaskRevision;
   readonly toRevision: TaskRevision;
@@ -45,8 +47,14 @@ export interface TaskReplanReceipt extends TaskReceiptBase<'task-replan-receipt'
   readonly affectedTaskIds: readonly TaskId[];
 }
 
+export interface TaskRootControlReceipt extends TaskReceiptBase<'task-root-control-receipt'> {
+  readonly taskId: TaskId;
+  readonly control: TaskRootControl;
+}
+
 export type TaskCommandReceipt =
   | TaskTransitionReceipt
   | TaskClaimReceipt
   | TaskSettlementReceipt
-  | TaskReplanReceipt;
+  | TaskReplanReceipt
+  | TaskRootControlReceipt;

@@ -29,11 +29,15 @@ import type {
   TaskTimestamp,
   TaskTransitionReceipt,
   WaitTaskCommand,
+  ControlTaskRootCommand,
+  PrepareTaskCommand,
+  TaskRootControlReceipt,
 } from 'task-manager-contract';
 import { canonicalOwnDataDigest } from 'task-manager-contract';
 import { buildTaskCompletionGraph, type TaskCompletionGraph } from './completionGraph.js';
 import { TaskManagerError } from './errors.js';
 import { assertTaskTransition, isTerminal } from './statusMachine.js';
+import {assertRootDispatchOpen,reduceTaskRootControl,reduceTaskPreparation,taskRoot,assertReplanDurableTasksImmutable} from './root-control.js';
 import {
   assertClaimIdentity,
   assertClaimLive,
@@ -162,6 +166,7 @@ export async function patchTaskSpace<Profile extends TaskProfileEnvelope>(
     ...snapshot.definition,
     tasks: snapshot.definition.tasks.map((task) => task.taskId === current.taskId ? nextDefinition : task),
   };
+  if(snapshot.tasks.some(task=>task.rootControl))assertReplanDurableTasksImmutable(snapshot,definition);
   validateTaskSpaceDefinition(definition, normalizeTaskProcessorConfig(config));
   const artifactBodies = input.artifactBodies ?? [];
   await assertArtifactAuthority(runtime.owner, input.taskSpaceId, definition.tasks.flatMap(({ inputArtifacts }) => inputArtifacts), artifactBodies);
@@ -194,6 +199,7 @@ export async function claimTask(
   if (task.definition.kind !== 'task' || task.status !== 'Ready') {
     throw new TaskManagerError('task-not-ready', `task ${task.taskId} is not a claimable Ready task`);
   }
+  assertRootDispatchOpen(snapshot,input.taskId);
   const normalized = normalizeTaskProcessorConfig(config);
   if (!Number.isSafeInteger(input.leaseDurationMs)
     || input.leaseDurationMs <= 0
@@ -453,11 +459,28 @@ export async function cancelTask(
   if (replay) return replay;
   const snapshot = await loadExpected(runtime, input);
   const task = requireTask(snapshot, input.taskId);
-  if (isTerminal(task.status)) {
+  if (isTerminal(task.status) && !input.cascade) {
     throw new TaskManagerError('terminal-task-immutable', `task ${task.taskId} is terminal (${task.status})`);
   }
   validateTimestamp(input.cancelledAt, 'cancelledAt');
   if (input.claim) assertClaimIdentity(snapshot, input.claim, task.taskId);
+  if (input.cascade !== undefined && input.cascade !== true) throw new TaskManagerError('invalid-task-transition', 'cascade must be explicitly true');
+  if (input.cascade) {
+    const selected = new Set([task.taskId]);
+    for (let grew = true; grew;) {
+      grew = false;
+      for (const relation of snapshot.definition.relations) if (relation.kind === 'parent-child' && relation.parentTaskId !== null && selected.has(relation.parentTaskId) && !selected.has(relation.childTaskId)) { selected.add(relation.childTaskId); grew = true; }
+    }
+    const events: TaskHistoryEvent[] = [];
+    const tasks = snapshot.tasks.map(current => {
+      if (!selected.has(current.taskId) || isTerminal(current.status)) return current;
+      assertTaskTransition(current.taskId, current.status, 'Cancelled');
+      events.push({...stateEventBase(snapshot,input,events.length,input.cancelledAt,current,'Cancelled'),kind:'task.cancelled',...(current.activeClaim ? {claimId:current.activeClaim.claimId} : {}),reason:nonEmpty(input.reason,'reason')});
+      return {...current,status:'Cancelled' as const,activeClaim:null,updatedAt:input.cancelledAt,...(current.taskId===task.taskId && input.profile ? {profile:input.profile} : {})};
+    });
+    const receipt: TaskSettlementReceipt = {...nextReceiptBase(snapshot,input,input.cancelledAt,events.map(event=>event.eventId)),kind:'task-settlement-receipt',taskId:task.taskId,...(input.claim ? {claimId:input.claim.claimId} : {}),status:task.status==='Succeeded'||task.status==='Failed'?task.status:'Cancelled'};
+    return admitExisting(runtime,input,snapshot,snapshot.definition,tasks,events,receipt);
+  }
   assertTaskTransition(task.taskId, task.status, 'Cancelled');
   const nextTask: TaskRecord = {
     ...task,
@@ -503,7 +526,8 @@ export async function replanTask(
   await assertArtifactAuthority(runtime.owner, input.taskSpaceId, definition.tasks.flatMap(({ inputArtifacts }) => inputArtifacts), artifactBodies);
   const provisional: TaskRecord[] = definition.tasks.map((nextDefinition) => {
     const prior = taskRecordById(snapshot, nextDefinition.taskId);
-    if (prior) return { ...prior, definition: nextDefinition, updatedAt: input.replannedAt };
+    if (prior) return { ...prior, definition: nextDefinition,
+      ...(!prior.activeClaim&&prior.attempt===0&&!prior.preparationReceiptId&&!isTerminal(prior.status)?{profile:nextDefinition.profile}:{}),updatedAt: input.replannedAt };
     return {
       kind: 'task-record',
       taskSpaceId: snapshot.taskSpaceId,
@@ -571,6 +595,29 @@ async function claimedStateTransition(
     taskId: task.taskId,
   };
   return admitExisting(runtime, input, snapshot, snapshot.definition, replaceTask(snapshot, nextTask), [event], receipt);
+}
+
+export async function controlTaskRoot(runtime:TaskManagerRuntime,input:ControlTaskRootCommand,config:TaskProcessorConfig):Promise<TaskProcessorResult<TaskRootControlReceipt>>{
+  input=canonicalCommand(input);
+  const replay=await replayed<TaskRootControlReceipt>(runtime,input,'task-root-control-receipt');
+  if(replay)return replay;
+  const snapshot=await loadExpected(runtime,input);
+  validateTimestamp(input.occurredAt,'occurredAt');
+  validateTaskSpaceDefinition(snapshot.definition,normalizeTaskProcessorConfig(config));
+  const control=reduceTaskRootControl(snapshot,input),task=requireTask(snapshot,input.taskId);
+  const event={...nextEventBase(snapshot,input,0,input.occurredAt),kind:'task.root-controlled' as const,taskId:task.taskId,control};
+  const receipt:TaskRootControlReceipt={...nextReceiptBase(snapshot,input,input.occurredAt,[event.eventId]),kind:'task-root-control-receipt',taskId:task.taskId,control};
+  return admitExisting(runtime,input,snapshot,snapshot.definition,replaceTask(snapshot,{...task,rootControl:control,updatedAt:input.occurredAt}),[event],receipt,input.artifactBodies??[]);
+}
+
+export async function prepareTask(runtime:TaskManagerRuntime,input:PrepareTaskCommand,config:TaskProcessorConfig):Promise<TaskProcessorResult<TaskTransitionReceipt>>{
+  input=canonicalCommand(input);
+  const replay=await replayed<TaskTransitionReceipt>(runtime,input,'task-transition-receipt');if(replay)return replay;
+  const snapshot=await loadExpected(runtime,input);validateTaskSpaceDefinition(snapshot.definition,normalizeTaskProcessorConfig(config));
+  const task=reduceTaskPreparation(snapshot,input);
+  const event={...nextEventBase(snapshot,input,0,input.preparedAt),kind:'task.prepared' as const,taskId:task.taskId,preparationReceiptId:task.preparationReceiptId!};
+  const receipt:TaskTransitionReceipt={...nextReceiptBase(snapshot,input,input.preparedAt,[event.eventId]),kind:'task-transition-receipt',taskId:task.taskId};
+  return admitExisting(runtime,input,snapshot,snapshot.definition,replaceTask(snapshot,task),[event],receipt);
 }
 
 async function replayed<Receipt extends TaskCommandReceipt>(
@@ -709,40 +756,6 @@ function replaceTask(snapshot: TaskSpaceSnapshot, replacement: TaskRecord): Task
   return snapshot.tasks.map((task) => task.taskId === replacement.taskId ? replacement : task);
 }
 
-function assertReplanDurableTasksImmutable(
-  snapshot: TaskSpaceSnapshot,
-  nextDefinition: TaskSpaceDefinition,
-): void {
-  for (const prior of snapshot.tasks) {
-    const next = nextDefinition.tasks.find(({ taskId }) => taskId === prior.taskId);
-    if (!next) {
-      if (isTerminal(prior.status) || prior.activeClaim) {
-        throw new TaskManagerError('terminal-task-immutable', `replan cannot remove durable task ${prior.taskId}`);
-      }
-      continue;
-    }
-    if (!isTerminal(prior.status)) continue;
-    const priorRelations = incidentRelations(snapshot.definition, prior.taskId);
-    const nextRelations = incidentRelations(nextDefinition, prior.taskId);
-    if (canonicalOwnDataDigest(prior.definition) !== canonicalOwnDataDigest(next)
-      || canonicalOwnDataDigest(priorRelations) !== canonicalOwnDataDigest(nextRelations)) {
-      throw new TaskManagerError(
-        'terminal-task-immutable',
-        `replan cannot rewrite terminal task ${prior.taskId} definition, profile, identity or relations`,
-      );
-    }
-  }
-}
-
-function incidentRelations(
-  definition: TaskSpaceDefinition,
-  taskId: TaskId,
-): TaskSpaceDefinition['relations'] {
-  return definition.relations.filter((relation) => relation.kind === 'parent-child'
-    ? relation.parentTaskId === taskId || relation.childTaskId === taskId
-    : relation.predecessorTaskId === taskId || relation.successorTaskId === taskId);
-}
-
 function dependenciesSucceeded(
   completionGraph: TaskCompletionGraph,
   tasks: readonly TaskRecord[],
@@ -811,6 +824,7 @@ function receiptBase(
     commandId: input.commandId,
     commandDigest: canonicalOwnDataDigest(input),
     taskSpaceId: input.taskSpaceId,
+    ...(input.intentDigest?{intentDigest:input.intentDigest}:{}),
     fromRevision,
     toRevision,
     eventIds,
@@ -890,6 +904,8 @@ function stabilizeTaskProjection(
           status = dependenciesSucceeded(completionGraph, tasks, task.taskId) ? 'Ready' : 'Pending';
         }
       } else {
+        // Explicit cancellation is an owner decision, not a derived child outcome.
+        if (task.status === 'Cancelled') return task;
         const childStatuses = (childrenByParent.get(task.taskId) ?? [])
           .map((childId) => tasks.find(({ taskId }) => taskId === childId)!.status);
         status = projectGroupStatus(task.definition.mode, childStatuses,

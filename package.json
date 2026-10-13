@@ -5,8 +5,7 @@
   "description": "depa-flows workspace root (bun monorepo)",
   "workspaces": [
     "packages/*",
-    "tools/*",
-    "../depa-processor"
+    "tools/*"
   ],
   "scripts": {
     "flow-dsl-check": "bun tools/flow-dsl-check/check.mjs",
@@ -16,7 +15,7 @@
   "devDependencies": {
     "bun-types": "^1.3.14",
     "typescript": "^5.5.0",
-    "xnl-core": "^0.1.8",
+    "xnl-core": "0.1.13",
     "instant-ctrl-flow-logic": "workspace:*"
   },
   "overrides": {

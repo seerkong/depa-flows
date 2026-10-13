@@ -10,6 +10,7 @@ import type {
 import { canonicalOwnDataDigest } from 'task-manager-contract';
 import { TaskManagerError } from './errors.js';
 import { assertArtifactBody, assertArtifactRef } from './validation.js';
+import {assertReplanDurableTasksImmutable,assertRootDispatchOpen,reduceTaskRootControl,reduceTaskPreparation,sameRootControl,taskRoot,validateRootControl} from './root-control.js';
 
 export interface TaskSpaceCommitAdmissionContext {
   readonly currentSnapshot?: TaskSpaceSnapshot;
@@ -57,9 +58,34 @@ export function validateTaskSpaceCommitAdmission(
     invalid('snapshot identity or revision disagrees with CAS');
   }
   assertSnapshotIdentity(commit.snapshot);
+  const preparing=commit.command.kind==='task.prepare'?commit.command:undefined;
+  const prepared=preparing&&current?reduceTaskPreparation(current,preparing):undefined;
+  if(preparing&&(!current||!prepared||canonicalOwnDataDigest(commit.snapshot.definition)!==canonicalOwnDataDigest(current.definition)))invalid('preparation cannot create or rewrite a tree');
+  if(current?.tasks.some(task=>task.rootControl))assertReplanDurableTasksImmutable(current,commit.snapshot.definition);
+  const controlled=commit.command.kind==='task.root-control'?commit.command:undefined;
+  const expectedControl=controlled&&current?reduceTaskRootControl(current,controlled):undefined;
+  if(controlled&&(!current||!expectedControl))invalid('root control requires an existing owner snapshot');
+  if(controlled&&canonicalOwnDataDigest(commit.snapshot.definition)!==canonicalOwnDataDigest(current!.definition))invalid('root control cannot rewrite the task tree');
+  for(const task of commit.snapshot.tasks){
+    if(task.rootControl){validateRootControl(task.rootControl);if(taskRoot(commit.snapshot,task.taskId).taskId!==task.taskId)invalid('non-root task has root control');}
+    const prior=current?.tasks.find(item=>item.taskId===task.taskId);
+    if(task.preparationReceiptId!==(task.taskId===prepared?.taskId?prepared.preparationReceiptId:prior?.preparationReceiptId))invalid('preparation receipt bypassed canonical command');
+    if(preparing&&prior&&canonicalOwnDataDigest(task)!==canonicalOwnDataDigest(task.taskId===prepared?.taskId?prepared:prior))invalid('preparation cannot rewrite other execution facts');
+    if(current&&task.activeClaim&&(!prior?.activeClaim||task.activeClaim.claimId!==prior.activeClaim.claimId))assertRootDispatchOpen(current,task.taskId);
+    if(!sameRootControl(task.taskId===controlled?.taskId?expectedControl:prior?.rootControl,task.rootControl))invalid('root control bypassed its canonical command');
+    if(controlled&&prior){
+      const expected=prior.taskId===controlled.taskId?{...prior,rootControl:expectedControl,updatedAt:controlled.occurredAt}:prior;
+      if(canonicalOwnDataDigest(task)!==canonicalOwnDataDigest(expected))invalid('root control cannot rewrite task execution facts');
+    }
+  }
+  if(current?.tasks.some(task=>task.rootControl&&!commit.snapshot.tasks.some(next=>next.taskId===task.taskId)))invalid('cannot remove a root with retained control');
 
   if (commit.receipts.length !== 1) invalid('one CAS command must issue exactly one receipt');
   const receipt = commit.receipts[0]!;
+  if(prepared&&(receipt.kind!=='task-transition-receipt'||receipt.taskId!==prepared.taskId||receipt.receiptId!==prepared.preparationReceiptId||commit.events.length!==1||commit.events[0]?.kind!=='task.prepared'||commit.events[0].taskId!==prepared.taskId||commit.events[0].preparationReceiptId!==prepared.preparationReceiptId))invalid('preparation event or receipt does not prove admission');
+  if(receipt.intentDigest!==commit.command.intentDigest||commit.command.intentDigest!==undefined&&!/^sha256:[a-f0-9]{64}$/.test(commit.command.intentDigest))invalid('receipt intent proof disagrees with canonical command');
+  if(controlled&&(receipt.kind!=='task-root-control-receipt'||receipt.taskId!==controlled.taskId||!sameRootControl(receipt.control,expectedControl)))invalid('root control receipt does not prove the admitted transition');
+  if(controlled&&(commit.events.length!==1||commit.events[0]?.kind!=='task.root-controlled'||commit.events[0].taskId!==controlled.taskId||!sameRootControl(commit.events[0].control,expectedControl)))invalid('root control event does not prove the admitted transition');
   if (receipt.commandId !== commit.commandId
     || receipt.commandDigest !== commandDigest
     || receipt.taskSpaceId !== commit.taskSpaceId

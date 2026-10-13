@@ -16,6 +16,7 @@ import type { WorkCtrlFlowSnapshot } from 'work-ctrl-flow-contract';
 import {
   createMaterializedWorkCtrlFlowEngineFromDirectory,
   loadFrozenCtrlDefinitionStepIds,
+  loadFrozenCtrlDefinitionMembership,
   loadMaterializedFlowInstance,
   materializeFlowInstance,
   type MaterializedWorkCtrlFlowDirectoryOptions,
@@ -293,7 +294,7 @@ export class FilesystemFlowRunCheckpointStore implements FlowRunCheckpointStore<
     if (!fs.existsSync(locations.runDir)) return undefined;
     assertExistingDirectory(locations.runDir, this.#realStoreRoot, 'flow-run-symlink-boundary');
     if (!fs.existsSync(locations.checkpointFile)) return undefined;
-    const checkpoint = readCheckpointFile(locations.checkpointFile, this.#realStoreRoot);
+    const checkpoint = this.#readStorage(locations.checkpointFile).checkpoint;
     this.#assertCheckpointIdentity(checkpoint, key, descriptor.definition);
     this.#validateFrozenProfile(checkpoint);
     return checkpoint;
@@ -317,7 +318,7 @@ export class FilesystemFlowRunCheckpointStore implements FlowRunCheckpointStore<
       this.#assertRunPhysicalBoundary(locations);
       removeUncommittedStaging(locations.stagingFile, locations.runDir, this.#realStoreRoot);
       const currentStorage = fs.existsSync(locations.checkpointFile)
-        ? readCheckpointStorage(locations.checkpointFile, this.#realStoreRoot)
+        ? this.#readStorage(locations.checkpointFile)
         : undefined;
       const current = currentStorage?.checkpoint;
       if (current) {
@@ -338,13 +339,15 @@ export class FilesystemFlowRunCheckpointStore implements FlowRunCheckpointStore<
           ));
       const encoded = encodeCheckpointSidecars(checkpoint, currentStorage?.tree, {
         definitionStepIds,
+        ...(checkpoint.profile.kind === 'AIDataWorkflow' ? {} : { definitionInvocationOwners: frozenAuthority?.definitionInvocationOwners
+          ?? loadFrozenCtrlDefinitionMembership(path.join(locations.instanceDir, 'definition'), checkpoint.profile.kind, this.#extensionCodecs).invocationOwners }),
         previousMaterialRecordDigests: currentStorage?.materialRecordDigests,
       });
       removeUnacceptedSidecarReceipt(locations.runDir, checkpoint.version, this.#realStoreRoot);
       persistCheckpointSidecars(locations.runDir, encoded, this.#durability);
       assertSidecarDirectories(locations.runDir, this.#realStoreRoot);
       writeCheckpointCandidate(locations.stagingFile, encoded.head, this.#realStoreRoot, this.#durability);
-      const staged = readCheckpointFile(locations.stagingFile, this.#realStoreRoot);
+      const staged = this.#readStorage(locations.stagingFile).checkpoint;
       this.#assertCheckpointIdentity(staged, key, descriptor.definition);
       this.#validateFrozenProfile(staged);
       if (stableJson(staged) !== stableJson(checkpoint)) {
@@ -359,7 +362,7 @@ export class FilesystemFlowRunCheckpointStore implements FlowRunCheckpointStore<
         assertRegularFile(locations.checkpointFile, this.#realStoreRoot, 'flow-run-checkpoint-invalid');
       }
       renameDurably(locations.stagingFile, locations.checkpointFile, 'head', this.#durability);
-      const accepted = readCheckpointFile(locations.checkpointFile, this.#realStoreRoot);
+      const accepted = this.#readStorage(locations.checkpointFile).checkpoint;
       this.#assertCheckpointIdentity(accepted, key, descriptor.definition);
       this.#validateFrozenProfile(accepted);
       if (stableJson(accepted) !== stableJson(checkpoint)) {
@@ -452,7 +455,7 @@ export class FilesystemFlowRunCheckpointStore implements FlowRunCheckpointStore<
     try {
       this.#assertRunPhysicalBoundary(locations);
       const checkpoint = fs.existsSync(locations.checkpointFile)
-        ? readCheckpointFile(locations.checkpointFile, this.#realStoreRoot)
+        ? this.#readStorage(locations.checkpointFile).checkpoint
         : undefined;
       if (!checkpoint) {
         throw new LegacyWorkCtrlImportError(
@@ -572,6 +575,13 @@ export class FilesystemFlowRunCheckpointStore implements FlowRunCheckpointStore<
       ...(this.#profileAuthority === undefined ? {} : { profileAuthority: this.#profileAuthority }),
       extensionCodecs: this.#extensionCodecs,
     }, { requireAIDataAuthority: true });
+  }
+
+  #readStorage(file: string) {
+    return readCheckpointStorage(file, this.#realStoreRoot, {
+      profileAuthority: this.#profileAuthority,
+      extensionCodecs: this.#extensionCodecs,
+    });
   }
 
   #ensureRunDirectory(locations: FlowRunFilesystemLocations): void {
@@ -1018,13 +1028,10 @@ function ensureChildDirectory(
   assertExistingDirectory(child, realRoot, 'flow-run-boundary-invalid');
 }
 
-function readCheckpointFile(file: string, realRoot: string): AIWorkflowFlowRunCheckpoint {
-  return readCheckpointStorage(file, realRoot).checkpoint;
-}
-
 function readCheckpointStorage(
   file: string,
   realRoot: string,
+  runtime: { readonly profileAuthority?: import('./checkpoint-profile.js').FlowRunProfileAuthorityPort; readonly extensionCodecs: import('flow-step-space-contract').DefinitionStepExtensionCodecRegistryPort },
 ): {
   readonly checkpoint: AIWorkflowFlowRunCheckpoint;
   readonly tree?: StepMerkleTree;
@@ -1034,7 +1041,13 @@ function readCheckpointStorage(
   try {
     if (isCheckpointHead(value)) {
       assertSidecarDirectories(path.dirname(file), realRoot);
-      const loaded = readCheckpointHeadAndLogical(file);
+      const loaded = readCheckpointHeadAndLogical(file,{ctrlMembership(head,kind){
+        assertSafeSegment(head.instanceId);
+        const authority=runtime.profileAuthority?.load({instanceId:head.instanceId,definition:head.definition,profileKind:kind});
+        return authority?.definitionInvocationOwners
+          ? {definitionStepIds:authority.definitionStepIds,invocationOwners:authority.definitionInvocationOwners}
+          : loadFrozenCtrlDefinitionMembership(path.join(realRoot,'instances',head.instanceId,'definition'),kind,runtime.extensionCodecs);
+      }});
       return {
         checkpoint: loaded.checkpoint,
         tree: loaded.tree,

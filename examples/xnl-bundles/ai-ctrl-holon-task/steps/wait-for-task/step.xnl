@@ -1,8 +1,0 @@
-<Step #wait-for-task (
-  <Core [
-    <ExternalJob #wait-for-task {
-      signalKind = "holon.task.settled"
-      signalKey = "support-review-task"
-    }>
-  ]>
-)>

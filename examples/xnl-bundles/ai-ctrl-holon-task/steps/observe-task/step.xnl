@@ -1,8 +1,0 @@
-<Step #observe-task (
-  <Core [
-    <Run #observe-task {
-      src = "vfs://./flow-code/holon-task.ts#observeOrganizationTask"
-      config = { taskSpaceId = "support-review-space" taskId = "support-review-task" settlementCommandId = "support-review-settle" }
-    }>
-  ]>
-)>

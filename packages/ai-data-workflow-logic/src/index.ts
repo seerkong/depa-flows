@@ -1,3 +1,4 @@
+export {planAIDataWorkflowAfterPatch} from './after.js';
 import type {
   AIDataWorkflowGraphPatch,
   AIDataWorkflowGraphPatchNodeSpec,
@@ -20,6 +21,7 @@ import type {
   AIDataWorkflowRunProfileState,
   AIDataWorkflowRuntime,
   AIAgentHostEffectPort,
+  AIAgentProcessorRuntime,
   FrozenAIAgentTaskBinding,
   AIWorkflowAuthoredEffects,
   AIWorkflowDefinitionRef,
@@ -58,10 +60,12 @@ import {
   loadFlowRunCheckpoint,
   resolveAIWorkflowReusePolicy,
   bindAIAgentProcessors,
+  bindWorkflowNodeTasks,
+  bindWorkflowTaskDelegation,
+  normalizeFlowClosedObject,
 } from 'ai-workflow-logic';
 import { assertFrozenAIAgentTaskBinding } from 'ai-workflow-logic/run-freeze';
 
-export * from './holon-task.js';
 export * from './autonomous-control.js';
 export * from './child-invocation.js';
 
@@ -175,7 +179,7 @@ export function createAIDataWorkflowAgentNodeRuntimeBinder(
     const proof = options.taskProofs[identity.nodeId];
     if (!proof) throw new Error(`AI_AGENT_TASK_PROOF_REQUIRED: no frozen proof for node ${identity.nodeId}.`);
     const taskBinding = assertFrozenAIAgentTaskBinding(proof).task;
-    const effects = bindAIAgentProcessors({
+    const agentRuntime = {
       checkpointRuntime: options.checkpointRuntime,
       checkpointKey: { instanceId: options.flowInstanceId, runId: options.runId },
       nodeId: identity.nodeId,
@@ -186,8 +190,19 @@ export function createAIDataWorkflowAgentNodeRuntimeBinder(
       taskBinding,
       effects: options.effects,
       ...(options.metadata === undefined ? {} : { metadata: options.metadata }),
-    });
-    return Object.freeze({ ai: Object.freeze({ ...runtime.ai, effects }) });
+    } satisfies AIAgentProcessorRuntime;
+    const effects = bindAIAgentProcessors(agentRuntime);
+    const delegation=options.effects.delegation ? bindWorkflowTaskDelegation({
+        checkpointRuntime: options.checkpointRuntime,
+        checkpointKey: { instanceId: options.flowInstanceId, runId: options.runId },
+        nodeId: identity.nodeId, invocationKey: `${identity.nodeId}#${generation}`,
+        workflowKind: 'AIDataWorkflow', workflowRef: options.workflowRef, taskBinding,
+        visit: `generation:${generation}`, generation, effects: options.effects.delegation,
+      }) : undefined;
+    return Object.freeze({ ai: Object.freeze({ ...runtime.ai, effects,
+      tasks:bindWorkflowNodeTasks(agentRuntime,delegation),
+      ...(delegation?{delegation}:{}),
+    }) });
   };
 }
 
@@ -272,6 +287,7 @@ function cloneNodeResult(result: AIWorkflowNodeResult): AIWorkflowNodeResult {
     ...result,
     ...(result.semanticFingerprint ? { semanticFingerprint: cloneFingerprint(result.semanticFingerprint) } : {}),
     ...(result.reusedFrom ? { reusedFrom: { ...result.reusedFrom } } : {}),
+    ...(result.waitContext===undefined?{}:{waitContext:normalizeFlowClosedObject(result.waitContext)}),
   };
 }
 
@@ -1133,6 +1149,7 @@ export function recordAIDataWorkflowNodeResult(
       `AI Data Workflow result generation ${result.generation} does not match node ${nodeId}@${node.generation}`,
     );
   }
+  if(node.result?.waitContext!==undefined&&(result.waitContext===undefined||JSON.stringify(normalizeFlowClosedObject(node.result.waitContext))!==JSON.stringify(normalizeFlowClosedObject(result.waitContext))))throw new AIDataWorkflowRunGraphError(`AI Data Workflow native wait context ${nodeId}@${node.generation} is immutable`);
   if (node.result
     && (node.result.status === 'Succeeded' || node.result.status === 'Failed' || node.result.status === 'Reused')) {
     if (JSON.stringify(node.result) === JSON.stringify(result)) return cloneGraph(graph);

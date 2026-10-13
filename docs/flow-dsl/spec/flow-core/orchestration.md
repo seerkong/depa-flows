@@ -60,6 +60,12 @@ output = fn(runtime, input, config)
 
 ## 产品能力矩阵
 
+`Until` 可显式设置 `onExhausted="complete"`，达到本次 `maxIterations` 后正常继续；省略或 `fail` 保持原来的失败语义。正常耗尽不表示业务已经收敛，业务输出须保留自己的收敛状态。
+
+`ForEach` 可声明 `maxItems=1..1000` 和 `concurrency=1..min(32,maxItems)`；超过集合预算在提交任何分项前拒绝，不截断集合。未声明 `maxItems` 的普通遍历仍遍历全部输入。WorkCtrl 首次展开将集合、数量和并发预算持久化，模板沿 instance 的冻结定义读取；等待项继续占槽，恢复按原 lane 和 wait 身份推进，输出按输入顺序归并。后续 statement 只在所有分项完成后执行。
+
+Host 可调用纯函数 `applyFlowControlOptions(spec, options)` 在检查时生成本次定义副本。最多64个精确节点覆盖；Until 的次数覆盖为1..1000，Map预算与并发按上界验证。该转换不修改原模板或旧运行，重置使用原定义重新转换；它本身不授予目录权限或启动执行。
+
 | 能力 | InstantCtrlFlow | WorkCtrlFlow | BPCtrlFlow |
 |---|---|---|---|
 | `Run` / `If` / `Require` / `Fallback` / `Until` / `Return` | 是 | 是 | 是 |
@@ -159,3 +165,4 @@ canonical XNL definition
 ## 规范约束
 
 该矩阵和边界由 loader、compiler、runtime、examples 与 tests 共同验证。合法 definition 仍可能因为当前 runtime capability 不可用而得到 `runtime-capability-unavailable`；实现不得静默降级成其他 profile 或节点语义。
+原生持久化将编译生成的谓词、分支与 fallback 动作投影到其精确的定义步骤 owner；不会按名称前缀接纳任意新动作。checkpoint 读回会对照冻结编译结果，旧格式未携带此投影时仍从原冻结定义恢复。运行期故障只在引擎拥有的 fault 槽中投影为诊断数据；业务输出仍须满足封闭数据合同。

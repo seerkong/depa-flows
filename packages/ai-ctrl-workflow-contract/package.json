@@ -1,6 +1,6 @@
 {
   "name": "ai-ctrl-workflow-contract",
-  "version": "0.2.0",
+  "version": "0.3.0-simplification.0",
   "private": false,
   "description": "AI Ctrl Workflow contracts backed by WorkCtrlFlow runtime state",
   "type": "module",
@@ -9,8 +9,8 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "ai-workflow-contract": "0.2.0",
-    "work-ctrl-flow-contract": "0.1.3"
+    "ai-workflow-contract": "0.3.0-simplification.0",
+    "work-ctrl-flow-contract": "0.1.4"
   },
   "files": [
     "src"

@@ -21,6 +21,8 @@ import {
 } from 'ai-workflow-logic';
 import { createFilesystemFlowCodeResolver, type FlowModuleImporter } from 'instant-ctrl-flow-logic/filesystem';
 import type { FlowNodeSpec } from 'instant-ctrl-flow-contract';
+import { projectWorkCtrlFlowInvocationOwners } from 'work-ctrl-flow-logic';
+import { assertFrozenAIAgentTaskBinding } from 'ai-workflow-logic/run-freeze';
 import {
   assembleDefinitionStepProfileDirectory,
   createFilesystemDefinitionStepProfileRuntime,
@@ -135,24 +137,29 @@ export function createMaterializedAICtrlWorkflowControllerFromDirectory(
     agentTaskProofs: _agentTaskProofs,
     ...controllerOptions
   } = options;
+  const bindAgentNode=options.agentEffects?createAICtrlWorkflowAgentNodeRuntimeBinder({
+    flowInstanceId:options.instanceId,
+    checkpointRuntime:{checkpointStore},
+    effects:options.agentEffects,
+    workflowRef:`resource://${binding.definition.fqn}`,
+    taskProofs:options.agentTaskProofs??{},
+  }):undefined;
   const controller = createAICtrlWorkflowController({
     ...controllerOptions,
     binding,
     store,
     resolveCode: createFilesystemFlowCodeResolver(options.importModule),
-    ...(options.agentEffects ? {
-      bindNodeRuntime: createAICtrlWorkflowAgentNodeRuntimeBinder({
-        flowInstanceId: options.instanceId,
-        checkpointRuntime: { checkpointStore },
-        effects: options.agentEffects,
-        workflowRef: `resource://${binding.definition.fqn}`,
-        taskProofs: options.agentTaskProofs ?? {},
-      }),
+    suspendDelegations: options.agentEffects?.delegation !== undefined,
+    ...(bindAgentNode ? {
+      // Pure branch/loop predicates have no Agent task. Keep the Agent binder
+      // exact for the nodes whose frozen proof actually grants that facade.
+      bindNodeRuntime:(runtime,identity)=>options.agentTaskProofs?.[identity.nodeId]?bindAgentNode(runtime,identity):runtime,
     } : {}),
   });
   const materializedController: AICtrlWorkflowController = {
     ...controller,
     async start(treeId, startOptions) {
+      for (const proof of Object.values(options.agentTaskProofs ?? {})) assertFrozenAIAgentTaskBinding(proof);
       const existing = await controller.store.load(treeId);
       if (existing) {
         if (startOptions?.input !== undefined
@@ -164,6 +171,10 @@ export function createMaterializedAICtrlWorkflowControllerFromDirectory(
         return outcome;
       }
       return controller.start(treeId, startOptions);
+    },
+    async resume(treeId, signal) {
+      for (const proof of Object.values(options.agentTaskProofs ?? {})) assertFrozenAIAgentTaskBinding(proof);
+      return controller.resume(treeId, signal);
     },
   };
   return Object.assign(materializedController, {
@@ -211,6 +222,7 @@ function profileAuthorityFromBinding(
   return Object.freeze({
     profileKind: 'AICtrlWorkflow' as const,
     definitionStepIds: Object.freeze([...definitionStepIds]),
+    definitionInvocationOwners: projectWorkCtrlFlowInvocationOwners(binding.definition),
     extensionsByStepId: Object.freeze(Object.fromEntries((forest?.stepOrder ?? []).flatMap((stepId) => {
       const extensions = Object.fromEntries(Object.entries(forest!.steps[stepId].extensions).map(([kind, extension]) => [kind, Object.freeze({
         ...(extension.schemaRef === undefined ? {} : { schemaRef: extension.schemaRef }),

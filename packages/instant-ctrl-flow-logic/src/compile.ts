@@ -8,6 +8,27 @@ import {
 import type { FlowBundleSpec, FlowNodeSpec } from 'instant-ctrl-flow-contract';
 
 export type CtrlNode = BehaviorTreeNode<CtrlFlowNodeType, INodeConfig>;
+const compiledOwners = new WeakMap<CtrlNode, string>();
+
+function compiledChildren(node: CtrlNode): readonly CtrlNode[] {
+  if (String(node.Type) !== 'wf.Composite') return node.Children;
+  const config = node.Config as { bodyPlan?: CtrlNode; items?: { bodyPlan: CtrlNode }[] };
+  return [...node.Children, ...(config.bodyPlan ? [config.bodyPlan] : []), ...(config.items ?? []).map(item => item.bodyPlan)];
+}
+
+/** Generated actions retain their authored owner; consumers never infer it from a key prefix. */
+export function projectCompiledFlowInvocationOwners(root: CtrlNode): Readonly<Record<string, string>> {
+  const owners = new Map<string, string>();
+  const visit = (node: CtrlNode): void => {
+    const owner = compiledOwners.get(node);
+    if (owner) {
+      if (owners.has(node.Key) && owners.get(node.Key) !== owner) throw new FlowCompileError('ambiguous-action-owner', node.Key);
+      owners.set(node.Key, owner);
+    }
+    compiledChildren(node).forEach(visit);
+  };
+  visit(root); return Object.freeze(Object.fromEntries(owners));
+}
 
 const INTERRUPTIBLE = new Set(['ExternalJob', 'Timer', 'TaskStep']);
 const VIEW_ATTRS = new Set(['status', 'iterations', 'runStatus', 'tickNo']);
@@ -80,11 +101,29 @@ function compileStatement(
   extension: CompileExtension | undefined,
   path: string,
   blockStack: readonly string[] = [],
+  inheritedOwner?: string,
+): CtrlNode {
+  const compiled = compileStatementBody(spec, node, extension, path, blockStack, inheritedOwner);
+  const owner = node.id ?? inheritedOwner;
+  const assign = (current: CtrlNode): void => {
+    if (owner && !compiledOwners.has(current)) compiledOwners.set(current, owner);
+    compiledChildren(current).forEach(assign);
+  };
+  assign(compiled); return compiled;
+}
+
+function compileStatementBody(
+  spec: FlowBundleSpec,
+  node: FlowNodeSpec,
+  extension: CompileExtension | undefined,
+  path: string,
+  blockStack: readonly string[],
+  inheritedOwner?: string,
 ): CtrlNode {
   const key = blockStack.length ? `${path}:${node.id ?? node.tag}` : node.id ?? path;
   const attrs = resolvedAttrs(spec, node);
   const compileStatements = (nodes: FlowNodeSpec[], bodyKey: string) =>
-    sequence(bodyKey, nodes.map((child, index) => compileStatement(spec, child, extension, `${bodyKey}.${index}`, blockStack)));
+    sequence(bodyKey, nodes.map((child, index) => compileStatement(spec, child, extension, `${bodyKey}.${index}`, blockStack, node.id ?? inheritedOwner)));
   const helpers: CompileHelpers = { meta: { key, name: node.id }, attrs, compileStatements };
 
   const extended = extension?.(spec, node, helpers);
@@ -103,7 +142,7 @@ function compileStatement(
       const body = spec.blocks?.[id];
       if (!body) throw new FlowCompileError('unresolved-block-ref', ref);
       if (blockStack.includes(id)) throw new FlowCompileError('recursive-block', [...blockStack, id].join(' -> '));
-      return sequence(key, body.map((child, index) => compileStatement(spec, child, extension, `${key}.block.${id}.${index}`, [...blockStack, id])));
+      return sequence(key, body.map((child, index) => compileStatement(spec, child, extension, `${key}.block.${id}.${index}`, [...blockStack, id], node.id ?? inheritedOwner)));
     }
     case 'Run':
       return action('flow.Run', key, { src: String(attrs.src ?? ''), config: statementConfig(attrs) });
@@ -179,6 +218,7 @@ function compileStatement(
         src: String(attrs.when ?? ''),
         config: statementConfig(attrs),
         maxIterations: Number(attrs.maxIterations ?? 9999),
+        onExhausted: attrs.onExhausted ?? 'fail',
       };
       const initial = action('flow.UntilPredicate', `${key}.__check.initial`, { ...predicateConfig, countIteration: false });
       const repeated = action('flow.UntilPredicate', `${key}.__check.repeat`, { ...predicateConfig, countIteration: true });

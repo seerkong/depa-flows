@@ -1,3 +1,5 @@
+import { createAICtrlWorkflowDelegationHandlers } from './delegation.js';
+export { createAICtrlWorkflowDelegationHandlers } from './delegation.js';
 import type {
   AICtrlWorkflowController,
   AICtrlWorkflowNodeRecord,
@@ -8,6 +10,7 @@ import type {
   AICtrlWorkflowRunProfileState,
   AICtrlWorkflowRuntime,
   AIAgentHostEffectPort,
+  AIAgentProcessorRuntime,
   FrozenAIAgentTaskBinding,
   AIWorkflowAuthoredEffects,
   AIWorkflowEffectProvider,
@@ -28,6 +31,8 @@ import {
   loadFlowRunCheckpoint,
   projectWorkCtrlSnapshotToCheckpointData,
   bindAIAgentProcessors,
+  bindWorkflowNodeTasks,
+  bindWorkflowTaskDelegation,
 } from 'ai-workflow-logic';
 import { assertFrozenAIAgentTaskBinding } from 'ai-workflow-logic/run-freeze';
 import type {
@@ -182,23 +187,39 @@ export function createAICtrlWorkflowAgentNodeRuntimeBinder(
     const proof = options.taskProofs[identity.nodeId];
     if (!proof) throw new Error(`AI_AGENT_TASK_PROOF_REQUIRED: no frozen proof for node ${identity.nodeId}.`);
     const taskBinding = assertFrozenAIAgentTaskBinding(proof).task;
-    const effects: AIWorkflowAuthoredEffects = bindAIAgentProcessors({
+    const visit = identity.invocationKey.slice(identity.invocationKey.lastIndexOf('#') + 1);
+    const scope = identity.invocationKey.includes('/') ? identity.invocationKey.slice(0, identity.invocationKey.lastIndexOf('/')) : '';
+    const agentRuntime = {
       checkpointRuntime: options.checkpointRuntime,
       checkpointKey: { instanceId: options.flowInstanceId, runId: identity.treeId },
       nodeId: identity.nodeId,
       invocationKey: identity.invocationKey,
+      nodeContext:{generation:identity.generation??Number(visit),scope},
       workflowKind: 'AICtrlWorkflow',
       workflowRef: options.workflowRef,
       taskBinding,
       effects: options.effects,
       ...(options.metadata === undefined ? {} : { metadata: options.metadata }),
-    });
-    return Object.freeze({ ...runtime, ai: Object.freeze({ ...workflowRuntime.ai, effects }) });
+    } satisfies AIAgentProcessorRuntime;
+    const effects: AIWorkflowAuthoredEffects = bindAIAgentProcessors(agentRuntime);
+    const delegation=options.effects.delegation ? bindWorkflowTaskDelegation({
+        checkpointRuntime: options.checkpointRuntime,
+        checkpointKey: { instanceId: options.flowInstanceId, runId: identity.treeId },
+        nodeId: identity.nodeId, invocationKey: identity.invocationKey,
+        workflowKind: 'AICtrlWorkflow', workflowRef: options.workflowRef, taskBinding,
+        visit: identity.visit ?? `${scope}#${visit}`, generation: identity.generation ?? Number(visit), effects: options.effects.delegation,
+      }) : undefined;
+    return Object.freeze({ ...runtime, ai: Object.freeze({ ...workflowRuntime.ai, effects,
+      tasks:bindWorkflowNodeTasks(agentRuntime,delegation),
+      ...(delegation?{delegation}:{}),
+    }) });
   };
 }
 
 export interface CreateAICtrlWorkflowControllerOptions
   extends Omit<WorkCtrlFlowEngineOptions, 'definition' | 'runtime' | 'expectedForm'> {
+  /** Set by composition when a native delegation owner is bound. */
+  readonly suspendDelegations?: boolean;
   readonly binding: AICtrlWorkflowDefinitionBinding;
   readonly resolveCode: FlowCodeResolver<AICtrlWorkflowRuntime>;
   readonly resolveFlow?: WorkCtrlFlowDefinition['resolveFlow'];
@@ -216,6 +237,10 @@ export function createAICtrlWorkflowController(
   };
   const engine = new WorkCtrlFlowEngine({
     ...options,
+    ...(options.suspendDelegations ? { extraHandlers: controller => ({
+      ...createAICtrlWorkflowDelegationHandlers(options.binding.definition, options.resolveCode as FlowCodeResolver, options.bindNodeRuntime, controller),
+      ...options.extraHandlers?.(controller),
+    }) } : {}),
     expectedForm: 'WorkCtrlFlow',
     definition,
     runtime: createAICtrlWorkflowRuntime({ runtime: options.runtime, ai: options.ai }),
@@ -302,4 +327,3 @@ export async function getAICtrlWorkflowRunRecord(
   return snapshot ? projectAICtrlWorkflowRunRecord(snapshot, await controller.getOutcome(treeId)) : undefined;
 }
 
-export * from './holon-task.js';

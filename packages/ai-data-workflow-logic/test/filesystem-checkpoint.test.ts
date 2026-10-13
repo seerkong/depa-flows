@@ -1192,7 +1192,7 @@ describe('materialized AI Data canonical execution', () => {
     expect(executions).toEqual({ prepare: 1, finalize: 1 });
   });
 
-  test('uses the named Agent facade across ordinary nodes and fresh reconstruction', async () => {
+  for(const entry of ['legacy','node-task'] as const)test(`uses the named Agent facade across ordinary nodes and fresh reconstruction (${entry})`, async () => {
     const supportRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-data-agent-facade-'));
     const source = path.join(supportRoot, 'source');
     fs.mkdirSync(source);
@@ -1220,8 +1220,8 @@ describe('materialized AI Data canonical execution', () => {
       agentTaskProofs: { 'transform-request': projectFrozenAIAgentTaskBinding(receipt) },
       importModule: async () => ({
         transformRequest: async (nodeRuntime: any, input: any, config: any) => {
-          const result = await nodeRuntime.ai.effects.runAgent(input, config);
-          return { result: result.output.text };
+          const output = entry==='node-task'?await nodeRuntime.ai.tasks.invoke(input,config):(await nodeRuntime.ai.effects.runAgent(input, config)).output;
+          return { result: output.text };
         },
       }),
     } as const;

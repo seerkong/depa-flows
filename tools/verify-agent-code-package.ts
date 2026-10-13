@@ -53,7 +53,7 @@ try {
   const tests: Record<string, string[]> = {
     'ai-workflow-logic': ['agent-code-execution.test.ts', 'agent-code-process-recovery.test.ts',
       'agent-execution-resources.test.ts', 'agent-definition-selection.test.ts', 'run-freeze.test.ts',
-      'holon-task-target.test.ts', 'resource-kind-contracts.test.ts'],
+      'resource-kind-contracts.test.ts'],
     'ai-data-workflow-logic': ['checkpoint-store.test.ts'],
     'ai-ctrl-workflow-logic': ['checkpoint-store.test.ts'],
   };

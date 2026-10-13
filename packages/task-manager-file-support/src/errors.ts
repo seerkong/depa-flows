@@ -10,7 +10,8 @@ export type FileTaskSpaceErrorCode =
   | 'journal-corrupt'
   | 'lock-corrupt'
   | 'lock-timeout'
-  | 'path-boundary';
+  | 'path-boundary'
+  | 'directory-capacity';
 
 export class FileTaskSpaceError extends Error {
   readonly name = 'FileTaskSpaceError';

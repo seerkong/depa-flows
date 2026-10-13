@@ -92,6 +92,15 @@ export function normalizeFlowRunCheckpoint(value: unknown): AIWorkflowFlowRunChe
     ? normalizeRunStepExtensions(dataField(record, 'stepExtensions', 'checkpoint.stepExtensions'))
     : undefined;
   const profile = normalizeProfile(dataField(record, 'profile', 'checkpoint.profile'), runId);
+  if (profile.kind !== 'WorkCtrlFlow') {
+    for (const [key, record] of Object.entries(profile.ai.delegationsByKey ?? {})) {
+      for (const attempt of record.attempts) {
+        if (attempt.request.lineage.instanceId !== instanceId || attempt.request.lineage.runId !== runId) {
+          invalid('DELEGATION_CHECKPOINT_SCOPE_MISMATCH', `checkpoint.profile.ai.delegationsByKey.${key}`, 'Delegation lineage must belong to the canonical instance and run.');
+        }
+      }
+    }
+  }
   validateProfileProjection(profile, { input, state, output, controllerSidecars, nodeSidecars });
   return Object.freeze({
     schemaVersion,
@@ -471,7 +480,7 @@ function normalizeWorkCtrlNestedFacts(snapshot: Record<string, unknown>, locatio
     if (kind === 'Branch' && !hasBranchKey) invalid('WORK_CTRL_BRANCH_KEY_MISSING', `${factLocation}.branchKey`, 'Branch decisions require a branch key.');
     if (hasBranchKey) {
       canonicalIdentity(dataField(fact, 'branchKey', `${factLocation}.branchKey`), `${factLocation}.branchKey`);
-      if (kind !== 'Branch') invalid('WORK_CTRL_BRANCH_KEY_INVALID', `${factLocation}.branchKey`, 'Only Branch decisions can retain a branch key.');
+      if (kind === 'NoMatch') invalid('WORK_CTRL_BRANCH_KEY_INVALID', `${factLocation}.branchKey`, 'NoMatch decisions cannot retain a branch key.');
     }
   }
 
@@ -501,7 +510,7 @@ function normalizeWorkCtrlNestedFacts(snapshot: Record<string, unknown>, locatio
   normalizeWorkCtrlAttempts(dataField(orchestration, 'attempts', `${orchestrationLocation}.attempts`), `${orchestrationLocation}.attempts`);
   normalizeWorkCtrlDeadlines(dataField(orchestration, 'deadlines', `${orchestrationLocation}.deadlines`), `${orchestrationLocation}.deadlines`);
   const lanes = normalizeWorkCtrlLanes(dataField(orchestration, 'lanes', `${orchestrationLocation}.lanes`), `${orchestrationLocation}.lanes`);
-  normalizeWorkCtrlComposites(dataField(orchestration, 'composites', `${orchestrationLocation}.composites`), `${orchestrationLocation}.composites`);
+  normalizeWorkCtrlComposites(dataField(orchestration, 'composites', `${orchestrationLocation}.composites`), `${orchestrationLocation}.composites`, lanes);
   normalizeWorkCtrlWinners(dataField(orchestration, 'winners', `${orchestrationLocation}.winners`), lanes, `${orchestrationLocation}.winners`);
   normalizeWorkCtrlCancellations(dataField(orchestration, 'cancellations', `${orchestrationLocation}.cancellations`), `${orchestrationLocation}.cancellations`);
 }
@@ -542,7 +551,8 @@ function normalizeWorkCtrlDeadlines(value: unknown, location: string): void {
 function normalizeWorkCtrlLanes(value: unknown, location: string): Map<string, { invocationKey: string; laneId: string; status: string }> {
   const output = new Map<string, { invocationKey: string; laneId: string; status: string }>();
   for (const [key, item, itemLocation] of closedRecordEntries(value, location)) {
-    const fact = exactRecord(item, ['invocationKey', 'laneId', 'status', 'bodyId'], ['item', 'flowState', 'output'], itemLocation);
+    const fact = exactRecord(item, ['invocationKey', 'laneId', 'status', 'bodyId'], ['item', 'flowState', 'output', 'started'], itemLocation);
+    if (Object.hasOwn(fact, 'started') && typeof dataField(fact, 'started', `${itemLocation}.started`) !== 'boolean') invalid('WORK_CTRL_LANE_STARTED_INVALID', `${itemLocation}.started`, 'Lane slot claim must be boolean.');
     const invocationKey = canonicalIdentity(dataField(fact, 'invocationKey', `${itemLocation}.invocationKey`), `${itemLocation}.invocationKey`);
     const laneId = canonicalIdentity(dataField(fact, 'laneId', `${itemLocation}.laneId`), `${itemLocation}.laneId`);
     if (key !== `${invocationKey}/${laneId}`) invalid('WORK_CTRL_LANE_IDENTITY_MISMATCH', itemLocation, 'Lane map key must equal invocationKey/laneId.');
@@ -583,12 +593,22 @@ function normalizeWorkCtrlCancellations(value: unknown, location: string): void 
   }
 }
 
-function normalizeWorkCtrlComposites(value: unknown, location: string): void {
+function normalizeWorkCtrlComposites(value: unknown, location: string, lanes: Map<string, { invocationKey: string; laneId: string; status: string }>): void {
   for (const [key, item, itemLocation] of closedRecordEntries(value, location)) {
-    const fact = exactRecord(item, ['invocationKey', 'primitive', 'bodyId', 'status', 'updatedAtMs'], ['input', 'cursor', 'childTreeId'], itemLocation);
+    const fact = exactRecord(item, ['invocationKey', 'primitive', 'bodyId', 'status', 'updatedAtMs'], ['input', 'cursor', 'childTreeId', 'expansion'], itemLocation);
     assertFactKey(fact, key, itemLocation);
     const primitive = dataField(fact, 'primitive', `${itemLocation}.primitive`);
     if (!['Retry', 'Timeout', 'ForEach', 'Parallel', 'Race', 'CallFlow'].includes(String(primitive))) invalid('WORK_CTRL_COMPOSITE_PRIMITIVE_INVALID', `${itemLocation}.primitive`, 'Composite primitive is invalid.');
+    if (Object.hasOwn(fact, 'expansion')) {
+      const location = `${itemLocation}.expansion`;
+      const expansion = exactRecord(dataField(fact, 'expansion', location), ['itemCount', 'concurrency'], ['maxItems'], location);
+      const itemCount = nonNegativeSafeInteger(dataField(expansion, 'itemCount', `${location}.itemCount`), `${location}.itemCount`);
+      const concurrency = nonNegativeSafeInteger(dataField(expansion, 'concurrency', `${location}.concurrency`), `${location}.concurrency`);
+      const maxItems = Object.hasOwn(expansion, 'maxItems') ? nonNegativeSafeInteger(dataField(expansion, 'maxItems', `${location}.maxItems`), `${location}.maxItems`) : undefined;
+      if (primitive !== 'ForEach' || concurrency < 1 || concurrency > Math.min(32, maxItems ?? 1000) || (maxItems !== undefined && (maxItems < 1 || maxItems > 1000 || itemCount > maxItems))) invalid('WORK_CTRL_EXPANSION_INVALID', location, 'Frozen ForEach expansion exceeds its budget.');
+      const expanded = [...lanes.values()].filter(lane => lane.invocationKey === key);
+      if (expanded.length !== itemCount || Array.from({ length: itemCount }, (_, index) => `${key}/${index}`).some(id => !lanes.has(id))) invalid('WORK_CTRL_EXPANSION_INCOMPLETE', location, 'Frozen ForEach lanes must cover the exact input order.');
+    }
     canonicalIdentity(dataField(fact, 'bodyId', `${itemLocation}.bodyId`), `${itemLocation}.bodyId`);
     if (!['Open', 'Waiting', 'Completed', 'Failed', 'Cancelled'].includes(String(dataField(fact, 'status', `${itemLocation}.status`)))) invalid('WORK_CTRL_COMPOSITE_STATUS_INVALID', `${itemLocation}.status`, 'Composite status is invalid.');
     nonNegativeSafeInteger(dataField(fact, 'updatedAtMs', `${itemLocation}.updatedAtMs`), `${itemLocation}.updatedAtMs`);
@@ -1412,7 +1432,7 @@ function normalizeAIDataNodeResult(
   const result = exactRecord(
     value,
     ['nodeId', 'generation', 'status'],
-    ['output', 'semanticFingerprint', 'reusedFrom'],
+    ['output', 'semanticFingerprint', 'reusedFrom', 'waitContext'],
     location,
   );
   if (canonicalIdentity(dataField(result, 'nodeId', `${location}.nodeId`), `${location}.nodeId`) !== nodeId) {
@@ -1422,6 +1442,10 @@ function normalizeAIDataNodeResult(
     invalid('AI_DATA_RESULT_GENERATION_INVALID', `${location}.generation`, 'Result generation must equal its run node generation.');
   }
   const resultStatus = String(dataField(result, 'status', `${location}.status`));
+  if(Object.hasOwn(result,'waitContext')){
+    const context=normalizeFlowClosedObject(dataField(result,'waitContext',`${location}.waitContext`),`${location}.waitContext`);
+    if(new TextEncoder().encode(JSON.stringify(context)).length>16384)invalid('AI_DATA_WAIT_CONTEXT_BUDGET',`${location}.waitContext`,'Native wait context exceeds 16KiB.');
+  }
   if (!['Pending', 'Running', 'Waiting', 'Succeeded', 'Failed', 'Cancelled', 'Invalidated', 'Reused'].includes(resultStatus)) {
     invalid('AI_DATA_RESULT_STATUS_INVALID', `${location}.status`, 'Result status is not part of the public contract.');
   }

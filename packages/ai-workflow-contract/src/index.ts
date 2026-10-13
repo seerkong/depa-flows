@@ -22,7 +22,6 @@ import type {
   WorkCtrlFlowRuntime,
 } from 'work-ctrl-flow-contract';
 
-export * from './holon-task.js';
 export * from './resource-kind-contracts.js';
 export * from './agent-code.js';
 
@@ -535,6 +534,8 @@ export interface AIWorkflowNodeResult {
   readonly status: AIWorkflowNodeStatus;
   readonly output?: unknown;
   readonly semanticFingerprint?: AIWorkflowSemanticFingerprint;
+  /** Closed owner context for an original native wait; never a successful business output. */
+  readonly waitContext?: FlowClosedObject;
   readonly reusedFrom?: {
     readonly runId: string;
     readonly generation: number;
@@ -667,6 +668,7 @@ export interface AIAgentHostRunResult<Output extends FlowClosedValue = FlowClose
 
 /** Host-owned typed effect boundary. It is deliberately not a generic dispatcher. */
 export interface AIAgentHostEffectPort {
+  readonly delegation?: import('./delegation.js').WorkflowDelegationEffectPort;
   runAgent(request: AIAgentHostRunRequest): Promise<AIAgentHostRunResult>;
   runTargetedAgent(request: AIAgentHostTargetedRunRequest): Promise<AIAgentHostRunResult>;
 }
@@ -680,6 +682,8 @@ export interface AIAgentProcessorRuntime {
   readonly workflowRef: `resource://${string}`;
   readonly taskBinding: AIWorkflowAgentTaskRef;
   readonly generation?: number;
+  /** Actual native node identity. Used only by explicitly frozen context policies. */
+  readonly nodeContext?: Readonly<{generation:number;scope:string}>;
   readonly effects: AIAgentHostEffectPort;
   readonly signal?: AbortSignal;
   readonly metadata?: FlowClosedObject;
@@ -695,6 +699,11 @@ export interface AIWorkflowAuthoredEffects {
     invocation: AIAgentInvocation<Input>,
     config: AIAgentEffectConfig,
   ): Promise<AIAgentRunResult<Output>>;
+}
+
+/** Explicit node task invocation follows the frozen source choice and returns business output. */
+export interface AIWorkflowNodeTasks {
+  invoke(input: FlowClosedValue, config: AIAgentEffectConfig): Promise<FlowClosedValue>;
 }
 
 export interface RunStepExtensionSelector {
@@ -722,6 +731,7 @@ export interface AIWorkflowAuthoredStepExtensions {
 
 /** Closed durable AI profile state stored inside the Flow checkpoint owner. */
 export interface AIWorkflowProfileDurableState {
+  readonly delegationsByKey?: Readonly<Record<string, import('./delegation.js').WorkflowDelegationRecord>>;
   readonly schemaVersion: typeof AI_AGENT_CHECKPOINT_STATE_SCHEMA_VERSION;
   readonly instancesById: Readonly<Record<string, AIAgentInstanceReference>>;
   readonly instanceIdByName: Readonly<Record<string, string>>;
@@ -844,6 +854,10 @@ export interface AIWorkflowRuntimeContext<
   Effects extends AIWorkflowEffectProvider | AIWorkflowAuthoredEffects = AIWorkflowEffectProvider,
   Store extends AIWorkflowStateProjection = AIWorkflowStateProjection,
 > {
+  readonly tasks?: AIWorkflowNodeTasks;
+  readonly delegation?: {
+    delegateTask(input: FlowClosedValue): Promise<FlowClosedValue>;
+  };
   readonly roots: AIWorkflowRuntimeRoots;
   readonly effects: Effects;
   /** Historical field name; canonical runtimes expose a read-only projection here. */
@@ -890,3 +904,4 @@ export interface AIDataWorkflowDefinitionBinding {
 export type AIWorkflowDefinitionBinding =
   | AICtrlWorkflowDefinitionBinding
   | AIDataWorkflowDefinitionBinding;
+export * from './delegation.js';

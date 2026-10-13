@@ -1,6 +1,6 @@
 {
   "name": "task-manager-contract",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "private": false,
   "description": "Profile-neutral TaskSpace forest, command, event, receipt and owner-port contracts",
   "type": "module",

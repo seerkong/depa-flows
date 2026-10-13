@@ -9,6 +9,8 @@ import path from 'node:path';
 import { createHash, randomUUID } from 'node:crypto';
 import { loadFlowBundle } from 'instant-ctrl-flow-logic/filesystem';
 import { loadCtrlFlowProfileFromSources } from 'instant-ctrl-flow-logic';
+import { projectWorkCtrlFlowInvocationOwners } from './engine.js';
+import type { DefinitionStepAssemblyRuntime } from 'flow-step-space-logic';
 import type { FlowNodeSpec } from 'instant-ctrl-flow-contract';
 import {
   assembleDefinitionStepProfileDirectory,
@@ -57,11 +59,12 @@ export interface MaterializedFlowInstance {
 }
 
 /** Definition-admission projection used by the checkpoint owner for Ctrl membership. */
-export function loadFrozenCtrlDefinitionStepIds(
+export function loadFrozenCtrlDefinitionMembership(
   definitionDir: string,
   profileKind: 'WorkCtrlFlow' | 'AICtrlWorkflow',
-): readonly string[] {
-  const runtime = createFilesystemDefinitionStepProfileRuntime({ rootDir: definitionDir });
+  extensionCodecs?: DefinitionStepAssemblyRuntime['extensionCodecs'],
+): { readonly definitionStepIds: readonly string[]; readonly invocationOwners: Readonly<Record<string, string>> } {
+  const runtime = createFilesystemDefinitionStepProfileRuntime({ rootDir: definitionDir, extensionCodecs });
   const assembled = assembleDefinitionStepProfileDirectory(runtime, {}, { profileRoot: profileKind });
   if (assembled.diagnostics.length > 0) {
     throw new FlowInstanceMaterializationError(
@@ -95,7 +98,11 @@ export function loadFrozenCtrlDefinitionStepIds(
       'frozen Ctrl binding must expose unique executable step identities',
     );
   }
-  return Object.freeze(ids);
+  return Object.freeze({ definitionStepIds: Object.freeze(ids), invocationOwners: projectWorkCtrlFlowInvocationOwners(spec) });
+}
+
+export function loadFrozenCtrlDefinitionStepIds(definitionDir: string, profileKind: 'WorkCtrlFlow' | 'AICtrlWorkflow'): readonly string[] {
+  return loadFrozenCtrlDefinitionMembership(definitionDir, profileKind).definitionStepIds;
 }
 
 export class FlowInstanceMaterializationError extends Error {
@@ -177,11 +184,24 @@ export function normalizeFlowInstanceDescriptor(value: unknown): FlowInstanceDes
   });
 }
 
+const bundleDigests = new Map<string, {signature: string; digest: `sha256:${string}`}>();
+
 /** Deterministic digest over relative paths, entry kinds and raw file bytes. */
 export function computeFlowBundleDigest(definitionDir: string): `sha256:${string}` {
   const root = requireDirectory(definitionDir, 'definition-not-found');
+  const entries = collectBundleEntries(root);
+  // Check the physical entries on each read, but do not reread identical file
+  // bytes for every checkpoint/query. ctime catches same-size writes even when
+  // the caller restores mtime; directory entries catch additions/removals.
+  const signature = JSON.stringify(entries.map(entry => {
+    const stat = fs.lstatSync(entry.absolutePath, {bigint: true});
+    return [entry.relativePath, entry.kind, String(stat.dev), String(stat.ino),
+      String(stat.size), String(stat.mtimeNs), String(stat.ctimeNs)];
+  }));
+  const cached = bundleDigests.get(root);
+  if (cached?.signature === signature) return cached.digest;
   const hash = createHash('sha256');
-  for (const entry of collectBundleEntries(root)) {
+  for (const entry of entries) {
     const pathBytes = Buffer.from(entry.relativePath, 'utf8');
     const pathLength = Buffer.allocUnsafe(4);
     pathLength.writeUInt32BE(pathBytes.length);
@@ -196,7 +216,10 @@ export function computeFlowBundleDigest(definitionDir: string): `sha256:${string
       hash.update(bytes);
     }
   }
-  return `sha256:${hash.digest('hex')}`;
+  const digest: `sha256:${string}` = `sha256:${hash.digest('hex')}`;
+  if (bundleDigests.size >= 128) bundleDigests.delete(bundleDigests.keys().next().value!);
+  bundleDigests.set(root, {signature, digest});
+  return digest;
 }
 
 /**
@@ -319,7 +342,8 @@ export function loadMaterializedFlowInstance(
   const definitionDir = requireDirectory(definitionPath, 'instance-definition-not-found');
   // runs/ is mutable checkpoint support. Only the frozen definition subtree
   // participates in instance artifact containment and digest verification.
-  assertTreeContained(definitionDir);
+  // computeFlowBundleDigest walks the physical tree and rejects every symlink;
+  // a second traversal/realpath of all those same entries adds no containment.
   const digest = computeFlowBundleDigest(definitionDir);
   if (digest !== descriptor.definition.digest) {
     throw new FlowInstanceMaterializationError('instance-definition-digest-mismatch', 'frozen definition digest differs from instance descriptor');

@@ -1,6 +1,6 @@
 {
   "name": "eager-data-flow-logic",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "private": false,
   "description": "Pure EagerDataFlow XNL loading, linking, validation, and plan projection",
   "type": "module",
@@ -11,8 +11,8 @@
   },
   "dependencies": {
     "eager-data-flow-contract": "0.1.4",
-    "flow-step-space-logic": "0.1.1",
-    "xnl-core": "^0.1.8"
+    "flow-step-space-logic": "0.1.2",
+    "xnl-core": "0.1.13"
   },
   "files": [
     "src"
