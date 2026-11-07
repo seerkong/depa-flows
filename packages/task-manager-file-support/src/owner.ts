@@ -186,9 +186,9 @@ export class FileTaskSpaceOwner implements TaskSpaceOwnerPort,TaskSpaceDirectory
       const events = fs.readdirSync(paths.historyDir)
         .filter((name) => name.endsWith('.json'))
         .map((name) => {
-          const match = /^(\d{12})--(sha256:[a-f0-9]{64})\.json$/.exec(name);
-          if (!match) corrupt(`unexpected history file ${name}`);
-          const event = readCanonicalFile<TaskHistoryEvent>(path.join(paths.historyDir, name), match[2] as TaskArtifactDigest);
+          const parsed = parseHistoryFileName(name);
+          if (!parsed) corrupt(`unexpected history file ${name}`);
+          const event = readCanonicalFile<TaskHistoryEvent>(path.join(paths.historyDir, name), parsed.digest);
           return event;
         })
         .sort((left, right) => left.sequence - right.sequence);
@@ -206,8 +206,8 @@ export class FileTaskSpaceOwner implements TaskSpaceOwnerPort,TaskSpaceDirectory
   ): Promise<TaskArtifactBody | undefined> {
     assertDigest(digest);
     return this.#withLock(taskSpaceId, (paths) => {
-      const file = path.join(paths.artifactsDir, `${digest}.json`);
-      if (!fs.existsSync(file)) return undefined;
+      const file = resolveDigestJsonFile(paths.artifactsDir, digest);
+      if (!file) return undefined;
       const artifact = readCanonicalFile<TaskArtifactBody>(file);
       if (artifact.digest !== digest) digestMismatch(`artifact file ${file} contains ${artifact.digest}`);
       verifyArtifactBody(artifact);
@@ -359,12 +359,15 @@ export class FileTaskSpaceOwner implements TaskSpaceOwnerPort,TaskSpaceDirectory
     }
     assertDigest(head.recordDigest);
     assertDigest(head.treeDigest);
+    const treeFile = resolveDigestJsonFile(paths.treesDir, head.treeDigest);
+    const recordFile = resolveDigestJsonFile(paths.recordsDir, head.recordDigest);
+    if (!treeFile || !recordFile) corrupt('head references missing tree or record material');
     const definition = readCanonicalFile<TaskSpaceSnapshot['definition']>(
-      path.join(paths.treesDir, `${head.treeDigest}.json`),
+      treeFile,
       head.treeDigest,
     );
     const record = readCanonicalFile<StoredTaskSpaceRecord>(
-      path.join(paths.recordsDir, `${head.recordDigest}.json`),
+      recordFile,
       head.recordDigest,
     );
     if (definition.taskSpaceId !== taskSpaceId
@@ -414,8 +417,13 @@ export class FileTaskSpaceOwner implements TaskSpaceOwnerPort,TaskSpaceDirectory
       corrupt(`command receipt index ${indexFile} has invalid identity`);
     }
     assertDigest(index.receiptDigest);
+    const receiptPrimary = path.join(paths.receiptsDir, index.receiptFile);
+    const receiptFallback = path.join(paths.receiptsDir, receiptMaterialFileName(index.receiptId, index.receiptDigest));
+    const receiptPath = fs.existsSync(receiptPrimary)
+      ? receiptPrimary
+      : (fs.existsSync(receiptFallback) ? receiptFallback : receiptPrimary);
     const receipt = readCanonicalFile<TaskCommandReceipt>(
-      path.join(paths.receiptsDir, index.receiptFile),
+      receiptPath,
       index.receiptDigest,
     );
     if (receipt.taskSpaceId !== taskSpaceId
@@ -439,8 +447,8 @@ export class FileTaskSpaceOwner implements TaskSpaceOwnerPort,TaskSpaceDirectory
     ]);
     const artifacts = new Map<TaskArtifactDigest, TaskArtifactBody>();
     for (const digest of digests) {
-      const file = path.join(paths.artifactsDir, `${digest}.json`);
-      if (!fs.existsSync(file)) continue;
+      const file = resolveDigestJsonFile(paths.artifactsDir, digest);
+      if (!file) continue;
       const artifact = readCanonicalFile<TaskArtifactBody>(file);
       verifyArtifactBody(artifact);
       if (artifact.digest !== digest) digestMismatch(`artifact file ${file} contains ${artifact.digest}`);
@@ -492,7 +500,7 @@ function buildMaterial(
   const recordDigest = sha256Digest(recordBytes);
   const receiptBytes = canonicalJsonBytes(receipt);
   const receiptDigest = sha256Digest(receiptBytes);
-  const receiptFile = `${receiptName(receipt.receiptId)}--${receiptDigest}.json`;
+  const receiptFile = receiptMaterialFileName(receipt.receiptId, receiptDigest);
   const index: CommandReceiptIndex = {
     kind: 'task-command-receipt-index',
     taskSpaceId: commit.taskSpaceId,
@@ -503,19 +511,19 @@ function buildMaterial(
     receiptDigest,
   };
   const entries: JournalEntry[] = [
-    entry(paths, path.join(paths.treesDir, `${treeDigest}.json`), treeBytes),
-    entry(paths, path.join(paths.recordsDir, `${recordDigest}.json`), recordBytes),
+    entry(paths, path.join(paths.treesDir, digestFileName(treeDigest)), treeBytes),
+    entry(paths, path.join(paths.recordsDir, digestFileName(recordDigest)), recordBytes),
     entry(paths, path.join(paths.receiptsDir, receiptFile), receiptBytes),
     entry(paths, path.join(paths.commandsDir, commandIndexName(commit.commandId)), canonicalJsonBytes(index)),
   ];
   for (const event of commit.events) {
     const bytes = canonicalJsonBytes(event);
     const digest = sha256Digest(bytes);
-    entries.push(entry(paths, path.join(paths.historyDir, `${String(event.sequence).padStart(12, '0')}--${digest}.json`), bytes));
+    entries.push(entry(paths, path.join(paths.historyDir, historyFileName(event.sequence, digest)), bytes));
   }
   for (const artifact of commit.artifacts) {
     verifyArtifactBody(artifact);
-    entries.push(entry(paths, path.join(paths.artifactsDir, `${artifact.digest}.json`), canonicalJsonBytes(artifact)));
+    entries.push(entry(paths, path.join(paths.artifactsDir, digestFileName(artifact.digest)), canonicalJsonBytes(artifact)));
   }
   const deduplicated = new Map<string, JournalEntry>();
   for (const candidate of entries) {
@@ -652,6 +660,42 @@ function commandIndexName(commandId: string): string {
 
 function receiptName(receiptId: string): string {
   return `receipt-${encodeURIComponent(receiptId)}`;
+}
+
+
+/** On-disk basename token: hex only (NTFS-safe). Logical digest stays `sha256:<hex>`. */
+function digestFileToken(digest: TaskArtifactDigest): string {
+  assertDigest(digest);
+  return digest.slice('sha256:'.length);
+}
+
+function digestFileName(digest: TaskArtifactDigest): string {
+  return `${digestFileToken(digest)}.json`;
+}
+
+function historyFileName(sequence: number, digest: TaskArtifactDigest): string {
+  return `${String(sequence).padStart(12, '0')}--${digestFileToken(digest)}.json`;
+}
+
+function receiptMaterialFileName(receiptId: string, digest: TaskArtifactDigest): string {
+  return `${receiptName(receiptId)}--${digestFileToken(digest)}.json`;
+}
+
+/** Prefer hex basename; fall back to legacy `sha256:<hex>.json` for read migration. */
+function resolveDigestJsonFile(directory: string, digest: TaskArtifactDigest): string | undefined {
+  const preferred = path.join(directory, digestFileName(digest));
+  if (fs.existsSync(preferred)) return preferred;
+  const legacy = path.join(directory, `${digest}.json`);
+  if (fs.existsSync(legacy)) return legacy;
+  return undefined;
+}
+
+function parseHistoryFileName(name: string): { readonly digest: TaskArtifactDigest } | undefined {
+  const modern = /^(\d{12})--([a-f0-9]{64})\.json$/.exec(name);
+  if (modern) return { digest: `sha256:${modern[2]}` as TaskArtifactDigest };
+  const legacy = /^(\d{12})--(sha256:[a-f0-9]{64})\.json$/.exec(name);
+  if (legacy) return { digest: legacy[2] as TaskArtifactDigest };
+  return undefined;
 }
 
 function assertDigest(digest: string): asserts digest is TaskArtifactDigest {

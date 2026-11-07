@@ -138,7 +138,7 @@ describe('FileTaskSpaceOwner', () => {
     });
     expect(committed.kind).toBe('commit-accepted');
     expect(await owner.readArtifact('space-1', artifact.digest)).toEqual(artifact);
-    const artifactFile = path.join(owner.diagnosticPaths('space-1').artifactsDir, `${artifact.digest}.json`);
+    const artifactFile = path.join(owner.diagnosticPaths('space-1').artifactsDir, `${artifact.digest.slice('sha256:'.length)}.json`);
     fs.appendFileSync(artifactFile, ' ');
     await expect(owner.readArtifact('space-1', artifact.digest))
       .rejects.toMatchObject({ code: 'digest-mismatch' });
@@ -299,7 +299,7 @@ describe('FileTaskSpaceOwner', () => {
     await createTaskSpace({ owner }, createCommand(), {});
     const paths = owner.diagnosticPaths('space-1');
     const head = JSON.parse(fs.readFileSync(paths.headFile, 'utf8')) as { recordDigest: string };
-    fs.appendFileSync(path.join(paths.recordsDir, `${head.recordDigest}.json`), ' ');
+    fs.appendFileSync(path.join(paths.recordsDir, `${head.recordDigest.slice('sha256:'.length)}.json`), ' ');
 
     await expect(new FileTaskSpaceOwner({ root: ownerRoot }).readSnapshot('space-1'))
       .rejects.toMatchObject({ code: 'digest-mismatch' });

@@ -91,7 +91,7 @@ export function assertRegularFile(file: string): void {
 
 const UNSUPPORTED_DIRECTORY_FSYNC = new Set(['EPERM', 'EINVAL', 'ENOTSUP', 'EISDIR']);
 
-/** Windows cannot fsync a directory handle. File data is still synced separately. */
+/** Retain the 0.1.5 Windows compatibility while keeping file data synced. */
 export function fsyncDirectory(directory: string): void {
   let fd: number | undefined;
   try {
