@@ -1,6 +1,6 @@
 {
   "name": "ai-workflow-logic",
-  "version": "0.3.0-simplification.0",
+  "version": "0.2.3",
   "private": false,
   "description": "AI workflow domain projections and pure runtime helpers with an explicit Halfcode filesystem adapter",
   "type": "module",
@@ -15,7 +15,7 @@
     "./definitions": "./src/definitions.ts"
   },
   "dependencies": {
-    "ai-workflow-contract": "0.3.0-simplification.0",
+    "ai-workflow-contract": "0.2.3",
     "ajv": "8.20.0",
     "flow-step-space-contract": "0.1.1",
     "flow-step-space-logic": "0.1.2",

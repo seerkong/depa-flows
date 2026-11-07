@@ -1,6 +1,6 @@
 {
   "name": "ai-data-workflow-logic",
-  "version": "0.3.0-simplification.0",
+  "version": "0.2.2",
   "private": false,
   "description": "EagerDataFlow-backed AI Data Workflow RunGraph helpers",
   "type": "module",
@@ -12,9 +12,9 @@
     "./sources": "./src/source-loader.ts"
   },
   "dependencies": {
-    "ai-data-workflow-contract": "0.3.0-simplification.0",
-    "ai-workflow-contract": "0.3.0-simplification.0",
-    "ai-workflow-logic": "0.3.0-simplification.0",
+    "ai-data-workflow-contract": "0.2.2",
+    "ai-workflow-contract": "0.2.3",
+    "ai-workflow-logic": "0.2.3",
     "eager-data-flow-contract": "0.1.4",
     "eager-data-flow-logic": "0.1.8",
     "flow-step-space-logic": "0.1.2",

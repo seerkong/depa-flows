@@ -24,7 +24,7 @@ importers:
   packages/ai-ctrl-workflow-contract:
     dependencies:
       ai-workflow-contract:
-        specifier: 0.3.0-simplification.0
+        specifier: 0.2.3
         version: link:../ai-workflow-contract
       work-ctrl-flow-contract:
         specifier: 0.1.4
@@ -33,13 +33,13 @@ importers:
   packages/ai-ctrl-workflow-logic:
     dependencies:
       ai-ctrl-workflow-contract:
-        specifier: 0.3.0-simplification.0
+        specifier: 0.2.2
         version: link:../ai-ctrl-workflow-contract
       ai-workflow-contract:
-        specifier: 0.3.0-simplification.0
+        specifier: 0.2.3
         version: link:../ai-workflow-contract
       ai-workflow-logic:
-        specifier: 0.3.0-simplification.0
+        specifier: 0.2.3
         version: link:../ai-workflow-logic
       depa-behavior-tree:
         specifier: 0.1.2
@@ -69,7 +69,7 @@ importers:
   packages/ai-data-workflow-contract:
     dependencies:
       ai-workflow-contract:
-        specifier: 0.3.0-simplification.0
+        specifier: 0.2.3
         version: link:../ai-workflow-contract
       eager-data-flow-contract:
         specifier: 0.1.4
@@ -78,13 +78,13 @@ importers:
   packages/ai-data-workflow-logic:
     dependencies:
       ai-data-workflow-contract:
-        specifier: 0.3.0-simplification.0
+        specifier: 0.2.2
         version: link:../ai-data-workflow-contract
       ai-workflow-contract:
-        specifier: 0.3.0-simplification.0
+        specifier: 0.2.3
         version: link:../ai-workflow-contract
       ai-workflow-logic:
-        specifier: 0.3.0-simplification.0
+        specifier: 0.2.3
         version: link:../ai-workflow-logic
       eager-data-flow-contract:
         specifier: 0.1.4
@@ -129,7 +129,7 @@ importers:
   packages/ai-workflow-logic:
     dependencies:
       ai-workflow-contract:
-        specifier: 0.3.0-simplification.0
+        specifier: 0.2.3
         version: link:../ai-workflow-contract
       ajv:
         specifier: 8.20.0
