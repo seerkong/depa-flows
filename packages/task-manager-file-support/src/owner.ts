@@ -611,7 +611,8 @@ function publishImmutable(
       fs.closeSync(fd);
     }
   } else {
-    const fd = fs.openSync(temporary, 'r');
+    // Windows requires a writable handle to flush an existing recovery file.
+    const fd = fs.openSync(temporary, 'r+');
     try {
       fs.fsyncSync(fd);
     } finally {

@@ -131,7 +131,7 @@ describe('AI workflow public package metadata', () => {
         }
       },
       "task-manager-file-support": {
-        "version": "0.1.7",
+        "version": "0.1.8",
         "dependencies": {
           "task-manager-contract": "0.1.4",
           "task-manager-logic": "0.1.7"
